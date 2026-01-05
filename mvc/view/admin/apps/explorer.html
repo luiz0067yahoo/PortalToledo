@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Explorer</title>
+        <link rel="stylesheet" type="text/css" href="/assets/libs/w2ui-master/dist/w2ui-1.5.rc1.css" />
+    </head>
+    <body onload="w2explorer.initialize()" onkeyup="{const key = event.key;if(key=='Delete') w2explorer.menuDeleteFileFolder(this)}">
+      <form name="upload" action="/admin/explorer?app=explorer&functions=upload" method="POST" enctype="multipart/form-data" onsubmit="return false;">
+        <div class="explorer_tool_bar">
+          <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/actions/go-previous.png" onclick="w2explorer.goBack(this)"/>
+          <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/actions/go-next.png" onclick="w2explorer.goForward(this)"/>
+          <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/actions/go-home.png" onclick="w2explorer.goHome(this)"/>
+          <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/actions/go-up.png" onclick="w2explorer.goUP(this)"/>
+          <input class="url" name="url" onkeypress="w2explorer.goPressEnter(event,this)">
+          <img class="icon_32 refresh" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/actions/view-refresh.png" onclick="w2explorer.go($(this).closest('.explorer_tool_bar').find('.url').val())"/>
+        </div>
+        <div class="explorer_tool_bar">
+          <input class="search" name="search"/>
+          <input type="image" class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/actions/document-preview.png" onclick="w2explorer.find($(this).closest('.explorer_tool_bar').find('.search').val())"/>
+        </div>
+        <div class="explorer_menu">
+          <ul class="dropdown">
+            <li onmouseover="w2explorer.menuEnable(this)" onmouseout="w2explorer.menuDisable(this)"><a href="#" onclick="return false;">Arquivo</a>
+              <ul class="sub_menu">
+                 <li onmouseover="w2explorer.menuEnable(this)" onmouseout="w2explorer.menuDisable(this)" onclick="w2explorer.menuSendFile();">
+                  <a href="#" onclick="return false;">Enviar arquivo</a>
+                </li>
+                <li onmouseover="w2explorer.menuEnable(this)" onmouseout="w2explorer.menuDisable(this)" onclick="top.w2explorer.menuCreateFolder(this)">
+                  <a href="#" onclick="return false;">Nova pasta</a>
+                </li>
+				<li onmouseover="w2explorer.menuEnable(this)" onmouseout="w2explorer.menuDisable(this)" onclick="top.w2explorer.menuCreateFile(this)">
+                  <a href="#" onclick="return false;">Novo Arquivo</a>
+                </li>
+                 <li  onmouseover="w2explorer.menuEnable(this)" onmouseout="w2explorer.menuDisable(this)" onclick="top.w2explorer.menuDeleteFileFolder(this);">
+                  <a  class="delete_file_folder" href="#" onclick="return false;">Excluir</a>
+                 </li>
+              </ul>
+            </li>
+          </ul>   
+        </div>
+        <div id="explorer">
+        </div>
+        <input type="file" id="file" name="files[]" multiple="multiple" style="display: none;" onchange="w2explorer.upload.FileSelectForm(this)" />
+        <div id="submitbutton">
+          <button type="submit"></button>
+        </div>
+      </form>
+      <div class="upload">
+      </div>
+    </body>
+    <script src="/assets/libs/jquery.min.js"></script>
+	<script type="text/javascript" src="/assets/libs/w2ui-master/dist/w2ui-1.5.rc1.js"></script>
+	<!--
+	<script type="text/javascript" src="/assets/libs/w2ui-master/dist/w2ui.min.js"></script>
+	-->
+</html>

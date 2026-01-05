@@ -1,0 +1,98 @@
+var loadDimension;
+jQuery(document).ready(function() {
+   
+
+    function loadDivMain(pathname_) {
+		console.log(pathname_);
+        if (pathname_ === '#login') {
+            $('#divMain').load('/boracomer/login.html');
+			$('title').html("Borra Comer - Login");
+        }  
+		else if (pathname_ === '#produtos') {
+            $('#divMain').load('/boracomer/products.html');
+			$('title').html("Borra Comer - Produtos");
+        }
+		else if (pathname_ === '#buscar_produtos') {
+            $('#divMain').load('/boracomer/search_products.html');
+			$('title').html("Borra Comer - Buscar Produtos");
+        } 
+		else if (pathname_ === '#item_pedido') {
+            $('#divMain').load('/boracomer/order_item.html');
+			$('title').html("Borra Comer - Item Pedido");
+        } 
+		else if (pathname_ === '#itens_pedido') {
+            $('#divMain').load('/boracomer/order_itens.html');
+			$('title').html("Borra Comer - Itens Pedido");
+        } 
+		else if (pathname_ === '#home') {
+            $('#divMain').load('/boracomer/home.html');
+			$('title').html("Borra Comer - Seu cardápio virtual");
+        } 
+		else{
+			$('#divMain').load('/boracomer/login.html');
+			$('title').html("Borra Comer - Login");
+		}
+    }
+	//window.location.pathname
+    loadDivMain(window.location.hash);
+	
+    loadDimension=function(){
+		$(".height-square").each(function(){
+				$(this).height($(this).width());
+		});
+		$(".dimenssion-parent").each(function(){
+			height=($(this).parent().height());
+			width=($(this).parent().width());
+			$(this).height(height);
+			$(this).width(width);
+		});
+		$(".max-height-parent-first-child").each(function(){
+			height=($(this).parent().children(":first").height());
+			$(this).css("max-height",height+"px");
+		});
+		$(".min-height-first-child").each(function(){
+			height=($(this).first().height());
+			if($(this).css("max-height").replace('px', '')>height)
+				$(this).css("min-height",$(this).css("max-height"));
+			else
+				$(this).css("min-height",height+"px");
+		});
+		$(".h-80").each(function(){
+			$(this).height($(this).parent().height()*0.8);
+		});
+
+	}
+	loadDimension
+	setTimeout(loadDimension,1000);
+
+	
+
+    function setCookie(cname, cvalue, exdays) {
+        const d = new Date();
+        d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+        let expires = "expires=" + d.toUTCString();
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+
+    function getCookie(cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+	http_request="http://209.145.62.221:1337/auth/local";
+	data_request={
+		"identifier": "food_api@nobresistemas.com",
+		"password": "jT4h4MtUqkNjLkG"
+	}
+	
+});

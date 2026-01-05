@@ -1,0 +1,75 @@
+	@media only screen and (max-width: 1024px) {/*ipad horizontal e pc*/
+	  
+    }
+    @media only screen and (max-width: 768px) {/*ipad vertical*/
+	  #login{
+			background-position:top 0px left -150px;
+		}
+	} 
+	@media only screen and (max-width: 600px) {/*ipad vertical*/
+	 #login{
+			background-position:top 0px left -150px;
+		}
+	}
+	@media only screen and (max-width: 500px) {/*ipad vertical*/
+	 #login{
+			background-position:top 0px left -150px;
+		}
+	}
+	@media only screen and (max-width: 400px) {/*ipad vertical*/
+	 #login{
+			background-position:top 0px left -150px;
+		}
+	}
+    @media only screen and (max-width: 414px) {/*iphone 6 7 8 plus vertical*/
+	   #login{
+			background-position:top 0px left -150px;
+		}
+	}
+    @media only screen and (max-width: 375px) {/*iphone 6 7 8 vertical*/
+	  #login{
+			background-position:top 0px left -150px;
+		}
+     }
+    @media only screen and (max-width: 320px) {/*iphone 5 vertical*/
+		#login{
+			background-position:top 0px left -150px;
+		}
+     }
+	 
+#loader {
+	width: 100%;
+	height: 100%;
+	position:absolute;
+	z-index:9999;
+	top:10%;
+	background-color:white;
+}	 
+
+.loader {
+	border: 50px solid #f3f3f3; /* Light grey */
+	border-top: 50px solid #3498db; /* Blue */
+	border-radius: 50%;
+	width: 250px;
+	height: 250px;
+	animation: spin 2s linear infinite;
+
+	margin-top: -webkit-calc(50% - 150px);
+	margin-top: -moz-calc(50% - 150x);
+	margin-top: calc(50% - 150px);
+	
+	margin-left: -webkit-calc(50% - 150px);
+	margin-left: -moz-calc(50% - 150x);
+	margin-left: calc(50% - 150px);
+	
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+
+	
+      

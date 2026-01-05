@@ -1,0 +1,23 @@
+<div id="product" class="d-flex justify-content-center flex-wrap h-100">
+	<div class="d-flex align-self-start flex-wrap margin-15 list container-block-by w-100 h-100 ">
+		<div class="w-100 d-flex justify-content-between">
+			<label class="font-size-1  ">
+				<button @click="goBack" class="bg-transparent border-0"><i class="fas fa-chevron-circle-left text-primary"></i></button> 
+			</label>
+			<label class="font-size-1 text-center w-100">
+				Filtre aqui em nosso catalogo digital<br>
+				Encontre o cardápio ideal para melhor atende-lo
+			</label>
+		</div>
+		<label class="font-size-3 w-100"> Categorias</label>
+		<select v-model="selectGroupOfProduct" class="big-button form-select form-select-lg font-size-2" >
+			<option disabled  selected>Escolha a categoria</option>
+			<option v-for="(groupOfProduct, index) in groupsOfProducts"  :value="groupOfProduct" :key="groupOfProduct.id">{{groupOfProduct.nome}}</option>
+		</select>
+		<label class="font-size-3 w-100 margin-top-15"> Encontre aqui</label>
+		<input v-model="inputSearch" class="big-button  form-control font-size-2">
+		<div class="w-100 margin-top-15">
+			<button @click="searchProducts" class="button-mini-squared font-size-1 bg-primary d-flex rounded-10 text-white hover-opacity-75 d-flex justify-content-center align-items-center"><i class="fas fa-search "></i></button>
+		</div>
+	</div>
+</div>

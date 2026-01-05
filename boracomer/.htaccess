@@ -1,0 +1,9 @@
+RewriteEngine on
+
+
+RewriteCond %{SCRIPT_FILENAME} !-d  
+RewriteCond %{SCRIPT_FILENAME} !-f  
+
+RewriteRule ^login$ 			index.html [L]
+
+ErrorDocument 404 /404.php

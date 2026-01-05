@@ -1,0 +1,66 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="/printer/assets/libs/CodeMirror-master/lib/codemirror.css">
+		<link rel="stylesheet" href="/printer/assets/libs/CodeMirror-master/theme/monokai.css">
+		<link rel="stylesheet" type="text/css" href="/printer/assets/libs/w2ui-master/dist/w2ui-1.5.rc1.css" />
+
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous">
+		<link type="text/css" rel="stylesheet" href="//use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+		<style type="text/css">
+			.CodeMirror{
+				height: -webkit-calc(100%);
+				height: -moz-calc(100% );
+				height: calc(100% );
+			}
+		</style>
+	</head>
+	<body onload="w2desktop.initialize();" unload="return false;" style="margin: 0px;padding: 0px">
+		<div id="loader">
+			<div class="loader"></div>
+		</div>
+		<form action="/printer/functionsAjax.php" method="POST" class="form-ajax" style="margin:0;padding:0;margin-block-end: 0;" >
+		
+			<main style="margin:0;padding:0;">
+				<textarea id="myTextArea" type="text" name="code"  /></textarea>
+			</main>
+		</form >
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script src="/printer/assets/libs/CodeMirror-master/lib/codemirror.js"></script>
+		<script src="/printer/assets/libs/CodeMirror-master/mode/php/php.js"></script>
+		<script  src="/printer/assets/js/forms.js"></script> 
+		<script>
+			var myTextarea=document.querySelector("#myTextArea");
+			
+			var editor = CodeMirror.fromTextArea(myTextarea, {
+				lineNumbers: true,
+				tabSize: 5,
+				mode: "PHP",
+				theme: 'monokai'
+			}).on('change', editor => {
+				var code=editor.getValue();
+				$("#myTextArea").val(code);
+			});
+			data="0";
+			document.querySelector('.CodeMirror').CodeMirror.setValue(data);
+			var code=editor.getValue();
+
+			/*
+			
+			
+			
+			
+								
+
+			
+			
+			
+			*/
+		</script>  
+
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-p34f1UUtsS3wqzfto5wAAmdvj+osOnFyQFpp4Ua3gs/ZVWx6oOypYoCJhGGScy+8" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.min.js" integrity="sha384-lpyLfhYuitXl2zRZ5Bn2fqnhNAKOAaM/0Kr9laMspuaMiZfGmfwRNFh8HlMy49eQ" crossorigin="anonymous"></script>	
+		<script type="text/javascript" src="/printer/assets/libs/w2ui-master/dist/w2ui-1.5.rc1.js"></script>
+	</body>
+</html>

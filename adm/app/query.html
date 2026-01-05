@@ -1,0 +1,17 @@
+<script src="/adm/assets/libs/codemirror/lib/codemirror.js"></script>
+<link rel="stylesheet" href="/adm/assets/libs/codemirror/lib/codemirror.css">
+<script src="/adm/assets/libs/codemirror/mode/javascript/javascript.js"></script>
+<script  src="/adm/assets/libs/codemirror/keymap/sublime.js"></script>            
+<script>
+ var myCodeMirror = CodeMirror.fromTextArea(myTextArea);
+</script>            
+<script  src="/adm/assets/js/forms2.js"></script>            
+<form action="/adm/functionsAjax.php" >
+    <input type="hidden" name="app" value="DAOquery" /><br>
+    sql:<br>
+    <textarea type="text" name="sql" onchange="readParams(this)"/></textarea><br>
+    <div id="params">
+  
+    </div>
+    <input type="submit" name="" value="ok" /><br>
+</form >

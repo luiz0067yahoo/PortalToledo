@@ -1,0 +1,13 @@
+@font-face {
+    font-family: 'Idealist Sans';
+    src: url('IdealistSans.eot');
+    src: url('IdealistSans.eot?#iefix') format('embedded-opentype'),
+        url('IdealistSans.woff2') format('woff2'),
+        url('IdealistSans.woff') format('woff'),
+        url('IdealistSans.ttf') format('truetype'),
+        url('IdealistSans.svg#IdealistSans') format('svg');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+

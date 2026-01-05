@@ -1,0 +1,79 @@
+<!doctype html>
+<html style="padding:0px;margin:0px;width:100%;height:100%;display:block;">
+    <head>
+        <title></title>
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" href="/adm/assets/libs/CodeMirror-master/lib/codemirror.css">
+        <link rel="stylesheet" href="/adm/assets/libs/CodeMirror-master/addon/fold/foldgutter.css">
+        <link rel="stylesheet" href="/adm/assets/libs/CodeMirror-master/addon/dialog/dialog.css">
+        <link rel="stylesheet" href="/adm/assets/libs/CodeMirror-master/theme/monokai.css">
+        <link rel="stylesheet" type="text/css" href="/adm/assets/libs/w2ui-master/dist/w2ui-1.5.rc1.css" />
+    </head>    
+    <body style="padding:0px;margin:0px;width:100%;height:100%;display:block;">
+        <form  action="/adm/functionsAjax.php?app=DAOquery" method="POST" onsubmit="return false;" enctype="multipart/form-data">
+             <input type="file" id="file" name="files[]" multiple="multiple" style="display: none;" />
+        
+                <div class="explorer_menu">
+                    <ul class="dropdown">
+                        <li onmouseover="w2explorer.menuEnable(this)" onmouseout="w2explorer.menuDisable(this)"><a href="#" onclick="return false;">Arquivo</a>
+                            <ul class="sub_menu">
+                            <li onmouseover="w2explorer.menuEnable(this)" onmouseout="w2explorer.menuDisable(this)" onclick="w2explorer.menuSendFile();">
+                            <a href="#" onclick="return false;">Enviar arquivo</a>
+                            </li>
+                            <li onmouseover="w2explorer.menuEnable(this)" onmouseout="w2explorer.menuDisable(this)" onclick="top.w2explorer.menuNewFile(this)">
+                                <a href="#" onclick="return false;">Novo Arquivo</a>
+                            </li>
+                            <li  onmouseover="w2explorer.menuEnable(this)" onmouseout="w2explorer.menuDisable(this)" onclick="top.w2explorer.menuSaveFile(this);">
+                             <a  href="#" onclick="return false;">Salvar</a>
+                            </li>
+                            <li  onmouseover="w2explorer.menuEnable(this)" onmouseout="w2explorer.menuDisable(this)" onclick="top.w2explorer.menuSaveAsFile(this);">
+                             <a   href="#" onclick="return false;">Salvar Como</a>
+                            </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            <textarea class="sql" name="sql" style="width:100%;height:100%" ></textarea>
+            <div id="params">
+  
+            </div>
+            <input class="sql" type="submit" value="enviar"/>
+            <div class="result">
+                
+            </div>
+           
+        </form>
+    <script src="/adm/assets/libs/CodeMirror-master/lib/codemirror.js"></script>
+    <script src="/adm/assets/libs/CodeMirror-master/addon/search/searchcursor.js"></script>
+    <script src="/adm/assets/libs/CodeMirror-master/addon/search/search.js"></script>
+    <script src="/adm/assets/libs/CodeMirror-master/addon/dialog/dialog.js"></script>
+    <script src="/adm/assets/libs/CodeMirror-master/addon/edit/matchbrackets.js"></script>
+    <script src="/adm/assets/libs/CodeMirror-master/addon/edit/closebrackets.js"></script>
+    <script src="/adm/assets/libs/CodeMirror-master/addon/comment/comment.js"></script>
+    <script src="/adm/assets/libs/CodeMirror-master/addon/wrap/hardwrap.js"></script>
+    <script src="/adm/assets/libs/CodeMirror-master/addon/fold/foldcode.js"></script>
+    <script src="/adm/assets/libs/CodeMirror-master/addon/fold/brace-fold.js"></script>
+    <script src="/adm/assets/libs/CodeMirror-master/mode/javascript/javascript.js"></script>
+    <script src="/adm/assets/libs/CodeMirror-master/keymap/sublime.js"></script>
+    <script src="/adm/assets/libs/jquery.min.js"></script>
+    <script src="/adm/assets/js/forms2.js"></script>
+    
+    <script type="text/javascript" src="/adm/assets/libs/w2ui-master/dist/w2ui-1.5.rc1.js"></script>
+    <script>
+        var editor = CodeMirror.fromTextArea(document.body.getElementsByTagName("textarea")[0], {
+            value: "",
+            lineNumbers: true,
+            mode: "SQL",
+            keyMap: "sublime",
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            showCursorWhenSelecting: true,
+            theme: "monokai",
+            tabSize: 2
+        });
+        $("#explorer").css("height","calc(50% )");
+        //editor.setSize(500, 300);
+       $(".CodeMirror" ).css("height","300px");
+    </script>
+    </body>
+</html>

@@ -1,0 +1,11 @@
+class FlavorsPizza {
+    id;
+    uuid;
+    descricao;
+    ativo;
+    empresa;
+    valor;
+    detalhes;
+    created_at;
+    updated_at;
+}

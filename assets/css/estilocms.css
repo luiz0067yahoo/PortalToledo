@@ -1,0 +1,161 @@
+@charset "utf-8";
+/*estilos do sistema crm inprolink */
+
+
+/* estruturação */ 
+
+#tudo{
+	width:100%; height:100%; margin-left:0px; margin-right:0px; margin-top:0px; margin-bottom:0px; background-color:#FFF;}
+	
+#conteudocentro{
+	width:1024px; height:600; float:center; margin-left:auto; margin-right:auto; clear:both; display:block;}	
+	
+.linhascentro{
+	width:1024px; float:center; margin-left:auto; margin-right:auto; display:block; overflow:hidden; clear:both;}	
+	
+.linhastotal{
+	width:100%; height:auto; display:block; overflow:hidden; clear:both;}	
+	
+.branco{
+	float:left;}	
+	
+
+
+
+
+/*  barra de sair, botoes e tudo */
+#barrasair{
+	width:1024px; height:30px; background-color:#000; float:center; clear:both; margin-left:auto; margin-right:auto;}
+
+#sair{
+	width:72px; height:30px; float:left; display:block; overflow:hidden;}
+	
+#botaooff{
+	width:26px; height:30px; float:left; display:block; overflow:hidden;}
+	
+#divtextosair{
+	width:46px; height:30px; float:left; display:block; overflow:hidden; font-family:Arial, Helvetica, sans-serif; font-size:14px; color:#FF9900; line-height:30px;}				
+
+.textosair{
+	text-decoration:none; font-family:Arial, Helvetica, sans-serif; font-size:14px; color:#0000ff;}
+	
+#encerramento{
+	width:202px; height:30px; background-color:transparent; float:left; font-family:Arial, Helvetica, sans-serif; font-size:14px; color:#FFF; line-height:30px; }
+	
+	
+/* barra de banners */
+
+#barrabanner{
+	width:1024px; height:140px; float:left; display:block; overflow:hidden; clear:both; background-color:#E8E8E8;}
+	
+	
+#containercrm{
+	width:236px; height:140px; float:left; display:block; overflow:hidden;}	
+	
+#crminprolink{
+	width:210px; height:84px; float:left; display:inline; overflow:hidden; margin-left:11px; margin-right:15px; margin-top:24px; margin-right:32px;}
+	
+#risco1{
+	width:1024px; height:2px; display:block; overflow:hidden; float:left; background-image:url(/assets/img/cms/risco1.gif); background-repeat:repeat-x;}	
+	
+#containercliente{
+	width:281px; height:140px; float:left; display:block; overflow:hidden;}	
+	
+#fotocliente{
+	width:auto;min-width:80px; height:120px; float:left; display:inline; overflow:hidden; margin-left:100px; margin-top:8px; margin-right:35px;/* menos 4 px na altura e largura, pcausa da borda de 2px */
+	 margin-bottom:32px; border:2px; border-style:solid; border-color:#CCCCCC;}	
+	 
+#riscobarra{
+		width:10px; height:140px;background-image:url(/assets/img/cms/riscobarra.gif); float:left;}	 
+	
+	
+/*  barra de usuario   */ 		
+
+#barrausuario{
+	width:1024px; padding-bottom:10px; height:45px; float:left; display:block; background-color:#FFF; overflow:hidden;}
+	
+#bemvindo{
+	width:274px; height:45px; float:left; display:block; overflow:hidden; background-color:#FFF; text-align:left; color:#000; font-family:Verdana, Geneva, sans-serif; font-size:14px; line-height:45px;}	
+
+#ferramentas{
+	width:238px; height:45px; float:left; display:block; overflow:hidden;}
+
+#trocarsenha{
+	width:124px; height:45px; float:left; display:block; overflow:hidden;}
+	
+#suporte{
+	width:114px; height:45px; float:left; display:block; overflow:hidden;}
+	
+#containerjava{
+	width:197px; height:140px; float:left; display:block; overflow:hidden;}	
+	
+#logojava{
+	width:200px; height:76px; float:left; overflow:hidden; display:block;}
+
+	
+	
+/* menus principais */
+
+div.menuprincipal{
+	width:275px; height:600px; float:left; display:block; overflow:auto;}
+	
+#menuscontainer{
+	width:257px; height:600px; float:left; display:block; background-color: #E8E8E8; left:0px; top:0px;}
+
+#divisorconteudovertical{
+	width:2px; float:left; display:block; height:auto; min-height:700px; background-color: #E8E8E8;}
+	
+#menudecomando{
+	width:247px; height:37px; background-color:#0000FF; float:left; margin-left:3px; margin-top:6px; /*  13 px a menos na largura */
+	 margin-right:8px; display:inline; font-family:Verdana, Geneva, sans-serif; font-size:16px; color:#FFF; text-indent:10px; line-height:41px;
+	 border:2px; border-style:solid; border-color:#000088;}	
+
+#menulateral {
+width: 251px;
+padding: 0;
+margin: 0;
+font: 16px Verdana, sans-serif;
+float:left;
+}
+/* caracteristicas do menu */
+#menulateral ul {
+list-style: none;
+margin: 0;
+padding: 0;
+}
+#menulateral li {
+border-bottom:1px; border-color:transparent;
+margin: 0;
+}
+#menulateral li a {
+display: block;
+padding: 5px 5px 5px 0.5em;
+background-color: #E8E8E8;
+color:#666666;
+text-decoration: none;
+margin-left:5px; display:block;
+}
+#menulateral li a:hover {
+background-color:#FFF;
+color:#000;
+}
+
+#menulateral li a:active {
+background-color:#FFF;
+color:#F90;
+}
+
+/* para o ie 7 e mac \*/
+* html ul#menulateral  li { float: left; height: 1%; }
+* html ul#menulateral  li a { height: 1%; }
+
+	
+	
+	
+/* inicial */
+
+.textoinicial {color:#999999; font-family:Verdana, Geneva, sans-serif; font-size:14px; text-align:left; line-height:100%;
+	}	
+	
+			
+						

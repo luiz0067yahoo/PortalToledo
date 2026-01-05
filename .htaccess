@@ -1,0 +1,46 @@
+RewriteEngine on
+
+
+
+RewriteRule ^buscar/$                                           /index.php [NC]
+RewriteRule ^contador_acesso$                                   /index.php [NC]
+
+
+ReWriteRule ^ler/(.*)/(.*)/(.*)$                                /index.php [NC]
+ReWriteRule ^ler/(.*)/(.*)/$                                    /index.php [NC]
+ReWriteRule ^ler/(.*)/(.*)$                                     /index.php [NC]
+ReWriteRule ^ler/(.*)/$                                         /index.php [NC]
+
+
+
+
+ReWriteRule ^Patrocinador/(.*)$                                 /index.php [NC]
+ReWriteRule ^contato$                                           /index.php [NC]
+ReWriteRule ^termo_de_uso_e_responsabilidade$                   /index.php [NC]
+ReWriteRule ^missao_visao_e_valores$                            /index.php [NC]
+ReWriteRule ^politica_de_privacidade$                           /index.php [NC]
+
+ReWriteRule ^Fotos/(.*)/(.*)$                                   /index.php [NC]
+ReWriteRule ^Fotos/(.*)/$                                       /index.php [NC]
+ReWriteRule ^Fotos/(.*)$                                        /index.php [NC]
+ReWriteRule ^Fotos/$                                            /index.php [NC]
+
+
+
+ReWriteRule ^Vídeos/(.*)/(.*)$                                  /index.php [NC]
+ReWriteRule ^Vídeos/(.*)/$                                      /index.php [NC]
+ReWriteRule ^Vídeos/(.*)$                                       /index.php [NC]
+ReWriteRule ^Vídeos/$                                           /index.php [NC]
+
+RewriteRule ^admin/assets/(.*)$                                 /admin/public/assets/$1 [R=301,NC,L]
+RewriteRule ^admin$ /index.php [NC]
+RewriteRule ^admin/(.*)/(.*)$                                   /index.php [NC]
+RewriteRule ^admin/(.*)$                                        /index.php [NC]
+
+RewriteRule ^server/(.*)/(.*)/(.*)$                             /index.php [NC]
+RewriteRule ^server/(.*)/(.*)/$                                 /index.php [NC]
+RewriteRule ^server/(.*)/(.*)$                                  /index.php [NC]
+RewriteRule ^server/(.*)$                                       /index.php [NC]
+
+
+ErrorDocument 404 /404.php

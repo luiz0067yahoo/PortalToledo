@@ -1,0 +1,65 @@
+<div id="login" class="d-flex flex-wrap align-content-between justify-content-center w-100 h-100">
+	<div class="d-flex justify-content-between w-100">
+		<div class="d-block">
+			<div id="food-left-top"></div>
+			<div id="food-half-top"></div>
+		</div>
+		<div id="food-right-top"></div>
+	</div>
+	<div class="d-flex justify-content-between w-100 align-self-baseline">
+		<div id="food-left-bottom"></div>
+		<div id="food-right-bottom"></div>
+	</div>
+	<div class="position-absolute d-flex justify-content-center flex-wrap h-100">
+		<div class="d-flex align-self-center flex-wrap margin-15 container-block-by">
+			<div class="w-100"><div id="logo" class="mx-auto"  v-bind:style="{ backgroundImage: 'url(' + store_logo + ')' }"></div></div>
+		</div>
+			<label id="slogam" class="w-100 text-center  font-size-1 ">
+				<p><b>{{store_text1}}</b></p>
+				<p><b>{{store_text2}}</b></p>
+			</label>
+			<label id="slogam" class="w-100 text-center font-size-2 ">
+				<p>Como quer entrar?</p>
+			</label>
+			<div class="w-100" >
+				<button class="big-button-center bg-primary rounded-10 text-white font-size-2 text-center hover-opacity-75 d-flex" >
+					<div class="d-flex align-self-center w-100 align-items-center">
+						<div class="rounded-10 mini-button logo-google d-flex align-self-center " ></div>
+						<label class="w-100 text-centeralign-self-center ">Use sua conta Google</label>
+					</div>
+				</button>
+			</div>
+			<div class="w-100  margin-top-15" >
+				<button class="big-button-center bg-primary rounded-10 text-white font-size-2 text-center hover-opacity-75 d-flex" >
+					<div class="d-flex align-self-center w-100 align-items-center">
+						<div class="rounded-10 mini-button  d-flex align-self-center  bg-white" ><i class="mx-auto text-primary  align-self-center fab font-size-2 fa-facebook-f" ></i></div>
+						<label class="w-100 text-centeralign-self-center ">Use sua conta Facebook</label>
+					</div>
+				</button>
+			</div>
+			
+			<div class="w-100  margin-top-15" >
+				<button class="big-button-center bg-primary rounded-10 text-white font-size-2 text-center hover-opacity-75 d-flex" >
+					<div class="d-flex align-self-center w-100 align-items-center">
+						<div class="rounded-10 mini-button  d-flex align-self-center  bg-white logo-instagram"> </div>
+						<label class="w-100 text-centeralign-self-center ">Use sua conta Intagram</label>
+					</div>
+				</button>
+			</div>
+			<div class="w-100 margin-top-15" >
+				<a  :href="'#'+storePath+'/create-user'"class="text-decoration-none"><button class="big-button-center bg-white border-0 font-size-2 text-center text-primary hover-opacity-75 d-flex justify-content-center  align-items-center">
+					<label class="">Crie sua conta {{store.nome}} aqui</label>
+				</button></a>
+			</div>
+			<div class="w-100 " >
+				<a :href="'#'+storePath+'/panel'" class="text-decoration-none"><button class="big-button-center bg-white border-0 font-size-2 text-center text-muted hover-opacity-75 d-flex justify-content-center  align-items-center">
+					<label class="">Manter como visitante </label>
+				</button></a>
+			</div>
+			<div class="w-100 margin-top-15" >
+				<a :href="'#'+storePath+'/'" class="text-decoration-none"><button class="big-button-center bg-white border-0 font-size-2 text-center text-primary hover-opacity-75 d-flex justify-content-center  align-items-center">
+					<label class="#home"><i class="fa fa-caret-left"></i> Voltar</label>
+				</button></a>
+			</div>
+	</div>
+</div>

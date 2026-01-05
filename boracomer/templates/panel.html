@@ -1,0 +1,44 @@
+<div id="home" class="d-flex justify-content-center flex-wrap h-100">
+   	<div class="d-flex align-self-start flex-wrap margin-15 list container-block-by w-100 h-100 ">
+		<div class="w-100 d-flex justify-content-between ">
+			<a href="#/"  class="text-decoration-none"><button class="button-mini-squared font-size-1 bg-danger d-flex rounded-10 text-white hover-opacity-75 d-flex justify-content-center align-items-center"><i class="fas fa-home "></i></button></a>
+			<div id="logo-vertical" v-bind:style="{ backgroundImage: 'url(' + storeVerticalLogo + ')' }"></div>
+			<div class="d-flex border border-primary rounded p-0">
+				<input v-model="inputSearch" class=" d-flex  font-size-1 border-0 search ">
+				<button @click="findGroup" class="d-flex justify-content-center align-items-center button-mini-squared bg-primary m-0 border-primary text-white font-size-1  hover-opacity-75  "><i class="fas fa-search "></i></button>
+			</div> 
+			<button @click="goOrder" class="button-mini-squared font-size-1 bg-primary d-flex rounded-10 border-0 text-white hover-opacity-75 d-flex justify-content-center align-items-center"><i class="fas fa-shopping-cart"></i></button>
+			<button @click="toggleMenu" class="button-mini-squared font-size-1 bg-dark d-flex rounded-10 border-0 text-white hover-opacity-75 d-flex justify-content-center align-items-center"><i class="fas fa-user"></i></button>
+		</div>
+
+		<div class="d-flex justify-content-between   margin-top-20 w-100">
+    		<div id="menu-user" class="d-none position-absolute rounded-10  margin-top-20 padding-20 w-100 bg-dark d-block  font-size-1" style="right:0px;z-index:3000;">
+                <a class="text-decoration-none text-white hover-opacity-75">HISTÓRICO DE  PEDIDOS</a><br>
+                <hr class="w-100 bg-white">
+                <a class="text-decoration-none text-white hover-opacity-75">EDITAR PERFIL</a><br>
+                <hr class="w-100 bg-white">
+                <a class="text-decoration-none text-white hover-opacity-75">TROCAR SENHA</a><br>
+                <hr class="w-100 bg-white">
+                <a class="text-decoration-none text-white hover-opacity-75">AJUDA E SUPORTE</a><br>
+                <hr class="w-100 bg-white">
+                <a class="text-decoration-none text-white hover-opacity-75" href="#logout">SAIR</a><br>
+            </div>
+			<div v-for="(groupOfProduct, index) in groupsOfProducts" class="d-flex justify-content-between w-100">
+				<a :href="'#'+storePath+'/produtos/'+groupOfProduct.nome"  class="text-decoration-none">
+					<button class="margin-top-20 big-button-menu flex-wrap justify-content-center align-items-start rounded-10 border-0 bg-danger text-white hover-opacity-75">
+						<label class="w-100 font-size-button" v-if="groupOfProduct.nome=='promoções'">%</label>
+						<label class="w-100 font-size-button" v-else-if="groupOfProduct.nome=='entrega gratis'"><i class="fas fa-motorcycle"></i></label>
+						<label class="w-100 font-size-button" v-else-if="groupOfProduct.nome=='PORÇÕES'"><img class="w-50" src="./assets/img/food portion.svg"></label>
+						<label class="w-100 font-size-button" v-else-if="groupOfProduct.nome=='LANCHES'"><i class="fas fa-hamburger"></i></label>
+						<label class="w-100 font-size-button" v-else-if="groupOfProduct.nome=='Pizzas'"><i class="fas fa-pizza-slice"></i></label>
+						<label class="w-100 font-size-button" v-else-if="groupOfProduct.nome=='Bebidas'"><i class="fas fa-wine-bottle"></i></label>
+						<label class="w-100 font-size-button" v-else-if="groupOfProduct.nome=='ADICIONAIS'"><i class="fas fa-bacon"></i></label>
+						<label class="w-100 font-size-button" v-else><i class="fas fa-hamburger"></i></label>
+						<label class="w-100 font-size-1 h-100">{{groupOfProduct.nome}}</label>
+					</button>
+				</a>
+				
+			</div>
+		</div>
+	</div>
+</div>
