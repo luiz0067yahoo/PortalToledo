@@ -9,10 +9,11 @@
 	    public function save(){
 			echo json_encode(parent::save());		
 		}
-		public function del(){
-			echo json_encode(parent::del());		
+		public function del($id){
+			echo json_encode(parent::del($id));		
 		}
 		public function find(){
+			$this->model->setOrders([$this->model::id=>"DESC"]);
             echo json_encode(parent::find());		
 		}
 			public function findById($id){
@@ -31,8 +32,8 @@
         }
 		public function __construct(){
 		     $params=[];
-	        if(emptyParameter(albumFotosDAO::id))$params[albumFotosDAO::id]=getParameter(albumFotosDAO::id);
-	        if(emptyParameter(albumFotosDAO::id_menu))$params[albumFotosDAO::id_menu]=getParameter(albumFotosDAO::id_menu);
+	        if(notEmptyParameter(albumFotosDAO::id))$params[albumFotosDAO::id]=getParameter(albumFotosDAO::id);
+	        if(notEmptyParameter(albumFotosDAO::id_menu))$params[albumFotosDAO::id_menu]=getParameter(albumFotosDAO::id_menu);
 	        if(arrayKeyExistsParameter(albumFotosDAO::nome))$params[albumFotosDAO::nome]=trim(getParameter(albumFotosDAO::nome));
 	        if(issetParameter(albumFotosDAO::ocultar))$params[albumFotosDAO::ocultar]=getParameter(albumFotosDAO::ocultar);
 			parent::__construct(new albumFotosDAO($params));

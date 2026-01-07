@@ -275,11 +275,11 @@
             	list($largura, $altura) = getimagesize($origem);
             	if($altura>$largura){
             		$diferenca=$altura/$maxaltura;
-            		$maxlargura=$largura/$diferenca;
+            		$maxlargura=round($largura/$diferenca, 0, PHP_ROUND_HALF_UP);
             	}
             	else{
             		$diferenca=$largura/$maxlargura;
-            		$maxaltura=$altura/$diferenca;
+            		$maxaltura=round($altura/$diferenca, 0, PHP_ROUND_HALF_UP);
             	}
             	$image_p = ImageCreateTrueColor($maxlargura,$maxaltura)	or die("Cannot Initialize new GD image stream");	
             	$origem = imagecreatefromjpeg($origem);

@@ -16,13 +16,13 @@ if(isset($_POST["enviar"])&&$_POST["enviar"]=="Enviar"){
   $e_mail=getParameter("e-mail");
   $telefone=getParameter("telefone");
   $mensagem=getParameter("mensagem");
-  $titulo_adm="Entre em contato com ${nome}";
+  $titulo_adm="Entre em contato com {$nome}";
   $mensagem_adm="Oi Equipe Tooeste!<br>\n ";
-  $mensagem_adm.="     ${nome} entrou em contato, deixou seu email <a href='mailto:${e_mail}'>${e_mail}</a><br>\n" ;
-  $mensagem_adm.="    e telefone:  para ligar <a href='tel:${telefone}'>${telefone}</a> <br>";
-  $mensagem_adm.="    ou mandar whats <a href='https://wa.me/${telefone}'>${telefone}</a>.<br>\n" ;
-  $mensagem_adm.="    Veja o que ${nome}  escreveu:<br><br>\n" ;
-  $mensagem_adm.="    ${mensagem} <br>\n" ;
+  $mensagem_adm.="     {$nome} entrou em contato, deixou seu email <a href='mailto:{$e_mail}'>{$e_mail}</a><br>\n" ;
+  $mensagem_adm.="    e telefone:  para ligar <a href='tel:{$telefone}'>{$telefone}</a> <br>";
+  $mensagem_adm.="    ou mandar whats <a href='https://wa.me/{$telefone}'>{$telefone}</a>.<br>\n" ;
+  $mensagem_adm.="    Veja o que {$nome}  escreveu:<br><br>\n" ;
+  $mensagem_adm.="    {$mensagem} <br>\n" ;
 
   echo $GLOBALS["mensagem_contato"];
   sendEmailMessage( 

@@ -22,6 +22,31 @@
                 case "upload":
                     echo json_encode(upload($url));
                 break;
+                case "ckeditor_upload":
+                    $CKEditorFuncNum = getParameter('CKEditorFuncNum');
+                    $upload_result = upload($url); // Call existing upload function
+                    
+                    // The upload functions returns array('field_name' => array('file_name'))
+                    // We expect only one file for CKEditor drag&drop or simple upload
+                    $keys = array_keys($upload_result);
+                    if (count($keys) > 0) {
+                        $field_name = $keys[0];
+                        $files = $upload_result[$field_name];
+                        if (count($files) > 0) {
+                            $filename = $files[0];
+                            // Construct the web path
+                            $webPath = getWebPathExplorer() . ($url ? $url . '/' : '') . $filename;
+                            
+                            // Return the script for CKEditor
+                             $message = 'Image uploaded successfully';
+                             echo "<script type='text/javascript'>window.parent.CKEDITOR.tools.callFunction($CKEditorFuncNum, '$webPath', '$message');</script>";
+                        } else {
+                             echo "<script type='text/javascript'>window.parent.CKEDITOR.tools.callFunction($CKEditorFuncNum, '', 'Unable to upload file');</script>";
+                        }
+                    } else {
+                         echo "<script type='text/javascript'>window.parent.CKEDITOR.tools.callFunction($CKEditorFuncNum, '', 'No file uploaded');</script>";
+                    }
+                break;
                 case "new_folder":
     				$folder=getParameter("folder");
     				$path=$folder;

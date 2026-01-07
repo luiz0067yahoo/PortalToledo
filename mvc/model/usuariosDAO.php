@@ -1,142 +1,292 @@
-<?
-require_once($_SERVER['DOCUMENT_ROOT'] . '/mvc/model/model.php');
-require_once($_SERVER['DOCUMENT_ROOT'] . '/mvc/model/loginDAO.php');
-class usuarioDAO extends model
+<?php
+require_once ($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
+require_once ($_SERVER['DOCUMENT_ROOT'] . '/mvc/model/model.php');
+require_once ($_SERVER['DOCUMENT_ROOT'] . '/mvc/model/loginDAO.php');
+class usuariosDAO extends model
 {
+    const table = "usuarios";
 
-	const table = "usuarios";
-	const nome = "nome";
-	const login = "login";
-	const senha = "senha";
-	const e_mail = "e_mail";
-	const tentativas = "tentativas";
+    const id = "id";
+    const nome = "nome";
+    const login = "login";
+    const senha = "senha";
+    const e_mail = "e_mail";
+    const tentativas = "tentativas";
+    const code = "code";
+    const codeTime = "code_time";
 
+    const novaSenha = "nova_senha";
+    const repetirNovaSenha = "repetir_nova_senha";
+
+    /* =====================================================
+     * LOGIN + JWT
+     * ===================================================== */
 	public function login($login, $senha)
 	{
-		$login = hash('sha512', $login_);
+		$login = hash('sha512', $login); // Fixed variable name from $login_ to $login
 		$senha = hash('sha512', $senha);
 		$mensagem_erro = "";
 		$this->cleanParams();
+		$this->cleanFields();
+		$this->setFields([
+			self::id,self::nome,self::login,self::senha,self::e_mail, self::tentativas
+		]);
+		$this->setParam(self::login, $login);
 		try {
-			$this->setParam(self::login, $login);
 			$result = $this->find();
-			if ((isset($result)) && (isset($result["data"]))) {
-				if (count($result["data"]) == 0)
+			if ((isset($result)) && (isset($result["elements"]))) {
+				if (count($result["elements"]) == 0){
 					$mensagem_erro = "Usuário ou senha inválido";
+				}
 				else {
-					$record_id = resultDataFieldByTitle($result, "id", 0);
-					$record_tentativas = resultDataFieldByTitle($result, "tentativas", 0);
-					$record_login = resultDataFieldByTitle($result, "login", 0);
-					$record_senha = resultDataFieldByTitle($result, "senha", 0);
-					$record_nome = resultDataFieldByTitle($result, "nome", 0);
-					if (($record_senha == $senha) && ($record_login == $login)) {
-						if (!isset($_SESSION))
-							session_start();
-						$_SESSION["id"] = $record_id;
-						$_SESSION["login"] = $login_;
-						$_SESSION["usuario"] = $record_nome;
-						$_SESSION["time"] = time();
+					$user_id = $result["elements"][0]["id"];
+					$user_login = $result["elements"][0]["login"];
+					$user_senha = $result["elements"][0]["senha"];
+					$user_nome = $result["elements"][0]["nome"];
+					$user_tentativas = $result["elements"][0]["tentativas"];
+                    $session_id = bin2hex(random_bytes(16)); // ou uniqid('sess_', true)
+					if (($user_senha == $senha) && ($user_login == $login)) {
+						// JWT Generation
+						$payload = [
+                            'user_id'    => functionsJWT::encrypt($user_id, JWT_SECRET_KEY_2),
+                            'session_id' => functionsJWT::encrypt($session_id, JWT_SECRET_KEY_2),
+                            'iss'        => 'https://portaltoledo.com',
+                            'aud'        => 'https://portaltoledo.com',
+                            'iat'        => time(),
+                            'exp'        => time() + (JWT_TIME) // 1 Hour expiration
+						];
+						$token = functionsJWT::generate($payload);
+
 						$this->cleanParams();
 						$this->setParams([
-							self::id => $record_id
-							,
-							self::code => ''
-							,
-							self::code_time => null
-							,
+							self::code => '',
+							self::codeTime => null,
 							self::tentativas => 0
 						]);
-						$this->update();
-						$login = new loginDAO([]);
-						$login->setParams([
-							"id_usuarios" => $record_id,
+						$this->update($user_id);
+						
+						// Maintain Audit Log
+						$login_log = new loginDAO([]);
+						$login_log->setParams([
+							"id_usuarios" => $user_id,
 							"hora_inicio" => date("H:i:s"),
 							"hora_fim" => date("H:i:s"),
 							"data_inicio" => date("Y-m-d"),
 							"data_fim" => date("Y-m-d")
 						]);
-						$login->create();
+						$login_log->create();
 
-					} else if ($record_tentativas >= 5)
+						return ["token" => $token];
+
+					} else if ($user_tentativas >= 5)
 						$mensagem_erro = "Usuário bloqueado já fora usadas 5 tentativas tente recuperar a conta com link <b>Esqueceu a senha</b> acima";
 					else {
 						$this->cleanParams();
-						$this->setParams(["id" => $record_id, "tentativas" => ($record_tentativas + 1)]);
-						$this->update();
-						$mensagem_erro = "Usuário ou senha inválido você possue ainda mais " . (5 - $record_tentativas) . " tentativas";
+						$this->setParams([ "tentativas" => ($user_tentativas + 1)]);
+						$this->update($user_id);
+						$mensagem_erro = "Usuário ou senha inválido você possue ainda mais " . (5 - $user_tentativas) . " tentativas";
 					}
-					unset($record_id);
-					unset($record_tentativas);
-					unset($record_login);
-					unset($record_senha);
-					unset($record_nome);
 				}
-				unset($result);
 			}
-			unset($result);
 		} catch (Exception $error) {
+			$mensagem_erro = $error->getMessage();
 		}
-		unset($login);
-		unset($senha);
 		return ["mensagem_erro" => $mensagem_erro];
 	}
 
+    /* =====================================================
+     * TROCAR SENHA (JWT PROTEGIDO)
+     * ===================================================== */
+    public function trocarSenha($id, $senha_atual, $nova_senha, $repetir)
+    {
+        if ($nova_senha !== $repetir) {
+            return ["mensagem_erro" => "As senhas não conferem"];
+        }
+
+        $this->cleanParams();
+        $user = $this->findById($id);
+
+        if (!isset($user["elements"][0])) {
+            return ["mensagem_erro" => "Usuário não encontrado"];
+        }
+
+        $user = $user["elements"][0];
+
+        if ($user[self::senha] !== hash('sha512', $senha_atual)) {
+            return ["mensagem_erro" => "Senha atual incorreta"];
+        }
+
+        $this->cleanParams();
+        $this->setParams([
+            self::id => $id,
+            self::senha => hash('sha512', $nova_senha),
+            self::tentativas => 0
+        ]);
+
+        $this->update($id);
+
+        return ["mensagem_sucesso" => "Senha alterada com sucesso"];
+    }
+
+	public function refreshToken() {
+        $user_id = $this->getAuthUserId();
+        if (!$user_id) {
+            return ["mensagem_erro" => "Token inválido ou expirado."];
+        }
+
+        // Reemitir token com novos dados
+        $current_time = time();
+        $session_id = uniqid('sess_', true);
+
+        $jwt = $this->setDataToken([
+            'user_id'     => $this->encryptData($user_id, JWT_SECRET_KEY_2),
+            'session_id'  => $this->encryptData($session_id, JWT_SECRET_KEY_2),
+            'iss'         => 'https://seusite.com',
+            'aud'         => 'https://seusite.com',
+            'iat'         => $current_time,
+            'exp'         => $current_time + JWT_TIME,
+        ]);
+
+        return [
+            'token' => $jwt,
+            'expires_in' => JWT_TIME
+        ];
+    }
+    /* =====================================================
+     * CRUD OVERRIDES
+     * ===================================================== */
+    	
 	public function __construct($model_attributes)
 	{
 		parent::__construct($model_attributes, self::table, [self::nome, self::login, self::senha, self::e_mail, self::tentativas]);
 	}
-	public function trocar_senha($id, $senha_atual, $nova_senha, $repetir_nova_senha)
-	{
-		$mensagem_erro = "";
-		$mensagem_sucesso = "";
-		if ($nova_senha != $repetir_nova_senha) {
-			$mensagem_erro = "A nova senha e a repetição da nova senha não conferem";
-		} else {
-			$this->cleanParams();
-			$this->setParam(self::id, $id);
-			$user_data = $this->findById($id); // Assuming findById returns array like in login
-			if (isset($user_data["elements"][0])) {
-				$user = $user_data["elements"][0];
-				$current_password_hash = hash('sha512', $senha_atual);
-				if ($user["senha"] == $current_password_hash) {
-					$new_password_hash = hash('sha512', $nova_senha);
-					$this->cleanParams();
-					$this->setParams([
-						self::id => $id,
-						self::senha => $new_password_hash
-					]);
-					$result = $this->update();
-					if (isset($result["elements"]))
-						$mensagem_sucesso = "Senha alterada com sucesso!";
-					else
-						$mensagem_erro = "Erro ao atualizar a senha no banco de dados.";
-				} else {
-					$mensagem_erro = "Senha atual incorreta.";
-				}
-			} else {
-				$mensagem_erro = "Usuário não encontrado.";
-			}
-		}
+	
+	public function save()
+    {
+		$this->setParam(self::login, hash('sha512', $this->getParam(self::login)));
+		$this->setParam(self::senha, hash('sha512', $this->getParam(self::senha)));
+		$this->setParam(self::tentativas, 0);
+		$this->setParam(self::code, null);
+		$this->setParam(self::codeTime, null);
+		return parent::save();
+    }
 
-		return ["mensagem_erro" => $mensagem_erro, "mensagem_sucesso" => $mensagem_sucesso];
-	}
+    public function saveSQL()
+    {
+		$this->setParam(self::login, hash('sha512', $this->getParam(self::login)));
+		$this->setParam(self::senha, hash('sha512', $this->getParam(self::senha)));
+		$this->setParam(self::tentativas, 0);
+		$this->setParam(self::code, null);
+		$this->setParam(self::codeTime, null);
+		return parent::saveSQL();
+    }
+
+    public function resetPasswordByCode($code, $nova_senha, $repetir_nova_senha)
+    {
+        if ($nova_senha != $repetir_nova_senha) {
+            return ["mensagem_erro" => "As senhas não conferem."];
+        }
+        
+        // Find user by code
+        $this->cleanParams();
+        $this->setParam('code', $code);
+        $result = $this->find();
+        
+        if (isset($result['data']) && count($result['data']) > 0) {
+             $id = resultDataFieldByTitle($result, "id", 0);
+             $hash = hash('sha512', $nova_senha);
+             
+             // Update
+             $this->cleanParams();
+             $this->setParam(self::id, $id);
+             $this->setParam(self::senha, $hash);
+             $this->setParam(self::code, ''); // Clear code
+             
+             if ($this->update()) {
+                 return ["mensagem_sucesso" => "Senha alterada com sucesso!"];
+             } else {
+                 return ["mensagem_erro" => "Erro ao atualizar senha."];
+             }
+        } else {
+            return ["mensagem_erro" => "Código inválido ou expirado."];
+        }
+    }
+
+    public function create()
+    {
+		$this->setParam(self::date_insert, date("Y-m-d H:i:s"));
+        return parent::create();
+    }
+
+    public function createSQL()
+    {
+		$this->setParam(self::date_insert, date("Y-m-d H:i:s"));
+        return parent::createSQL($id);
+    }
+
+    public function update($id)
+    {
+        $this->setParam(self::date_update, date("Y-m-d H:i:s"));
+        return parent::update($id);
+    }
+
+    public function updateSQL($id)
+    {
+        $this->setParam(self::date_update, date("Y-m-d H:i:s"));
+        return parent::updateSQL($id);
+    }
+
+    public function findById($id)
+    {
+        return parent::findById($id);
+    }
+
+    public function findByIdSQL($id)
+    {
+        return parent::findByIdSQL($id);
+    }
+
+    public function find()
+    {
+        return parent::find();
+    }
+
+    public function findSQL()
+    {
+        return parent::findSQL();
+    }
+
+    public function delete($id)
+    {
+        return parent::delete($id);
+    }
+
+    public function deleteSQL($id)
+    {
+        return parent::deleteSQL($id);
+    }
+    
+    public function userActive()
+    {
+        $id = functionsJWT::getUserId();
+        $this->cleanFields();
+		$this->setFields([
+			self::id,self::nome,self::e_mail
+		]);
+        return self::findById($id)["elements"][0];
+    }
+
+    public function controlAcess() {
+        $jwt = explode(" ", $_SERVER['HTTP_AUTHORIZATION'])[1];
+        $validate = functionsJWT::validate($jwt);
+        if ($validate && $validate['exp'] > time()) {
+            return ($this->userActive()[self::id]==functionsJWT::getUserId());
+        }
+        http_response_code(401);
+        echo json_encode(["mensagem_erro" => "Acesso negado."]);
+        return false;
+    }
+
+   
 
 }
-
-if (isset($_REQUEST['acao']) && !empty($_REQUEST['acao'])) {
-	$GLOBALS["base_server_path_files"] = isset($GLOBALS["base_server_path_files"]) ? $GLOBALS["base_server_path_files"] : $_SERVER['DOCUMENT_ROOT'];
-
-	$acao = $_REQUEST['acao'];
-	$usuarioDAO = new usuarioDAO([]);
-
-	if ($acao == 'trocar_senha') {
-		$id = $_REQUEST['id'];
-		$senha_atual = $_REQUEST['senha_atual'];
-		$nova_senha = $_REQUEST['nova_senha'];
-		$repetir_nova_senha = $_REQUEST['repetir_nova_senha'];
-
-		$result = $usuarioDAO->trocar_senha($id, $senha_atual, $nova_senha, $repetir_nova_senha);
-		echo json_encode($result);
-	}
-}
-?>

@@ -2,6 +2,7 @@
 	if (!function_exists("BlockSQLInjection")) {
 		function BlockSQLInjection($str)
 		{
+			if($str==null)return $str;
 			return str_replace("'","''",$str);
 		}
 	}	
@@ -9,6 +10,7 @@
 	if (!function_exists("simbolTo_")){
 		    function simbolTo_($parameter)
     		{
+				if($parameter==null)return $parameter;
     		    $parameter=urldecode($parameter);
     		    $parameter= str_replace("?", "_", $parameter);
     		    $parameter= str_replace(",", "_", $parameter);
@@ -29,7 +31,7 @@
     		    $parameter= str_replace("Ç", "_", $parameter);
     		    return $parameter;
     		}
-		}
+	}
 	
 	if (!function_exists("DAOquery")) {
 	    function DAOquery($sql,$params,$select_execute,$limitParams){
@@ -92,38 +94,30 @@
 	    }
 	}
 	
-	
-	if (!function_exists("DAOqueryInsert")) {
-	    function DAOqueryInsert($table,$params){
+	if (!function_exists("DAOqueryInsertSQL")) {
+	    function DAOqueryInsertSQL($table,$params){
 	        try {
 	            $sql="INSERT INTO  ".$table;
     	        $fields_array=array_keys($params);
     	        $field_str=implode(",",$fields_array);
     	        $field_params_str=":".join(",:",$fields_array);
     	        $sql.=" (".$field_str.") VALUES (".$field_params_str.");";
-                DAOquery($sql,$params,false,null);
-                DAOquery("commit;",null,false,null);
-                return true;
+                return [
+					"sql"=>$sql,
+					"params"=>$params,
+				];
 	        }
 	        catch (PDOException $error) {
-	            return false;
+	            return $error;
 	        }
 	    }
 	}
 	
-	
-	if (!function_exists("DAOqueryUpdate")) {
-	    function DAOqueryUpdate($table,$params,$conditionsParams){
+	if (!function_exists("DAOqueryInsert")) {
+	    function DAOqueryInsert($table,$params){
 	        try {
-    	        $fields_values="";
-    	        $conditions="";
-    	        foreach ($params as $key => $value  )
-    	            $fields_values.=($fields_values=="")?" ".$key." = :".$key." "  : ", ".$key." = :".$key." ";
-    	        foreach ($conditionsParams as $key => $value  )
-    	            $conditions=($conditions=="")?"(".$key." = :".$key.")"  : " and (".$key." = :".$key.")";
-    	        $sql="UPDATE ".$table." SET ".$fields_values." WHERE ( ".$conditions." );";
-    	        $params=($params+$conditionsParams);
-    	        DAOquery($sql,$params,false,null);
+				$query= DAOqueryInsertSQL($table,$params);
+    	        DAOquery($query["sql"],$query["params"],false,null);
                 DAOquery("commit;","",false,null);
                 return true;
 	        }
@@ -133,19 +127,74 @@
 	    }
 	}
 	
-	if (!function_exists("DAOqueryDelete")) {
-	    function DAOqueryDelete($table,$conditionsParams){
-	        $conditions="";
-	        foreach ($conditionsParams as $key => $value  ){
-	            $conditions=($conditions=="")?"(".$key." = :".$key.")"  : " and (".$key." = :".$key.")";
+	if (!function_exists("DAOqueryUpdateSQL")) {
+	    function DAOqueryUpdateSQL($table,$params,$conditionsParams){
+	        try {
+    	        $fields_values="";
+    	        $conditions="";
+    	        foreach ($params as $key => $value  )
+    	            $fields_values.=($fields_values=="")?" ".$key." = :".$key." "  : ", ".$key." = :".$key." ";
+    	        foreach ($conditionsParams as $key => $value  )
+    	            $conditions=($conditions=="")?"(".$key." = :".$key.")"  : " and (".$key." = :".$key.")";
+    	        $sql="UPDATE ".$table." SET ".$fields_values." WHERE ( ".$conditions." );";
+    	        $params=($params+$conditionsParams);
+    	        return [
+					"sql"=>$sql,
+					"params"=>$params,
+				];
 	        }
-	        $sql="DELETE FROM ".$table." WHERE (".$conditions.")";
-	        return DAOquery($sql,$conditionsParams,false,null);
+	        catch (PDOException $error) {
+	            return $error;
+	        }
 	    }
 	}
 
+	if (!function_exists("DAOqueryUpdate")) {
+	    function DAOqueryUpdate($table,$params,$conditionsParams){
+	        try {
+				$query= DAOqueryUpdateSQL($table,$params,$conditionsParams);
+    	        DAOquery($query["sql"],$query["params"],false,null);
+                DAOquery("commit;","",false,null);
+                return true;
+	        }
+	        catch (PDOException $error) {
+	            return false;
+	        }
+	    }
+	}
 	
+	if (!function_exists("DAOqueryDeleteSQL")) {
+	    function DAOqueryDeleteSQL($table,$conditionsParams){
+			try {
+				$conditions="";
+				foreach ($conditionsParams as $key => $value  ){
+					$conditions=($conditions=="")?"(".$key." = :".$key.")"  : " and (".$key." = :".$key.")";
+				}
+				$sql="DELETE FROM ".$table." WHERE (".$conditions.")";
+				return [
+					"sql"=>$sql,
+					"conditionsParams"=>$conditionsParams,
+				];			}
+	        catch (PDOException $error) {
+	            return $error;
+	        }
+	    }
+	}
 	
+	if (!function_exists("DAOqueryDelete")) {
+	    function DAOqueryDelete($table,$conditionsParams){
+	        try {
+				$query= DAOqueryDeleteSQL($table,$conditionsParams);
+    	        DAOquery($query["sql"],$query["conditionsParams"],false,null);
+                DAOquery("commit;","",false,null);
+                return true;
+	        }
+	        catch (PDOException $error) {
+	            return false;
+	        }
+	    }
+	}
+		
 	if (!function_exists("createCondition")) {
 	    function createCondition($table,$key,$conditionalOperator,$paramName,$value){
 			
@@ -226,7 +275,8 @@
                             $paramName=explode("|", $paramName)[0];
                             $paramName=explode("&", $paramName)[0];
 	                    }
-                        $conditionalOperator=(array_keys($value)[0]!=0)?"=":array_keys($value)[0];    
+                        $conditionalOperator=(count(array_keys($value))==0)?"=":array_keys($value)[0];    
+						
                         $value_value=array_values($value)[$endPosition];
                         $condition=createCondition($table,$key,$conditionalOperator,$paramName,$value_value);
 	                }
@@ -291,13 +341,10 @@
 	        }
 	        return $conditionParams;
 	    }
-	}
+	}	
 	
-	
-	
-	
-	if (!function_exists("DAOquerySelect")) {
-	    function DAOquerySelect($table,$fields_params,$joins,$conditionsParams,$groups,$having,$orders,$limitParams){
+	if (!function_exists("DAOquerySelectSQL")) {
+	    function DAOquerySelectSQL($table,$fields_params,$joins,$conditionsParams,$groups,$having,$orders,$limitParams){
 	        $sql="";
 	        $fields_str="";
 			
@@ -311,6 +358,8 @@
 	        }
 	        $fields_str= implode(",",$fields_params);
 	        $sql="SELECT ".$fields_str." FROM ".$table." ".$joins;
+			//foreach ($conditionsParams as $key => $value)
+				//$conditionsParams[$key]=["like"=>"%".BlockSQLInjection($value)."%"];
 	        $conditions=createConditions($table,$conditionsParams,"");
 	        if ($conditions!="")
 	          $sql.=" WHERE (".$conditions.")";
@@ -358,14 +407,39 @@
 					$row_count=BlockSQLInjection($limitParams["row_count"]);
 					$row_count=intval($row_count);
 					$page=BlockSQLInjection($limitParams["page"]);
+					$page=intval($page);
+					$page=($page>=1)?$page:1;	
 					$offset=intval($row_count)*intval($page-1);
 					$limitParams["offset"]=$offset;
 					$sql.=" limit :offset , :row_count ";
     			}
-	        return DAOquery($sql,$params_,true,$limitParams,null);
+	        return [
+				"sql"=>$sql,
+				"params"=>$params_,
+				"limitParams"=>$limitParams
+			];
+	    }
+	}
+
+	if (!function_exists("DAOquerySelect")) {
+	    function DAOquerySelect($table,$fields_params,$joins,$conditionsParams,$groups,$having,$orders,$limitParams){
+	        $query=DAOquerySelectSQL($table,$fields_params,$joins,$conditionsParams,$groups,$having,$orders,$limitParams);
+	        return DAOquery($query["sql"],$query["params"],true,$query["limitParams"],null);
 	    }
 	}
 	
+	if (!function_exists("DAOquerySelectLastSQL")) {
+	    function DAOquerySelectLastSQL($table,$fields_params,$joins){
+	        foreach ($fields_params as $fields_key => $fields_value){
+	            if(!strpos($fields_value,"."))
+	                $fields_params[$fields_key]=$table.".".$fields_value;
+	        }
+	        $fields= implode(",",$fields_params);
+	        $sql="SELECT ".$fields." FROM ".$table." ".$joins." ORDER BY  ".$table.".id DESC limit 0,1";
+	        return DAOquerySQL($sql,"",true,null);
+	    }
+	}
+
 	if (!function_exists("DAOquerySelectLast")) {
 	    function DAOquerySelectLast($table,$fields_params,$joins){
 	        foreach ($fields_params as $fields_key => $fields_value){
@@ -374,12 +448,18 @@
 	        }
 	        $fields= implode(",",$fields_params);
 	        $sql="SELECT ".$fields." FROM ".$table." ".$joins." ORDER BY  ".$table.".id DESC limit 0,1";
-			
 	        return DAOquery($sql,"",true,null);
 	    }
 	}
-	
-	
+		
+	if (!function_exists("DAOquerySelectByIdSQL")) {
+	    function DAOquerySelectByIdSQL($table,$fields_params,$joins,$id){
+	        $conditionsParams=["id"=>$id];
+			$limitParams=["page"=>1,"row_count"=>1];
+	        return DAOquerySelectSQL($table,$fields_params,$joins,$conditionsParams,"","","",$limitParams);
+	    }
+	}
+
 	if (!function_exists("DAOquerySelectById")) {
 	    function DAOquerySelectById($table,$fields_params,$joins,$id){
 	        $conditionsParams=["id"=>$id];

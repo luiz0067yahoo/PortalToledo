@@ -9,9 +9,9 @@
 
 
 
-<div id="login" class="" style="background-repeat:no-repeat;background-image:url('/adm/assets/img/cms/LINK LINK.png');height:850px;width:100%;z-index:2;position:absolute;display:block">
+<div id="login" class="" style="background-repeat:no-repeat;background-image:url('/assets/img/cms/LINK LINK.png');height:850px;width:100%;z-index:2;position:absolute;display:block">
 	<div class="" style="clear:both;height:150px;width:100%;text-align:center;overflow:hidden;margin: 0 0 0 0 px; paddding:0 0 0 0;">
-		<img src="/adm/assets/img/cms/inprolink.png" style="height:150px;margin-left:auto;margin-right:auto;">
+		<img src="/assets/img/cms/inprolink.png" style="height:150px;margin-left:auto;margin-right:auto;">
 	</div> 
     <div class="row" style="width:100%;">
 

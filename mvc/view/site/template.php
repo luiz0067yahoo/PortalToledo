@@ -73,7 +73,7 @@ function top()
 
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta charset="utf-8">
-        <title><? echo $GLOBALS["og_title"] . " - " . $GLOBALS["og_description"]; ?> </title>
+        <title><?php echo $GLOBALS["og_title"] . " - " . $GLOBALS["og_description"]; ?> </title>
         <link rel="icon" type="image/png" sizes="192x192"
             href="<?php echo $GLOBALS["base_url"]; ?>/uploads/logo/320x240/<?php echo $GLOBALS["logo_site_mobile"]; ?>">
         <meta name="description" content="<?php echo $GLOBALS["og_description"]; ?>">
@@ -83,8 +83,7 @@ function top()
         <meta property="og:title" content="<?php echo $GLOBALS["og_title"] ?>" />
         <meta property="og:description" content="<?php echo $GLOBALS["og_description"]; ?>" />
 
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
         <link rel="stylesheet" href="<?php echo $GLOBALS["base_url"]; ?>/assets/css/simpleLightbox.css">
         <link rel="stylesheet" href="<?php echo $GLOBALS["base_url"]; ?>/assets/css/tooeste.css">
 
@@ -116,18 +115,18 @@ function top()
                     <nav class=" d-flex justify-content-between align-items-center" style="background-color:#F8F8FF">
                         <div class="w-100 desktop-show d-none"></div>
                         <div>
-                            <a href="<?php echo $GLOBALS["base_url"]; ?>" title="Tooeste Informação ao seu alcance"
+                            <a href="<?php echo $GLOBALS["base_url"]; ?>" title="Portal Toledo Informação ao seu alcance"
                                 class="desktop-show  d-none text-color-default pl-0 pr-2"
-                                style="text-decoration:none;width:300px"><img alt="Tooeste Informação ao seu alcance"
+                                style="text-decoration:none;width:300px"><img alt="Portal Toledo Informação ao seu alcance"
                                     style="width:auto	;height:90px;"
                                     src="<?php echo $GLOBALS["base_url"]; ?>/uploads/logo/1366x768/<?php echo $GLOBALS["logo_site"]; ?>"
-                                    title="Tooeste Informação ao seu alcance"></a>
-                            <a href="<?php echo $GLOBALS["base_url"]; ?>" title="Tooeste Informação ao seu alcance"
+                                    title="Portal Toledo Informação ao seu alcance"></a>
+                            <a href="<?php echo $GLOBALS["base_url"]; ?>" title="Portal Toledo Informação ao seu alcance"
                                 class="mobile-show text-color-default pl-0 pr-2"
                                 style="text-decoration:none;max-width:135px;width:135px"><img
-                                    alt="Tooeste Informação ao seu alcance" style="width:135px;height:90px;"
+                                    alt="Portal Toledo Informação ao seu alcance" style="width:135px;height:90px;"
                                     src="<?php echo $GLOBALS["base_url"]; ?>/uploads/logo_mobile/1366x768/<?php echo $GLOBALS["logo_site_mobile"]; ?>"
-                                    title="Tooeste Informação ao seu alcance"></a>
+                                    title="Portal Toledo Informação ao seu alcance"></a>
                         </div>
                         <div class="d-flex justify-content-end w-100">
                             <button id="abrirsearchMobile"
@@ -220,12 +219,9 @@ function foot()
             integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
             crossorigin="anonymous"></script>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-            crossorigin="anonymous"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-            crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
         <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
         <script src="<?php echo $GLOBALS["base_url"]; ?>/assets/js/simpleLightbox.js"></script>
         <script src="<?php echo $GLOBALS["base_url"]; ?>/assets/js/tooeste.js"></script>

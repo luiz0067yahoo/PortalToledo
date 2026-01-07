@@ -62,14 +62,13 @@ if (!function_exists("top")) {
 
 
 			<link rel="stylesheet" href="<?php echo $base_url_; ?>/assets/css/lightbox.css">
-			<link rel="stylesheet" type="text/css" href="<?php echo $base_url_; ?>/assets/libs/w2ui-master/dist/w2ui.min.css" />
 
 			<link type="text/css" rel="stylesheet" href="<?php echo $base_url_; ?>/assets/css/forms.css" />
 			<script src="<?php echo $base_url_; ?>/assets/libs/ckeditor/ckeditor.js"></script>
 
 		</head>
 
-		<body onload="w2desktop.initialize();" unload="return false;" style="margin: 0px;padding: 0px">
+		<body  style="margin: 0px;padding: 0px">
 
 
 
@@ -80,25 +79,13 @@ if (!function_exists("top")) {
 		{
 			$base_url_ = "https://$_SERVER[HTTP_HOST]";
 			?>
-
-
-
-
-			<script src="<?php echo $base_url_; ?>/assets/js/jquery-3.4.1.min.js"></script>
 			<script src="<?php echo $base_url_; ?>/assets/js/bootstrap5.1.1/popper.min.js"></script>
 			<script src="<?php echo $base_url_; ?>/assets/js/bootstrap5.1.1/bootstrap.bundle.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+            <script src="<?php echo $base_url_; ?>/assets/js/jwt-auth.js"></script>
 			<script src="<?php echo $base_url_; ?>/assets/js/sweetalert2@9.js"></script>
-			<script src="<?php echo $base_url_; ?>/assets/js/simpleLightbox.js"></script>
-			<script src="<?php echo $base_url_; ?>/assets/js/axios.min.js"></script>
-			<script src="<?php echo $base_url_; ?>/assets/js/vue@2.js"></script>
 			<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
 			<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/2.3.5/jspdf.plugin.autotable.js"></script>
-			<script src="<?php echo $base_url_; ?>/assets/js/forms3.js"></script>
-			<script type="text/javascript"
-				src="<?php echo $base_url_; ?>/assets/libs/w2ui-master/dist/w2ui-1.5.rc1.js"></script>
-			<!--
-		<script type="text/javascript" src="<?php echo $base_url_; ?>/assets/libs/w2ui-master/dist/w2ui.min.js"></script>
-		-->
 		</body>
 
 		</html>

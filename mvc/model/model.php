@@ -11,7 +11,7 @@ class model
     private $having;
     private $groups;
     private $orders;
-    private $limit;
+    public $limit;
 
     const id = "id";
     const date_insert = "date_insert";
@@ -67,7 +67,7 @@ class model
     }
 
     public function setParams($params)
-    {//strtoupper
+    {
         $this->params = $params;
     }
     public function getParams()
@@ -76,7 +76,7 @@ class model
     }
 
     public function setParam($attribute, $value)
-    {//strtoupper
+    {
         $this->params[$attribute] = ($value);
         return $this;
     }
@@ -105,7 +105,7 @@ class model
 
 
     public function setOrder($attribute, $value)
-    {//strtoupper
+    {
         $this->orders[$attribute] = ($value);
         return $this;
     }
@@ -170,7 +170,7 @@ class model
 
 
     public function setHaving($attribute, $value)
-    {//strtoupper
+    {
         $this->having[$attribute] = ($value);
         return $this;
     }
@@ -192,7 +192,7 @@ class model
     }
 
     public function setRowCount($value)
-    {//strtoupper
+    {
         $this->limit["row_count"] = $value;
         return $this;
     }
@@ -203,7 +203,7 @@ class model
     }
 
     public function setPage($value)
-    {//strtoupper
+    {
         $this->limit["page"] = $value;
         return $this;
     }
@@ -212,6 +212,7 @@ class model
         if (isset($this->limit["page"]))
             return $this->limit["row_count"];
     }
+    
     public function save()
     {
         try {
@@ -228,23 +229,76 @@ class model
         }
     }
 
-    public function create()
+    public function saveSQL()
     {
         try {
-            if (strrpos((DAOqueryInsert($this->table, $this->params)), "Error") != -1)
+            if ((!$this->issetParam(self::id)) || ($this->getParam(self::id) == "")) {
+                return DAOqueryInsertSQL($this->table, $this->params);
+            } else {
+                $conditions_params = array(self::id => $this->params[self::id]);
+                $params = array_diff_key($this->params, $conditions_params);
+                return DAOqueryUpdateSQL($this->table, $params, $conditions_params);    
+            }
+        } catch (Exception $Errorr) {
+            return $Errorr;
+        }
+    }
+
+    public function create()
+    {
+        $this->setParam(self::date_insert, date("Y-m-d H:i:s"));
+        try {
+            if (strrpos((DAOqueryInsert($this->table, $this->params)), "Error") != -1){
                 return DAOquerySelectLast($this->table, $this->fields, $this->joins);
+            }
         } catch (Exception $Errorr) {
         }
     }
 
-    public function update()
+    public function createSQL()
     {
+        $this->setParam(self::date_insert, date("Y-m-d H:i:s"));
         try {
-            $conditions_params = array(self::id => $this->params[self::id]);
-            $params = array_diff_key($this->params, $conditions_params);
-            if (strrpos(DAOqueryUpdate($this->table, $params, $conditions_params), "Error") != -1)
-                return DAOquerySelectById($this->table, $this->fields, $this->joins, $this->params[self::id]);
+            $insert=DAOqueryInsertSQL($this->table, $this->params);
+            $selectLast=DAOquerySelectLastSQL($this->table, $this->fields, $this->joins);
+            return [
+                "selectLast"=>$selectLast,
+                "insert"=>$insert
+            ];
         } catch (Exception $Errorr) {
+            return $Errorr;
+        }
+    }
+
+    public function update($id)
+    {
+        $this->setParam(self::date_update, date("Y-m-d H:i:s"));
+        try {
+            $conditions_params = array(self::id => $id);
+            $params = array_diff_key($this->params, $conditions_params);
+            $params[self::date_update] = date("Y-m-d H:i:s");
+            if (strrpos(DAOqueryUpdate($this->table, $params, $conditions_params), "Error") != -1)
+                return DAOquerySelectById($this->table, $this->fields, $this->joins, $id);
+        } catch (Exception $Errorr) {
+            
+        }
+    }
+
+    public function updateSQL($id)
+    {
+        $this->setParam(self::date_update, date("Y-m-d H:i:s"));
+        try {
+            $conditions_params = array(self::id => $id);
+            $params = array_diff_key($this->params, $conditions_params);
+            $params[self::date_update] = date("Y-m-d H:i:s");
+            $update=DAOqueryUpdateSQL($this->table, $params, $conditions_params);
+            $selectById= DAOquerySelectById($this->table, $this->fields, $this->joins, $id);
+        return [
+                "selectById"=>$selectById,
+                "update"=>$update
+            ];
+        } catch (Exception $Errorr) {
+            return $Errorr;
         }
     }
 
@@ -281,12 +335,37 @@ class model
         }
     }
 
+    public function findSQL()
+    {
+        try {
+            $list = array();
+            $title = array();
+            $recordsCount = 0;
+            $result_count = DAOquerySelectSQL($this->table, array("count(" . $this->table . "." . self::id . ") as countID"), $this->joins, $this->params, $this->groups, $this->having, $this->orders, null);
+            $result = DAOquerySelectSQL($this->table, $this->fields, $this->joins, $this->params, $this->groups, $this->having, $this->orders, $this->limit);
+            return [
+                "result"=>$result,
+                "recordsCount"=>$recordsCount
+            ];
+        } catch (Exception $Errorr) {
+            return $Errorr;
+        }
+    }
+
     public function findById($id)
     {
         try {
             $list = array();
             return DAOquerySelectById($this->table, $this->fields, $this->joins, $id);
         } catch (Exception $Errorr) {
+        }
+    }
+    public function findByIdSQL($id)
+    {
+        try {
+            return DAOquerySelectByIdSQL($this->table, $this->fields, $this->joins, $id);
+        } catch (Exception $Errorr) {
+            return $Errorr;
         }
     }
 
@@ -327,6 +406,30 @@ class model
         }
     }
 
+    public function allSQL()
+    {
+        try {
+            $recordsCount = 0;
+            if (isset($this->params) && !empty($this->params) && is_array($this->params) && count($this->params) > 0) {
+                $this->params = addConditionalOperatorInConditionParams($this->params, "%.%");
+                $this->params = ["and" => $this->params];
+            }
+            $result_count = DAOquerySelectSQL($this->table, array("count(" . $this->table . "." . self::id . ") as countID"), $this->joins, $this->params, $this->groups, $this->having, $this->orders, null);
+            if (isset($result_count["elements"])) {
+                $recordsCount = ($result_count["elements"][0]["countID"]);
+            }
+            $orders = [];
+            $result = DAOquerySelectSQL($this->table, $this->fields, $this->joins, $this->params, $this->groups, $this->having, $this->orders, $this->limit);
+            return [
+                "result"=>$result,
+                "recordsCount"=>$recordsCount
+            ];
+
+        } catch (Exception $Errorr) {
+            return $Errorr;
+        }
+    }
+
     public function destroy($id)
     {
         $list = array();
@@ -343,6 +446,22 @@ class model
         else
             $this->json_exit = (array("error"));
         return $this->json_exit;
+    }
+
+    public function destroySQL($id)
+    {
+        $list = array();
+        try {
+            $conditions_params = array(self::id => $id);
+            $delete=DAOqueryDeleteSQL($this->table, $conditions_params);
+            $selectById = DAOquerySelectByIdSQL($this->table, $this->fields, $this->joins, $id);
+            return [
+                "selectById"=>$selectById,
+                "delete"=>$delete
+            ];
+        } catch (Exception $Errorr) {
+            return $Errorr;
+        }
     }
 
 }

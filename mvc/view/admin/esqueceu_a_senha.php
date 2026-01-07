@@ -1,90 +1,80 @@
 <?php
-
-            	ini_set('display_errors', 0);
-                ini_set('display_startup_errors', 0);
-                error_reporting(0);
-
+// Removed direct DAO access and session deps. Now Vue App.
+require_once $_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php';
 ?>
-<?php require $_SERVER['DOCUMENT_ROOT'].'/library/functions.php'?>
-<?php include $_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php';	?>
-<?php
-	$mensagem_erro="";
-	$mensagem_successo="";
-	$acao=getParameter("acao");
-	$e_mail=hash('sha512', getParameter("e_mail"));
-	$nome="";
-	if($acao=="Recuperar a senha"){
-	    
-		try { 
-			$result=DAOquery("SELECT id,nome,e_mail FROM usuarios where (e_mail=:e_mail)",['e_mail'=>$e_mail],true,"");
-			if(count($result["data"])>0){
-    			$id=resultDataFieldByTitle($result,"id",0);
-    			$url=resultDataFieldByTitle($result,"nome",0);
-    			$url=resultDataFieldByTitle($result,"nome",0);
-                $code=hash('sha512', time());
-                $code_time=date('Y-m-d H:i:s', time());
-                DAOquery("update usuarios set code=:code,code_time=:code_time where(id=:id)",['id'=>$id,'code'=>$code,'code_time'=>$code_time],false,"");
-            	
-            	//sendEmail($host,$username,$password,$subject,$email,$name,$urlBody);
-            	
-    			sendEmailUrl(
-    			    "smtp.hostinger.com.br",
-    			    "naoresponda@tooeste.com.br",
-    			    "Tooeste Nao Responda",
-    			    "]!xY/>Lv3",
-    			    "Recuperar senha de $nome do site ".$_SERVER['HTTP_HOST'],
-    			    getParameter("e_mail"),
-    			    $nome,
-    			    domainURL()."/admin/email_recuperar_senha?acao=recuperar_senha&nome=$nome&e_mail=".getParameter("e_mail")
-    			);
-                $mensagem_successo= "<b>$nome</b> foi enviado uma mensagem para recuperar sua senha para o e-mail <b>".getParameter("e_mail")."</b>.".
-                "<br>".
-                "<br>Por favor verifique a caixa de entrada do e-mail <b>".getParameter("e_mail")."</b>."
-                ;
-			}
-			else $mensagem_erro="O e-mail ".getParameter("e_mail")." não foi encontrado em nosso sistema.";
-		}
-		catch (PDOException $error) {
-		     //$mensagem_erro=$error->getMessage( );
-		}
-	}
-	
-?>
-
-<div id="login" class="" style="background-repeat:no-repeat;height:850px;">
+<div id="recovery-app" style="background-repeat:no-repeat;height:850px;">
     <div class="row" style="height:135px;"></div>
     <div class="row" style="">
 
 		<div class="col-md-4" style="margin-left:auto;margin-right:auto;width:320px;">
-			<form class="form-login" method="POST">
+			<form class="form-login" @submit.prevent="doRecovery">
 				
 				<h2 class="form-login-heading" style="background-color:white">Esqueceu a senha</h2>
 				<div class="form-group">
 					<div class="input-group">
 						<label for="e_mail" class="sr-only">E-mail</label>
 						<span class="input-group-addon"><i class="glyphicon glyphicon-user color-blue"></i></span>
-						<input type="text" id="e_mail" name="e_mail" class="form-control" placeholder="E-mail" required autofocus>
+						<input type="text" id="e_mail" v-model="email" class="form-control" placeholder="E-mail" required autofocus>
 					</div>
 				</div>			
 				<div class="form-group">
 					<div class="input-group ">
-						<input name="acao" class="btn btn-lg btn-primary btn-block" type="submit" value="Recuperar a senha">
+						<input class="btn btn-lg btn-primary btn-block" type="submit" value="Recuperar a senha" :disabled="loading">
 					</div>
 				</div>
 				<div class="form-group">					
 					<div class="input-group ">
-						<a href="<?php echo domainURL();?>/admin/login" class="btn btn-link" style="background-color:white;">< voltar para login</a>
+						<a href="/admin/login" class="btn btn-link" style="background-color:white;">< voltar para login</a>
 					</div>
 				</div>	
-				<?php if (strlen($mensagem_erro)>0){?>
-			    <label class="alert alert-danger text-center"><?php echo $mensagem_erro?></label>
-				<?php } ?>			
-				<?php if (strlen($mensagem_successo)>0){?>
-				<label class="alert alert-success text-center"><?php echo $mensagem_successo ?></label>
-				<?php } ?>	
-			
+				
+                <div v-if="message" :class="['alert', 'text-center', messageClass]" role="alert" v-html="message"></div>
 			</form>
 		</div> 
 	</div> 
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+<script>
+    new Vue({
+        el: '#recovery-app',
+        data: {
+            email: '',
+            message: '',
+            messageClass: '',
+            loading: false
+        },
+        methods: {
+            async doRecovery() {
+                this.loading = true;
+                this.message = '';
+                
+                const formData = new FormData();
+                formData.append('e_mail', this.email);
+                
+                try {
+                    const response = await axios.post('/server/usuarios/recovery', formData);
+                    
+                    if (response.data && response.data.mensagem_successo) {
+                        this.message = response.data.mensagem_successo;
+                        this.messageClass = 'alert-success';
+                    } else if (response.data && response.data.mensagem_erro) {
+                        this.message = response.data.mensagem_erro;
+                         this.messageClass = 'alert-danger';
+                    } else {
+                         this.message = "Erro ao enviar email.";
+                         this.messageClass = 'alert-danger';
+                    }
+                } catch (error) {
+                    console.error(error);
+                    this.message = "Erro de comunicação.";
+                    this.messageClass = 'alert-danger';
+                } finally {
+                    this.loading = false;
+                }
+            }
+        }
+    });
+</script>
 <?php include $_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/foot.php'?>

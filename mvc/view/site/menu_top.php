@@ -2,9 +2,9 @@
 					<div class="container-fluid p-0 align-items-stretch" >
 							<ul id="navbarNavDropdown" class="show navbar-nav navbar-collapse collapse  h5 text-center  w-100 align-items-stretch "style="min-height:0px" >
 							<?php
-                                $menus=array();
-								$sql="select id,nome,convertUrl(nome) as nome_url from menus where (menus.ocultar=0) and (id_menu is :id_menu) and (nome!='home') and not(id is null)";
-								$result_menu=DAOquery($sql,["id_menu"=>null],true,"");
+								require_once($GLOBALS["base_server_path_files"].'/mvc/model/menusDAO.php');
+								$result_menu = (new menusDAO([]))->findMainMenus();
+								$menus=array();
 								if (isset($result_menu["elements"])){
 									$menus=$result_menu["elements"];
 									$GLOBALS["menus"]=$menus;
@@ -15,7 +15,7 @@
 								    $menu_id=$result_menu["elements"][$i-1]["id"];
 								    $nome_url=$result_menu["elements"][$i-1]["nome_url"];
 								    $prefixo="/ler";
-                                    if ((strtolower($menu_nome)=="fotos") or (strtolower($menu_nome)=="vídeos"))
+                                    if ((strtolower($menu_nome??"")=="fotos") or (strtolower($menu_nome??"")=="vídeos"))
                                         $prefixo="";
 								?>
 								<li class=" col nav-item  text-color-<?php echo $i; ?> "  style="padding-left: 0;padding-right: 0; min-width:<?php echo round(strlen($menu_nome)*11.3);?>px"  >
@@ -23,11 +23,10 @@
 									<a id="menu<?php echo $i; ?>"   class="p-0 nav-link dropdown-toggle text-capitalize h-100 d-flex justify-content-center align-items-center" href="#"  role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><?php echo $menu_nome;?></a>
 									<?php
         								$sub_menus=array();
-        								$sql="select id,nome,convertUrl(nome) as nome_url,tema,icone from menus where (id_menu = $menu_id)";
-        								$result_sub_menu=DAOquery($sql,"",true,"");
+										$result_sub_menu = (new menusDAO([]))->findSubMenus($menu_id);
         								if (isset($result_sub_menu["elements"])){
 									?>
-									<div style="<?php if($i==6) echo "left:-150px; min-width:340px;" ;?>" class="dropdown-menu bg-menu-<?php echo $i; ?> text-left text-uppercase " id="submenu<?php echo $i; ?>" aria-labelledby="menu<?php echo $i; ?>">
+									<div style="<?php if($i==6) echo "margin-left:-150px; min-width:340px;" ;?>" class="dropdown-menu bg-menu-<?php echo $i; ?> text-left text-uppercase " id="submenu<?php echo $i; ?>" aria-labelledby="menu<?php echo $i; ?>">
 									    <?php
 									        for($j=1;$j<=count($result_sub_menu["elements"]);$j++){ 
                                                 $icone=$result_sub_menu["elements"][$j-1]["icone"];

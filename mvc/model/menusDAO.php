@@ -1,4 +1,4 @@
-<?
+<?php
 require_once($GLOBALS["base_server_path_files"].'/mvc/model/model.php');
 class menusDAO extends model
 {
@@ -6,8 +6,16 @@ class menusDAO extends model
 	const id_menu="id_menu";
 	const nome="nome";
 	const ocultar="ocultar";
+	const icone="icone";
+	const tema="tema";
 	public function findMainMenus(){
-        $this->setFields([self::id,self::nome]);
+        $this->setFields([
+            self::id,
+            self::nome,
+            self::icone,
+            self::tema,
+            " convertUrl(" . self::table . "." . self::nome . ") as nome_url ",
+        ]);
 	    $this->cleanParams();
         $this->setParam(self::id_menu,null);
         $this->setParam(self::nome,["!="=>"home"]);
@@ -27,7 +35,13 @@ class menusDAO extends model
         return $this->find();		
     }
 	public function findSubMenus($id_menu){
-        $this->setFields([self::nome]);
+        $this->setFields([
+            self::id,
+            self::nome,
+            self::icone,
+            self::tema,
+            " convertUrl(" . self::table . "." . self::nome . ") as nome_url ",
+        ]);
         $this->cleanParams();
         $this->setParam(self::id_menu,$id_menu);
         $this->setParam(self::ocultar,false);
@@ -35,7 +49,7 @@ class menusDAO extends model
         return $this->find();		
 	}
     public function __construct($model_attributes){
-		parent::__construct($model_attributes,self::table,[self::id_menu,self::nome,self::ocultar]);
+		parent::__construct($model_attributes,self::table,[self::id_menu,self::nome,self::icone,self::tema,self::ocultar]);
     }
 }
 ?>

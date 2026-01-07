@@ -1,14 +1,14 @@
 <?php
 	header ('Content-type: text/html; charset=UTF-8');
-	if(isset($_SESSION))
-		session_start();
-	include($base_server_path_files.'/library/functions.php');
+	require_once ($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
+	require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/model/model.php');
 	class controller{
-		protected $model;
+		protected model $model;
 		private	$action;
 		private	$params;
 		protected $settingsImagesUpload;
-		public function __construct($model){
+		protected $findParams;
+		public function __construct(model $model){
 			$this->model=$model;
 			$this->action=BlockSQLInjection(getParameter("action"));
 			$this->findParams=getParameter("findParams");
@@ -57,23 +57,44 @@
 		public function create(){
 			return($this->model->create());
 		}
-		public function update(){
-			return($this->model->update());
+		public function createSQL(){
+			return($this->model->createSQL());
+		}
+		public function update($id){
+			return($this->model->update($id));
+		}
+		public function updateSQL($id){
+			return($this->model->updateSQL($id));
 		}
 		public function save(){
 			return($this->model->save());
 		}
+		public function saveSQL(){
+			return($this->model->saveSQL());
+		}
 		public function del($id){
 			return($this->model->destroy($id));
+		}
+		public function delSQL($id){
+			return($this->model->destroySQL($id));
 		}
 		public function find(){
 			return($this->model->find());
 		}
+		public function findSQL(){
+			return($this->model->findSQL());
+		}
     	public function all(){
 			return($this->model->all());
 		}
+    	public function allSQL(){
+			return($this->model->allSQL());
+		}
 		public function findById($id){
 			return($this->model->findById($id));
+		}
+		public function findByIdSQL($id){
+			return($this->model->findByIdSQL($id));
 		}
 	}
 ?>

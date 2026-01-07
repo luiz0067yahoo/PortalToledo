@@ -1,4 +1,4 @@
-<?
+<?php
 require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/model/model.php');
 require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/model/menusDAO.php');
 class noticiasDAO extends model

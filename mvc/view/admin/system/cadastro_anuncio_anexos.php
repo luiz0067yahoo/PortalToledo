@@ -8,12 +8,12 @@
     </div>
     <br>
     <div class="container">
-        <h1>CADASTRO DE ANEXO NOTÍCIAS</h1>
+        <h1>CADASTRO DE ANEXO ANÚNCIOS</h1>
         <br>
         <br>
         <div class="row">
             <div class="sm-12">
-                <form class="cadastro" id="cadastro_noticias_anexo" method="POST" enctype="multipart/form-data" @submit.prevent="saveElement">
+                <form class="cadastro" id="cadastro_anuncio_anexo" method="POST" enctype="multipart/form-data" onsubmit="return false;">
                     <div class="form-row align-items-center">
                         <div class="input-group mb-3">
                             <label class="sr-only" for="inlineFormInputGroupcodigo">Código</label>
@@ -29,15 +29,15 @@
                         </div>
                         
                         <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGroupNoticia">Notícia</label>
+                            <label class="sr-only" for="inlineFormInputGroupAnuncio">Anúncio</label>
                              <div class="input-group-prepend">
                                 <div class="input-group-text h-100">
                                     <i class="fa fa-link" aria-hidden="true"></i>
                                 </div>
                             </div>
-                            <select v-model="elementCurrent.id_noticia" class="form-control" id="inlineFormInputGroupNoticia" name="id_noticia">
-                                <option value="">Selecione uma Notícia</option>
-                                <option v-for="noticia in noticias" :value="noticia.id" :key="noticia.id">{{ noticia.titulo }}</option>
+                            <select v-model="elementCurrent.id_anuncio" class="form-control" id="inlineFormInputGroupAnuncio" name="id_anuncio">
+                                <option value="">Selecione um Anúncio</option>
+                                <option v-for="anuncio in anuncios" :value="anuncio.id" :key="anuncio.id">{{ anuncio.nome }}</option>
                             </select>
                         </div>
                         
@@ -58,7 +58,7 @@
                                     <i class="fa fa-bars" aria-hidden="true"></i>
                                 </div>
                             </div>
-                            <input type="text" class="form-control" v-model="elementCurrent.titulo" id="inlineFormInputGrouptitulo" placeholder="Título da Notícia" name="titulo">
+                            <input type="text" class="form-control" v-model="elementCurrent.titulo" id="inlineFormInputGrouptitulo" placeholder="Título do Anúncio" name="titulo">
                             <div class="input-group-append">								
                                 <button name="buscar" @click="findAllElements(1)" type="button" class="btn btn-primary buscarcampo buscartitulo d-none"><i class="fa fa-search" aria-hidden="true"></i></button>
                             </div>
@@ -71,12 +71,12 @@
                                     <i class="fa fa-bars" aria-hidden="true"></i>
                                 </div>
                             </div>
-                            <input type="text" class="form-control" v-model="elementCurrent.subtitulo" id="inlineFormInputGroupsubtitulo" placeholder="Subtítulo da notícia" name="subtitulo">
+                            <input type="text" class="form-control" v-model="elementCurrent.subtitulo" id="inlineFormInputGroupsubtitulo" placeholder="Subtítulo do Anúncio" name="subtitulo">
                         </div>
                         
                         <div class="input-group mb-3">
-                            <label class="sr-only" for="conteudo_noticias_anexo">Notícia</label>
-                            <textarea type="text" class="form-control" v-model="elementCurrent.conteudo_noticias_anexo" id="conteudo_noticias_anexo" placeholder="Conteúdo da Notícia" name="conteudo_noticias_anexo" rows="5"></textarea>
+                            <label class="sr-only" for="conteudo_anuncios_anexo">Anúncio</label>
+                            <textarea type="text" class="form-control" v-model="elementCurrent.conteudo_anuncios_anexo" id="conteudo_anuncios_anexo" placeholder="Conteúdo do Anúncio" name="conteudo_anuncios_anexo" rows="5"></textarea>
                         </div>
                         
                         <div class="input-group mb-3">
@@ -86,7 +86,7 @@
                                     <i class="fa fa-bars" aria-hidden="true"></i>
                                 </div>
                             </div>
-                            <input type="text" class="form-control" v-model="elementCurrent.fonte" id="inlineFormInputGroupfonte" placeholder="Fonte da Notícia" name="fonte">
+                            <input type="text" class="form-control" v-model="elementCurrent.fonte" id="inlineFormInputGroupfonte" placeholder="Fonte do Anúncio" name="fonte">
                         </div>
                         
                         <div class="input-group mb-3">
@@ -126,7 +126,7 @@
                     <thead>
                         <tr>
                             <th>Código</th>
-                            <th>Notícia</th>
+                            <th>Anúncio</th>
                             <th>Titulo</th>
                              <th>Foto</th>
                             <th class="text-center">Ocultar</th>
@@ -136,10 +136,10 @@
                     <tbody>
                         <tr v-for="element in elements" :key="element.id" @mouseover="hover=true" @mouseleave="hover=false">
                             <td>{{element.id}}</td>
-                            <td>{{ getNoticiaTitle(element.id_noticia) }}</td>
+                            <td>{{ getAnuncioName(element.id_anuncio) }}</td>
                             <td>{{element.titulo}}</td>
                              <td>
-                                <a v-if="element.foto_principal" :href="'/uploads/noticias_anexos/1024x768/'+element.foto_principal" target="_blank" class="btn btn-sm btn-info"><i class="fa fa-image"></i> Ver</a>
+                                <a v-if="element.foto_principal" :href="'/uploads/anuncios_anexos/1024x768/'+element.foto_principal" target="_blank" class="btn btn-sm btn-info"><i class="fa fa-image"></i> Ver</a>
                             </td>
                             <td class="text-center">
                                 <input type="checkbox" disabled :checked="element.ocultar == 1">
@@ -199,11 +199,11 @@
             successMsg: "",
             infoMsg: "",
             state: 'default',
-            serverUrl: '/server/noticiasAnexo',
-            serverNoticiaUrl: '/server/noticias',
+            serverUrl: '/server/anunciosAnexos',
+            serverAnuncioUrl: '/server/anuncios',
             elements: [],
-            noticias: [],
-            elementCurrent: { id: "", id_noticia: "", titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: "" },
+            anuncios: [],
+            elementCurrent: { id: "", id_anuncio: "", titulo: "", subtitulo: "", conteudo_anuncios_anexo: "", fonte: "", ocultar: false, foto_principal: "" },
             file: null,
             pagination: {
                 page: 1,
@@ -214,7 +214,7 @@
             loading: false
         },
         mounted: function() {
-             this.loadNoticias();
+             this.loadAnuncios();
              this.findAllElements(1); 
         },
         methods: {
@@ -229,11 +229,11 @@
             },
             prepareNew() {
                 this.clearMsg();
-                this.elementCurrent = { id: "", id_noticias: this.elementCurrent.id_noticias, titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
+                this.elementCurrent = { id: "", id_anuncio: "", titulo: "", subtitulo: "", conteudo_anuncios_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
                 this.file = null;
                 if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                    CKEDITOR.instances.conteudo_noticias_anexo.setData("");
+                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_anuncios_anexo) {
+                    CKEDITOR.instances.conteudo_anuncios_anexo.setData("");
                 }
                 this.state = 'new';
             },
@@ -242,22 +242,19 @@
                 this.successMsg= "";
                 this.infoMsg= "";
                 this.state= 'default';
-                this.serverUrl= '/server/noticiasAnexo';
-                this.serverNoticiaUrl= '/server/noticias';
+                this.serverUrl= '/server/anunciosAnexos';
+                this.serverAnuncioUrl= '/server/anuncios';
                 this.elements= [];
-                this.elementCurrent= { id: "",id_noticias: this.elementCurrent.id_noticias, titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
+                this.anuncios= [];
+                this.elementCurrent= { id: "", id_anuncio: "", titulo: "", subtitulo: "", conteudo_anuncios_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
                 this.file= null;
                 this.pagination= {
                     page: 1,
                     rowCount: 10,
                     total: 0,
                     limitpage: 0
-                },
+                };
                 this.loading= false;
-                if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                    CKEDITOR.instances.conteudo_noticias_anexo.setData("");
-                }
             },
             editItem(element) {
                 this.clearMsg();
@@ -266,28 +263,28 @@
                 this.file = null;
                 if(this.$refs.fileInput) this.$refs.fileInput.value = "";
                 
-                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                    CKEDITOR.instances.conteudo_noticias_anexo.setData(this.elementCurrent.conteudo_noticias_anexo || "");
+                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_anuncios_anexo) {
+                    CKEDITOR.instances.conteudo_anuncios_anexo.setData(this.elementCurrent.conteudo_anuncios_anexo || "");
                 }
                 
                 this.state = 'edit';
             },
-            getNoticiaTitle(id) {
+            getAnuncioName(id) {
                 if(!id) return "";
-                const noticia = this.noticias.find(n => n.id == id);
-                return noticia ? noticia.titulo : id;
+                const anuncio = this.anuncios.find(a => a.id == id);
+                return anuncio ? anuncio.nome : id;
             },
-            loadNoticias() {
+            loadAnuncios() {
                 let params = new URLSearchParams();
                 params.append('row_count', 1000); 
                 params.append('token', this.generateToken(256));
                 
-                axios.get(this.serverNoticiaUrl+"?"+params.toString()).then(response => {
+                axios.get(this.serverAnuncioUrl+"?"+params.toString()).then(response => {
                    if(response.data.elements) {
-                       this.noticias = response.data.elements;
+                       this.anuncios = response.data.elements;
                    }
                 }).catch(error => {
-                    console.error("Error loading noticias", error);
+                    console.error("Error loading anuncios", error);
                 });
             },
             handleFileUpload(event) {
@@ -301,8 +298,8 @@
                         if (this.elements && this.elements.length > 0) {
                              this.elementCurrent = this.elements[0];
                              this.state = 'findById';
-                              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                                CKEDITOR.instances.conteudo_noticias_anexo.setData(this.elementCurrent.conteudo_noticias_anexo || "");
+                              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_anuncios_anexo) {
+                                CKEDITOR.instances.conteudo_anuncios_anexo.setData(this.elementCurrent.conteudo_anuncios_anexo || "");
                             }
                         }
                     }).catch(error => {
@@ -339,8 +336,8 @@
                 });
             },
             saveElement() {
-                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                    this.elementCurrent.conteudo_noticias_anexo = CKEDITOR.instances.conteudo_noticias_anexo.getData();
+                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_anuncios_anexo) {
+                    this.elementCurrent.conteudo_anuncios_anexo = CKEDITOR.instances.conteudo_anuncios_anexo.getData();
                 }
 
                 this.loading = true;
@@ -356,7 +353,7 @@
                 if (this.file) {
                     formData.append('foto_principal', this.file);
                     formData.append('foto_principal_formats', '160x120,320x240,480x640,800x600,1024x768,1366x768');
-                    formData.append('foto_principal_path', 'noticias_anexos');
+                    formData.append('foto_principal_path', 'anuncios_anexos');
                 }
                 
                 if(this.elementCurrent?.id){
@@ -364,11 +361,11 @@
                         this.processResponse(response.data);
                         if (this.successMsg) {
                             this.state = 'default';
-                             this.elementCurrent = { id: "", id_noticia: "", titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
+                             this.elementCurrent = { id: "", id_anuncio: "", titulo: "", subtitulo: "", conteudo_anuncios_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
                              this.file = null;
                              if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                                CKEDITOR.instances.conteudo_noticias_anexo.setData("");
+                              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_anuncios_anexo) {
+                                CKEDITOR.instances.conteudo_anuncios_anexo.setData("");
                             }
                             this.findAllElements(this.pagination.page);
                         }
@@ -383,11 +380,11 @@
 						this.processResponse(response.data);
 						if (this.successMsg) {
 							this.state = 'default';
-							 this.elementCurrent = { id: "", id_noticia: "", titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
+							 this.elementCurrent = { id: "", id_anuncio: "", titulo: "", subtitulo: "", conteudo_anuncios_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
                              this.file = null;
                              if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                                CKEDITOR.instances.conteudo_noticias_anexo.setData("");
+                              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_anuncios_anexo) {
+                                CKEDITOR.instances.conteudo_anuncios_anexo.setData("");
                             }
 							this.findAllElements(this.pagination.page);
 						}
@@ -405,7 +402,7 @@
                     axios.delete(this.serverUrl+"/"+id).then(response => {
                         this.processResponse(response.data);
                         if (this.successMsg || !this.errorMsg) { 
-                             this.elementCurrent = {id:"", id_noticia: "", titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: ""};
+                             this.elementCurrent = {id:"", id_anuncio: "", titulo: "", subtitulo: "", conteudo_anuncios_anexo: "", fonte: "", ocultar: false, foto_principal: ""};
                              this.state = 'default';
                              this.findAllElements(this.pagination.page);
                         }

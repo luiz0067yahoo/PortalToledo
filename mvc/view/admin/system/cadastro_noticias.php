@@ -1,193 +1,488 @@
 <?php 
-	require ($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
-	verify();
+	require_once($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
 	include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 ?>
-<div id="loader">
-	<div class="loader"></div>
-	<div class="progress progress-item" >
-	  <div class="progress-bar" role="progressbar"  aria-valuemin="0" aria-valuemax="100" style="width:0%">
-	  </div>
-	</div>
-	<div class="progress progress-all" >
-	  <div class="progress-bar" role="progressbar"  aria-valuemin="0" aria-valuemax="100" style="width:0%">
-	  </div>
-	</div>
+<div id="app">
+    <div id="loader" v-if="loading">
+        <div class="loader"></div>
+    </div>
+    <br>
+    <div class="container">
+        <h1>CADASTRO NOTÍCIAS</h1>
+        <br>
+        <br>
+        <div class="row">
+            <div class="sm-12">
+                <form class="cadastro" id="cadastro_noticias" method="POST" enctype="multipart/form-data" onsubmit="return false;">
+                    <div class="form-row align-items-center">
+                        <div class="input-group mb-3">
+                            <label class="sr-only" for="inlineFormInputGroupcodigo">Código</label>
+                            <div class="input-group-prepend">
+                                <div class="input-group-text h-100">
+                                    <i class="fa fa-key" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <input type="number" disabled v-model="elementCurrent.id" class="form-control" id="inlineFormInputGroupcodigo" placeholder="Código" name="id">
+                            <div class="input-group-append">								
+                                <button name="buscar" @click="findById(elementCurrent.id)" type="button" class="btn btn-primary buscarcampo buscarcodigo d-none"><i class="fa fa-search" aria-hidden="true"></i></button>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group mb-3">
+                            <label class="sr-only" for="inlineFormInputGroupmenu">Menu</label>
+                            <div class="input-group-prepend">
+                                <div class="input-group-text h-100">
+                                    <i class="fa fa-link" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <select v-model="elementCurrent.id_menu" class="form-control" id="inlineFormInputGroupmenu" name="id_menu">
+                                <option value="">Selecione um Menu</option>
+                                <option v-for="menu in menus" :value="menu.id" :key="menu.id">{{ menu.nome }}</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group mb-3">
+                            <label class="sr-only" for="inlineFormInputGroupfotoPrincipal">Foto Principal</label>
+                            <div class="input-group-prepend">
+                                <div class="input-group-text h-100">
+                                    <i class="fa fa-camera" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <input class="form-control" id="inlineFormInputGroupfotoPrincipal" placeholder="Foto Principal" ref="fileInput" name="foto_principal" type="file" accept="image/jpeg" @change="handleFileUpload">
+                        </div>
+                        
+                         <div class="input-group mb-3">
+                            <label class="sr-only" for="inlineFormInputGrouptitulo">Título</label>
+                            <div class="input-group-prepend">
+                                <div class="input-group-text h-100">
+                                    <i class="fa fa-bars" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <input type="text" class="form-control" v-model="elementCurrent.titulo" id="inlineFormInputGrouptitulo" placeholder="Título da Notícia" name="titulo">
+                            <div class="input-group-append">								
+                                <button name="buscar" @click="findAllElements(1)" type="button" class="btn btn-primary buscarcampo buscartitulo d-none"><i class="fa fa-search" aria-hidden="true"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="input-group mb-3">
+                            <label class="sr-only" for="inlineFormInputGroupsubtitulo">Subtítulo</label>
+                            <div class="input-group-prepend">
+                                <div class="input-group-text h-100">
+                                    <i class="fa fa-bars" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <input type="text" class="form-control" v-model="elementCurrent.subtitulo" id="inlineFormInputGroupsubtitulo" placeholder="Subtítulo da notícia" name="subtitulo">
+                        </div>
+
+                         <div class="input-group mb-3">
+                            <label class="sr-only" for="conteudo_noticia">Notícia</label>
+                            <textarea type="text" class="form-control" v-model="elementCurrent.conteudo_noticia" id="conteudo_noticia" placeholder="Conteúdo da Notícia" name="conteudo_noticia" rows="5"></textarea>
+                        </div>
+                        
+                         <div class="input-group mb-3">
+                            <label class="sr-only" for="inlineFormInputGroupfonte">Fonte</label>
+                            <div class="input-group-prepend">
+                                <div class="input-group-text h-100">
+                                    <i class="fa fa-bars" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <input type="text" class="form-control" v-model="elementCurrent.fonte" id="inlineFormInputGroupfonte" placeholder="Fonte da Notícia" name="fonte">
+                        </div>
+
+                         <div class="input-group mb-3">
+                            <label class="sr-only" for="slide_show">Slide Show</label>
+                            <div class="input-group-prepend">
+                                <div class="input-group-text h-100">
+                                    <i class="fa fa-play-circle" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <span class="form-check-label form-control" for="slide_show">
+                                <input type="checkbox" id="slide_show" name="slide_show" v-model="elementCurrent.slide_show">
+                                Slide Show
+                            </span>
+                        </div>
+                        
+                        <div class="input-group mb-3">
+                            <label class="sr-only" for="ocultar">Ocultar</label>
+                            <div class="input-group-prepend">
+                                <div class="input-group-text h-100">
+                                    <i class="fa fa-eye-slash" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <span class="form-check-label form-control" for="ocultar">
+                                <input type="checkbox" id="ocultar" name="ocultar" v-model="elementCurrent.ocultar">
+                                Ocultar
+                            </span>
+                        </div>
+                        
+                        <button v-if="state=='default'" @click="prepareNew();" name="novo" type="button" class="btn btn-dark novo"><i class="fa fa-sticky-note" aria-hidden="true"></i> Novo</button>      
+                        
+                        <button v-if="state=='new'" @click="findAllElements(1); state='find'" name="buscar" type="button" class="btn btn-primary buscar"><i class="fa fa-search" aria-hidden="true"></i> Buscar</button>
+                    
+                        <button v-if="state=='default'||state=='new'||state=='edit'||state=='find'" @click="saveElement()" name="salvar" class="btn btn-success salvar"><i class="fa fa-floppy-o" aria-hidden="true"></i> Salvar</button>    
+                    
+                        <button v-if="state=='findById'" @click="state='edit';" name="editar" type="button" class="btn btn-primary editar"><i class="fa fa-edit" aria-hidden="true"></i> Editar</button>
+                        
+                        <button v-if="state=='edit'" @click="deleteElement(elementCurrent.id);" name="excluir" type="button" class="btn btn-danger excluir"><i class="fa fa-times" aria-hidden="true"></i> Excluir</button>
+                        
+                        <button v-if="state=='new'||state=='edit'||state=='find'" @click="cancelAction();" name="cancelar" type="button" class="btn btn-danger cancelar"><i class="fa fa-ban" aria-hidden="true"></i> Cancelar</button>
+                    </div>
+                </form>
+                <br>
+                
+                <div class="alert alert-success" v-if="successMsg" role="alert" v-html="successMsg"></div>
+                <div class="alert alert-danger" v-if="errorMsg" role="alert" v-html="errorMsg"></div>
+                <div class="alert alert-info" v-if="infoMsg" role="alert" v-html="infoMsg"></div>
+                
+                <br>
+                <table class="table table-striped resultado_busca" v-if="elements.length > 0">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Menu</th>
+                            <th>Titulo</th>
+                            <th>Foto</th>
+                            <th class="text-center">Slide</th>
+                            <th class="text-center">Ocultar</th>
+                            <th class="text-center" style="width: 120px;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="element in elements" :key="element.id" @mouseover="hover=true" @mouseleave="hover=false">
+                            <td>{{element.id}}</td>
+                            <td>{{ getMenuName(element.id_menu) }}</td>
+                            <td>{{element.titulo}}</td>
+                            <td>
+                                <a v-if="element.foto_principal" :href="'/uploads/noticias/1024x768/'+element.foto_principal" target="_blank" class="btn btn-sm btn-info"><i class="fa fa-image"></i> Ver</a>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" disabled :checked="element.slide_show == 1">
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" disabled :checked="element.ocultar == 1">
+                            </td>
+                            <td class="text-center">
+                                <button @click="editItem(element)" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></button>
+                                <button @click="deleteElement(element.id)" class="btn btn-danger btn-sm"><i class="fa fa-times"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                 <!-- Pagination -->
+                 <div class="paginator" v-if="elements.length > 0">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" :class="{disabled: pagination.page <= 1}">
+                                <a class="page-link h-100 justify-content-center align-items-center d-flex" href="#" @click.prevent="findAllElements(1)"><i class="fas fa-angle-double-left"></i></a>
+                            </li>
+                            <li class="page-item" :class="{disabled: pagination.page <= 1}">
+                                <a class="page-link h-100 justify-content-center align-items-center d-flex" href="#" @click.prevent="findAllElements(pagination.page - 1)"><i class="fas fa-angle-left"></i></a>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link">
+                                    Pag <input type="number" v-model.lazy="pagination.page" @change="findAllElements(pagination.page)" style="width: 50px; text-align: center;"> de {{ pagination.limitpage }}
+                                </span>
+                            </li>
+                            <li class="page-item" :class="{disabled: pagination.page >= pagination.limitpage}">
+                                <a class="page-link h-100 justify-content-center align-items-center d-flex" href="#" @click.prevent="findAllElements(pagination.page + 1)"><i class="fas fa-angle-right"></i></a>
+                            </li>
+                            <li class="page-item" :class="{disabled: pagination.page >= pagination.limitpage}">
+                                <a class="page-link h-100 justify-content-center align-items-center d-flex" href="#" @click.prevent="findAllElements(pagination.limitpage)"><i class="fas fa-angle-double-right"></i></a>
+                            </li>
+                            <li class="page-item inverted">
+                                <select class="form-control h-100" v-model="pagination.rowCount" @change="findAllElements(1)">
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </li>
+                        </ul>
+                    </nav>
+                 </div>
+
+            </div>
+        </div>
+    </div>
 </div>
-<br>
-<div class="container">
-	<h1>CADASTRO NOTÍCIAS</h1>
-	<br>
-	<br>
-	<div class="row">
-		<div class="sm-12">
-			<form class="cadastro" id="cadastro_noticias" action="/mvc/model/noticiasDAO.php" method="POST" enctype="multipart/form-data" >
-				<input type="hidden" name="acao" value="">
-				<div class="form-row align-items-center">
-						<div class="input-group mb-3">
-							<label class="sr-only" for="inlineFormInputGroupcodigo">codigo</label>
-							<div class="input-group-prepend">
-								<div class="input-group-text">
-									<i class="fa fa-key" aria-hidden="true"></i>
-								</div>
-							</div>
-							<input type="number" disabled data-bind="value:replyNumber" class="form-control" id="inlineFormInputGroupcodigo" placeholder="Código" name="id">
-							<div class="input-group-append">								
-								<button name="buscar" type="button" class="btn btn-primary buscarcampo buscarcodigo d-none"><i class="fa fa-search" aria-hidden="true"></i></button	>
-							</div>
-						</div>
-						
-				    	<div class="input-group mb-3">
-							<label class="sr-only" for="inlineFormInputGroupmenu">menu</label>
-							<div class="input-group-prepend">
-								<div class="input-group-text">
-									<i class="fa fa-link" aria-hidden="true"></i>
-								</div>
-							</div>
-							<select chave="id" valor="nome" modelo="menu" class="form-control selectAjax" id="inlineFormInputGroupmenu" placeholder="Menu" name="id_menu">
-								<option value=""></option>
-							<select>
-							<div class="input-group-append">								
-								<button name="buscar" type="button" class="btn btn-primary buscarcampo buscarmenu d-none"><i class="fa fa-search" aria-hidden="true"></i></button	>
-							</div>
-						</div>
-						
-							<div class="input-group mb-3">
-							<label class="sr-only" for="inlineFormInputGroupfotoPrincipal">foto</label>
-							<div class="input-group-prepend">
-								<div class="input-group-text">
-									<i class="fa fa-bars" aria-hidden="true"></i>
-								</div>
-							</div>
-							<input class="form-control" id="inlineFormInputGroupfotoPrincipal" placeholder="Foto Principal" name="foto_principal" type="file"  accept="image/jpeg" >
-							<input type="hidden" name="foto_principal_formats" value="160x120,320x240,480x640,800x600,1024x768,1366x768">
-							<input type="hidden" name="foto_principal_path" value="noticias">
-							<div class="input-group-append">								
-								<button name="buscar" type="button" class="btn btn-primary buscarcampo buscarfoto_principal d-none"><i class="fa fa-search" aria-hidden="true"></i></button>
-							</div>
-						</div>
-						
-						<div class="input-group mb-3">
-							<label class="sr-only" for="inlineFormInputGrouptitulo">Título</label>
-							<div class="input-group-prepend">
-								<div class="input-group-text">
-									<i class="fa fa-bars" aria-hidden="true"></i>
-								</div>
-							</div>
-							<input type="text" class="form-control" id="inlineFormInputGrouptitulo" placeholder="Título da Notícia" name="titulo">
-							<div class="input-group-append">								
-								<button name="buscar" type="button" class="btn btn-primary buscarcampo buscartitulo d-none"><i class="fa fa-search" aria-hidden="true"></i></button	>
-							</div>
-						</div>
-						<div class="input-group mb-3">
-							<label class="sr-only" for="inlineFormInputGroupsubtitulo">Subtítulo</label>
-							<div class="input-group-prepend">
-								<div class="input-group-text">
-									<i class="fa fa-bars" aria-hidden="true"></i>
-								</div>
-							</div>
-							<input type="text" class="form-control" id="inlineFormInputGroupsubtitulo" placeholder="Subtítulo da notícia" name="subtitulo">
-							<div class="input-group-append">								
-								<button name="buscar" type="button" class="btn btn-primary buscarcampo buscarsubtitulo d-none"><i class="fa fa-search" aria-hidden="true"></i></button	>
-							</div>
-						</div>
-						<div class="input-group mb-3">
-							<label class="sr-only" for="conteudo_noticia">Notícia</label>
-							<textarea type="text" class="form-control ckeditor"   id="conteudo_noticia" placeholder="Conteúdo da Notícia" name="conteudo_noticia"></textarea>
-							<div class="input-group-append">								
-								<button name="buscar" type="button" class="btn btn-primary buscarcampo buscarconteudo_noticia d-none"><i class="fa fa-search" aria-hidden="true"></i></button	>
-							</div>
-						</div>
-						<div class="input-group mb-3">
-							<label class="sr-only" for="inlineFormInputGroupfonte">Fonte</label>
-							<div class="input-group-prepend">
-								<div class="input-group-text">
-									<i class="fa fa-bars" aria-hidden="true"></i>
-								</div>
-							</div>
-							<input type="text" class="form-control" id="inlineFormInputGroupfonte" placeholder="Fonte da Notícia" name="fonte">
-							<div class="input-group-append">								
-								<button name="buscar" type="button" class="btn btn-primary buscarcampo buscarfonte d-none"><i class="fa fa-search" aria-hidden="true"></i></button	>
-							</div>
-						</div>
-						
-						
-						
-						<div class="input-group mb-3">
-							<label class="sr-only" for="inlineFormInputGroupslide_show">Slide Show</label>
-							<div class="input-group-prepend">
-								<div class="input-group-text">
-									<i class="fa fa-bars" aria-hidden="true"></i>
-								</div>
-							</div>
-								<spam class="form-check-label form-control" for="ocultar">
-    								<input id="inlineFormInputGroupslide_show"  class=" " type="checkbox" id="slide_show" name="slide_show" value="true" >
-									Slide Show
-								</spam>
-							<div class="input-group-append">								
-								<button name="buscar" type="button" class="btn btn-primary buscarcampo buscarslide_show d-none"><i class="fa fa-search" aria-hidden="true"></i></button	>
-							</div>
-						</div>
-						
-						
-						
-						
-						<div class="input-group mb-3">
-							<label class="sr-only" for="inlineFormInputGroupOcultar">ocultar</label>
-							<div class="input-group-prepend">
-								<div class="input-group-text">
-									<i class="fa fa-bars" aria-hidden="true"></i>
-								</div>
-							</div>
-								<spam class="form-check-label form-control" for="ocultar">
-    								<input id="inlineFormInputGroupOcultar" class=" " type="checkbox" id="ocultar" name="ocultar" value="true" >
-									Ocultar
-								</spam>
-							<div class="input-group-append">								
-								<button name="buscar" type="button" class="btn btn-primary buscarcampo buscarocultar d-none"><i class="fa fa-search" aria-hidden="true"></i></button	>
-							</div>
-						</div>
-						
-							
-								<button name="novo" type="button" class="btn btn-dark novo"><i class="fa fa-sticky-note" aria-hidden="true"></i> Novo</button>      
-								
-								<button name="buscar" type="button" class="btn btn-primary buscar d-none"><i class="fa fa-search" aria-hidden="true"></i> Buscar</button>
-							
-								<button name="salvar" type="button" class="btn btn-success salvar "><i class="fa fa-floppy-o" aria-hidden="true"></i> Salvar</button>    
-							
-								<button name="editar" type="button" class="btn btn-primary editar d-none"><i class="fa fa-edit " aria-hidden="true"></i> Editar</button>
-								
-								<button name="excluir" type="button" class="btn btn-danger excluir d-none"><i class="fa fa-times " aria-hidden="true"></i> Excluir</button>
-								
-								<button name="cancelar" type="button" class="btn btn-danger cancelar d-none"><i class="fa fa-ban " aria-hidden="true"></i> Cancelar</button>
-								
-						
-				</div>
-			</form>
-			<br>
-			<div class="alert alert-success mensagem_sucesso d-none" role="alert"></div>
-			<div class="alert alert-danger mensagem_erro d-none" role="alert"></div>
-			<div class="alert alert-info mensagem_informacao d-none" role="alert"></div>
-			<br>
-				<table class="table table-striped resultado_busca">
-				<thead>
-					<tr>
-						<th>Código</th>
-						<th>Código noticia</th>
-						<th>noticia</th>
-						<th>Titulo</th>
-						<th>SubTitulo</th>
-						<th>Notícia</th>
-						<th>Fonte</th>
-						<th>Slide Show</th>
-						<th>Ocultar</th>
-						<th>Ação</th>
-					</tr>
-				</thead>
-				<tbody>
-				</tbody>
-			</table>
-		</div>
-	</div>
-</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>		
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            errorMsg: "",
+            successMsg: "",
+            infoMsg: "",
+            state: 'default',
+            serverUrl: '/server/noticias',
+            serverMenuUrl: '/server/menus',
+            elements: [],
+            menus: [],
+            elementCurrent: { id: "", id_menu: "", titulo: "", subtitulo: "", conteudo_noticia: "", fonte: "", slide_show: false, ocultar: false, foto_principal: "" },
+            file: null,
+            pagination: {
+                page: 1,
+                rowCount: 10,
+                total: 0,
+                limitpage: 0
+            },
+            loading: false
+        },
+        mounted: function() {
+             this.loadMenus();
+             this.findAllElements(1); 
+        },
+        methods: {
+            generateToken(length) {
+                var a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
+                var b = [];
+                for (var i = 0; i < length; i++) {
+                    var j = (Math.random() * (a.length - 1)).toFixed(0);
+                    b[i] = a[j];
+                }
+                return b.join("");
+            },
+            prepareNew() {
+                this.clearMsg();
+                this.elementCurrent = { id: "", id_menu: "", titulo: "", subtitulo: "", conteudo_noticia: "", fonte: "", slide_show: false, ocultar: false, foto_principal: "" };
+                this.file = null;
+                if(this.$refs.fileInput) this.$refs.fileInput.value = "";
+                // Reset CKEditor if present
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticia) {
+                    CKEDITOR.instances.conteudo_noticia.setData("");
+                }
+                this.state = 'new';
+            },
+            cancelAction() {
+                this.errorMsg= "";
+                this.successMsg= "";
+                this.infoMsg= "";
+                this.state= 'default';
+                this.serverUrl= '/server/noticias';
+                this.serverMenuUrl= '/server/menus';
+                this.elements= [];
+                this.elementCurrent= { id: "", id_menu: "", titulo: "", subtitulo: "", conteudo_noticia: "", fonte: "", slide_show: false, ocultar: false, foto_principal: "" };
+                this.file= null;
+                this.pagination= {
+                    page: 1,
+                    rowCount: 10,
+                    total: 0,
+                    limitpage: 0
+                };
+                this.loading= false;
+                if(this.$refs.fileInput) this.$refs.fileInput.value = "";
+                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticia) {
+                    CKEDITOR.instances.conteudo_noticia.setData("");
+                }
+            },
+            editItem(element) {
+                this.clearMsg();
+                this.elementCurrent = { ...element };
+                this.elementCurrent.ocultar = (this.elementCurrent.ocultar == 1 || this.elementCurrent.ocultar == true);
+                this.elementCurrent.slide_show = (this.elementCurrent.slide_show == 1 || this.elementCurrent.slide_show == true);
+                this.file = null;
+                if(this.$refs.fileInput) this.$refs.fileInput.value = "";
+                
+                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticia) {
+                    CKEDITOR.instances.conteudo_noticia.setData(this.elementCurrent.conteudo_noticia || "");
+                }
+                
+                this.state = 'edit';
+            },
+            getMenuName(id) {
+                if(!id) return "";
+                const menu = this.menus.find(m => m.id == id);
+                return menu ? menu.nome : id;
+            },
+            loadMenus() {
+                let params = new URLSearchParams();
+                params.append('row_count', 1000); 
+                params.append('token', this.generateToken(256));
+                
+                axios.get(this.serverMenuUrl+"?"+params.toString()).then(response => {
+                   if(response.data.elements) {
+                       this.menus = response.data.elements;
+                   }
+                }).catch(error => {
+                    console.error("Error loading menus", error);
+                });
+            },
+            handleFileUpload(event) {
+                this.file = event.target.files[0];
+            },
+            findById(id) {
+                if ((id!=null) && (id!=undefined) && (id.length!=0)) {
+                    this.loading = true;
+                    axios.get(this.serverUrl+"/"+id).then(response => {
+                        this.processResponse(response.data);
+                        if (this.elements && this.elements.length > 0) {
+                             this.elementCurrent = this.elements[0];
+                             this.state = 'findById';
+                             if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticia) {
+                                CKEDITOR.instances.conteudo_noticia.setData(this.elementCurrent.conteudo_noticia || "");
+                            }
+                        }
+                    }).catch(error => {
+                        this.errorMsg = "Erro: " + error;
+                    }).finally(() => {
+                        this.loading = false;
+                    });
+                }
+            },
+            findAllElements(page) {
+                if (page) this.pagination.page = page;
+                if (this.pagination.page < 1) this.pagination.page = 1;
+                if (this.pagination.limitpage > 0 && this.pagination.page > this.pagination.limitpage) this.pagination.page = this.pagination.limitpage;
+
+                this.loading = true;
+                let serverpage = this.pagination.page;
+                if (serverpage < 1) serverpage = 1;
+
+                let params = new URLSearchParams();
+                params.append('page', serverpage);
+                params.append('row_count', this.pagination.rowCount);
+                params.append('token', this.generateToken(256));
+                
+                if (this.elementCurrent.titulo) params.append('titulo', this.elementCurrent.titulo);
+                if (this.elementCurrent.id) params.append('id', this.elementCurrent.id);
+
+                axios.get(this.serverUrl+"?"+params.toString()).then(response => {
+                    this.processResponse(response.data);
+                }).catch(error => {
+                    console.log(error);
+                    this.errorMsg = "Erro na conexão: " + error;
+                }).finally(() => {
+                    this.loading = false;
+                });
+            },
+            saveElement() {
+                // Sync CKEditor data to elementCurrent before saving
+                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticia) {
+                    this.elementCurrent.conteudo_noticia = CKEDITOR.instances.conteudo_noticia.getData();
+                }
+
+                this.loading = true;
+                var formData = new FormData();
+                for (var i in this.elementCurrent) {
+                    if (i === 'ocultar' || i === 'slide_show') {
+                         formData.append(i, this.elementCurrent[i] ? 1 : 0);
+                    } else if (this.elementCurrent[i] !== null && this.elementCurrent[i] !== "null") {
+                         formData.append(i, this.elementCurrent[i]);
+                    }
+                }
+                
+                if (this.file) {
+                    formData.append('foto_principal', this.file);
+                    formData.append('foto_principal_formats', '160x120,320x240,480x640,800x600,1024x768,1366x768');
+                    formData.append('foto_principal_path', 'noticias');
+                }
+                
+                if(this.elementCurrent?.id){
+                    axios.put(this.serverUrl+"/"+this.elementCurrent.id, formData).then(response => {
+                        this.processResponse(response.data);
+                        if (this.successMsg) {
+                            this.state = 'default';
+                             this.elementCurrent = { id: "", id_menu: "", titulo: "", subtitulo: "", conteudo_noticia: "", fonte: "", slide_show: false, ocultar: false, foto_principal: "" };
+                             this.file = null;
+                             if(this.$refs.fileInput) this.$refs.fileInput.value = "";
+                             if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticia) {
+                                CKEDITOR.instances.conteudo_noticia.setData("");
+                            }
+                            this.findAllElements(this.pagination.page);
+                        }
+                    }).catch((error) => {
+                        console.log(error);
+                        this.errorMsg = "Erro desconhecido: " + error;
+                    }).finally(() => {
+                        this.loading = false;
+                    });
+                }else{
+					axios.post(this.serverUrl, formData).then(response => {
+						this.processResponse(response.data);
+						if (this.successMsg) {
+							this.state = 'default';
+							 this.elementCurrent = { id: "", id_menu: "", titulo: "", subtitulo: "", conteudo_noticia: "", fonte: "", slide_show: false, ocultar: false, foto_principal: "" };
+                             this.file = null;
+                             if(this.$refs.fileInput) this.$refs.fileInput.value = "";
+                             if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticia) {
+                                CKEDITOR.instances.conteudo_noticia.setData("");
+                            }
+							this.findAllElements(this.pagination.page);
+						}
+					}).catch((error) => {
+						console.log(error);
+						this.errorMsg = "Erro desconhecido: " + error;
+					}).finally(() => {
+						this.loading = false;
+					});
+				}
+            },
+            deleteElement(id) {
+                if(confirm("Tem certeza que deseja excluir?")) {
+                    this.loading = true;
+                    axios.delete(this.serverUrl+"/"+id).then(response => {
+                        this.processResponse(response.data);
+                        if (this.successMsg || !this.errorMsg) { 
+                             this.elementCurrent = {id:"", id_menu: "", titulo: "", subtitulo: "", conteudo_noticia: "", fonte: "", slide_show: false, ocultar: false, foto_principal: ""};
+                             this.state = 'default';
+                             this.findAllElements(this.pagination.page);
+                        }
+                    }).catch(error => {
+                        this.errorMsg = "Erro ao excluir: " + error;
+                    }).finally(() => {
+                        this.loading = false;
+                    });
+                }
+            },
+            processResponse(data) {
+                this.clearMsg();
+                if (typeof data === 'string') {
+                    try {
+                        data = JSON.parse(data);
+                    } catch (e) {
+                         return;
+                    }
+                }
+                
+                if (data.mensagem_erro) {
+                    this.errorMsg = data.mensagem_erro;
+                } else if (data.message && data.error) {
+                     this.errorMsg = data.message;
+                }
+                
+                if (data.mensagem_sucesso) {
+                    this.successMsg = data.mensagem_sucesso;
+                } else if (data.message && !data.error) {
+                    this.successMsg = data.message;
+                } else if (data.mensagem_informacao) {
+                    this.infoMsg = data.mensagem_informacao;
+                }
+
+                if (data.elements) {
+                    this.elements = data.elements;
+                }
+
+                if (data.recordsCount !== undefined) {
+                    this.pagination.total = parseInt(data.recordsCount);
+                } else if (data.numero_registros !== undefined) {
+                    this.pagination.total = parseInt(data.numero_registros);
+                }
+
+                if (this.pagination.total > 0) {
+                     this.pagination.limitpage = Math.ceil(this.pagination.total / this.pagination.rowCount);
+                     if (this.pagination.limitpage < 1) this.pagination.limitpage = 1;
+                } else {
+                    this.pagination.limitpage = 1; 
+                }
+            },
+            clearMsg() {
+                this.errorMsg = "";
+                this.successMsg = "";
+                this.infoMsg = "";
+            }
+        }
+    });
+</script>
 <?php include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/foot.php');?>

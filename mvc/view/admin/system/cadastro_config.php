@@ -1,6 +1,6 @@
 <?php 
-	require ($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
-	include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
+	require_once($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
+	require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 ?>
 <div id="app">
     <div id="loader" v-if="loading">
@@ -8,12 +8,12 @@
     </div>
     <br>
     <div class="container">
-        <h1>CADASTRO DE ANEXO NOTÍCIAS</h1>
+        <h1>CADASTRO DE CONFIGURAÇÕES</h1>
         <br>
         <br>
         <div class="row">
             <div class="sm-12">
-                <form class="cadastro" id="cadastro_noticias_anexo" method="POST" enctype="multipart/form-data" @submit.prevent="saveElement">
+                <form class="cadastro" id="cadastro_config" method="POST" enctype="multipart/form-data" onsubmit="return false;">
                     <div class="form-row align-items-center">
                         <div class="input-group mb-3">
                             <label class="sr-only" for="inlineFormInputGroupcodigo">Código</label>
@@ -29,64 +29,33 @@
                         </div>
                         
                         <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGroupNoticia">Notícia</label>
-                             <div class="input-group-prepend">
-                                <div class="input-group-text h-100">
-                                    <i class="fa fa-link" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                            <select v-model="elementCurrent.id_noticia" class="form-control" id="inlineFormInputGroupNoticia" name="id_noticia">
-                                <option value="">Selecione uma Notícia</option>
-                                <option v-for="noticia in noticias" :value="noticia.id" :key="noticia.id">{{ noticia.titulo }}</option>
-                            </select>
-                        </div>
-                        
-                        <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGroupfotoPrincipal">Foto Principal</label>
+                            <label class="sr-only" for="inlineFormInputGroupLogo">Logo</label>
                             <div class="input-group-prepend">
                                 <div class="input-group-text h-100">
                                     <i class="fa fa-camera" aria-hidden="true"></i>
                                 </div>
                             </div>
-                            <input class="form-control" id="inlineFormInputGroupfotoPrincipal" placeholder="Foto Principal" ref="fileInput" name="foto_principal" type="file" accept="image/jpeg" @change="handleFileUpload">
+                            <input class="form-control" id="inlineFormInputGroupLogo" placeholder="Foto do Logo" ref="fileInputLogo" name="logo" type="file" accept="image/jpeg" @change="handleFileUploadLogo">
+                        </div>
+
+                         <div class="input-group mb-3">
+                            <label class="sr-only" for="inlineFormInputGrouplogo_mobile">Logo Mobile</label>
+                            <div class="input-group-prepend">
+                                <div class="input-group-text h-100">
+                                    <i class="fa fa-camera" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <input class="form-control" id="inlineFormInputGrouplogo_mobile" placeholder="Foto do Logo Mobile" ref="fileInputLogoMobile" name="logo_mobile" type="file" accept="image/jpeg" @change="handleFileUploadLogoMobile">
                         </div>
                         
                         <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGrouptitulo">Título</label>
-                             <div class="input-group-prepend">
+                            <label class="sr-only" for="inlineFormInputGroupmensagem_contato">Mensagem Contato</label>
+                            <div class="input-group-prepend">
                                 <div class="input-group-text h-100">
                                     <i class="fa fa-bars" aria-hidden="true"></i>
                                 </div>
                             </div>
-                            <input type="text" class="form-control" v-model="elementCurrent.titulo" id="inlineFormInputGrouptitulo" placeholder="Título da Notícia" name="titulo">
-                            <div class="input-group-append">								
-                                <button name="buscar" @click="findAllElements(1)" type="button" class="btn btn-primary buscarcampo buscartitulo d-none"><i class="fa fa-search" aria-hidden="true"></i></button>
-                            </div>
-                        </div>
-                        
-                        <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGroupsubtitulo">Subtítulo</label>
-                             <div class="input-group-prepend">
-                                <div class="input-group-text h-100">
-                                    <i class="fa fa-bars" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                            <input type="text" class="form-control" v-model="elementCurrent.subtitulo" id="inlineFormInputGroupsubtitulo" placeholder="Subtítulo da notícia" name="subtitulo">
-                        </div>
-                        
-                        <div class="input-group mb-3">
-                            <label class="sr-only" for="conteudo_noticias_anexo">Notícia</label>
-                            <textarea type="text" class="form-control" v-model="elementCurrent.conteudo_noticias_anexo" id="conteudo_noticias_anexo" placeholder="Conteúdo da Notícia" name="conteudo_noticias_anexo" rows="5"></textarea>
-                        </div>
-                        
-                        <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGroupfonte">Fonte</label>
-                             <div class="input-group-prepend">
-                                <div class="input-group-text h-100">
-                                    <i class="fa fa-bars" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                            <input type="text" class="form-control" v-model="elementCurrent.fonte" id="inlineFormInputGroupfonte" placeholder="Fonte da Notícia" name="fonte">
+                            <input type="text" class="form-control" v-model="elementCurrent.mensagem_contato" id="inlineFormInputGroupmensagem_contato" placeholder="Mensagem Contato" name="mensagem_contato">
                         </div>
                         
                         <div class="input-group mb-3">
@@ -126,9 +95,9 @@
                     <thead>
                         <tr>
                             <th>Código</th>
-                            <th>Notícia</th>
-                            <th>Titulo</th>
-                             <th>Foto</th>
+                            <th>Logo</th>
+                            <th>Logo Mobile</th>
+                            <th>Msg Contato</th>
                             <th class="text-center">Ocultar</th>
                             <th class="text-center" style="width: 120px;">Ação</th>
                         </tr>
@@ -136,11 +105,13 @@
                     <tbody>
                         <tr v-for="element in elements" :key="element.id" @mouseover="hover=true" @mouseleave="hover=false">
                             <td>{{element.id}}</td>
-                            <td>{{ getNoticiaTitle(element.id_noticia) }}</td>
-                            <td>{{element.titulo}}</td>
                              <td>
-                                <a v-if="element.foto_principal" :href="'/uploads/noticias_anexos/1024x768/'+element.foto_principal" target="_blank" class="btn btn-sm btn-info"><i class="fa fa-image"></i> Ver</a>
+                                <a v-if="element.logo" :href="'/uploads/logo/1024x768/'+element.logo" target="_blank" class="btn btn-sm btn-info"><i class="fa fa-image"></i> Ver</a>
                             </td>
+                             <td>
+                                <a v-if="element.logo_mobile" :href="'/uploads/logo_mobile/1024x768/'+element.logo_mobile" target="_blank" class="btn btn-sm btn-info"><i class="fa fa-image"></i> Ver</a>
+                            </td>
+                            <td>{{element.mensagem_contato}}</td>
                             <td class="text-center">
                                 <input type="checkbox" disabled :checked="element.ocultar == 1">
                             </td>
@@ -199,12 +170,11 @@
             successMsg: "",
             infoMsg: "",
             state: 'default',
-            serverUrl: '/server/noticiasAnexo',
-            serverNoticiaUrl: '/server/noticias',
+            serverUrl: '/server/config',
             elements: [],
-            noticias: [],
-            elementCurrent: { id: "", id_noticia: "", titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: "" },
-            file: null,
+            elementCurrent: { id: "", mensagem_contato: "", ocultar: false, logo: "", logo_mobile: "" },
+            fileLogo: null,
+            fileLogoMobile: null,
             pagination: {
                 page: 1,
                 rowCount: 10,
@@ -214,7 +184,6 @@
             loading: false
         },
         mounted: function() {
-             this.loadNoticias();
              this.findAllElements(1); 
         },
         methods: {
@@ -229,24 +198,23 @@
             },
             prepareNew() {
                 this.clearMsg();
-                this.elementCurrent = { id: "", id_noticias: this.elementCurrent.id_noticias, titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
-                this.file = null;
-                if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                    CKEDITOR.instances.conteudo_noticias_anexo.setData("");
-                }
+                this.elementCurrent = { id: "", mensagem_contato: "", ocultar: false, logo: "", logo_mobile: "" };
+                this.fileLogo = null;
+                this.fileLogoMobile = null;
+                if(this.$refs.fileInputLogo) this.$refs.fileInputLogo.value = "";
+                if(this.$refs.fileInputLogoMobile) this.$refs.fileInputLogoMobile.value = "";
                 this.state = 'new';
             },
             cancelAction() {
-                this.errorMsg= "";
+                this.errorMsg= "";  
                 this.successMsg= "";
                 this.infoMsg= "";
                 this.state= 'default';
-                this.serverUrl= '/server/noticiasAnexo';
-                this.serverNoticiaUrl= '/server/noticias';
+                this.serverUrl= '/server/config';
                 this.elements= [];
-                this.elementCurrent= { id: "",id_noticias: this.elementCurrent.id_noticias, titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
-                this.file= null;
+                this.elementCurrent= { id: "", mensagem_contato: "", ocultar: false, logo: "", logo_mobile: "" };
+                this.fileLogo= null;
+                this.fileLogoMobile= null;
                 this.pagination= {
                     page: 1,
                     rowCount: 10,
@@ -254,44 +222,22 @@
                     limitpage: 0
                 },
                 this.loading= false;
-                if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                    CKEDITOR.instances.conteudo_noticias_anexo.setData("");
-                }
             },
             editItem(element) {
                 this.clearMsg();
                 this.elementCurrent = { ...element };
                 this.elementCurrent.ocultar = (this.elementCurrent.ocultar == 1 || this.elementCurrent.ocultar == true);
-                this.file = null;
-                if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                
-                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                    CKEDITOR.instances.conteudo_noticias_anexo.setData(this.elementCurrent.conteudo_noticias_anexo || "");
-                }
-                
+                this.fileLogo = null;
+                this.fileLogoMobile = null;
+                if(this.$refs.fileInputLogo) this.$refs.fileInputLogo.value = "";
+                if(this.$refs.fileInputLogoMobile) this.$refs.fileInputLogoMobile.value = "";
                 this.state = 'edit';
             },
-            getNoticiaTitle(id) {
-                if(!id) return "";
-                const noticia = this.noticias.find(n => n.id == id);
-                return noticia ? noticia.titulo : id;
+            handleFileUploadLogo(event) {
+                this.fileLogo = event.target.files[0];
             },
-            loadNoticias() {
-                let params = new URLSearchParams();
-                params.append('row_count', 1000); 
-                params.append('token', this.generateToken(256));
-                
-                axios.get(this.serverNoticiaUrl+"?"+params.toString()).then(response => {
-                   if(response.data.elements) {
-                       this.noticias = response.data.elements;
-                   }
-                }).catch(error => {
-                    console.error("Error loading noticias", error);
-                });
-            },
-            handleFileUpload(event) {
-                this.file = event.target.files[0];
+            handleFileUploadLogoMobile(event) {
+                this.fileLogoMobile = event.target.files[0];
             },
             findById(id) {
                 if ((id!=null) && (id!=undefined) && (id.length!=0)) {
@@ -301,9 +247,6 @@
                         if (this.elements && this.elements.length > 0) {
                              this.elementCurrent = this.elements[0];
                              this.state = 'findById';
-                              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                                CKEDITOR.instances.conteudo_noticias_anexo.setData(this.elementCurrent.conteudo_noticias_anexo || "");
-                            }
                         }
                     }).catch(error => {
                         this.errorMsg = "Erro: " + error;
@@ -326,7 +269,6 @@
                 params.append('row_count', this.pagination.rowCount);
                 params.append('token', this.generateToken(256));
                 
-                if (this.elementCurrent.titulo) params.append('titulo', this.elementCurrent.titulo);
                 if (this.elementCurrent.id) params.append('id', this.elementCurrent.id);
 
                 axios.get(this.serverUrl+"?"+params.toString()).then(response => {
@@ -339,10 +281,6 @@
                 });
             },
             saveElement() {
-                 if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                    this.elementCurrent.conteudo_noticias_anexo = CKEDITOR.instances.conteudo_noticias_anexo.getData();
-                }
-
                 this.loading = true;
                 var formData = new FormData();
                 for (var i in this.elementCurrent) {
@@ -353,10 +291,15 @@
                     }
                 }
                 
-                if (this.file) {
-                    formData.append('foto_principal', this.file);
-                    formData.append('foto_principal_formats', '160x120,320x240,480x640,800x600,1024x768,1366x768');
-                    formData.append('foto_principal_path', 'noticias_anexos');
+                if (this.fileLogo) {
+                    formData.append('logo', this.fileLogo);
+                    formData.append('logo_formats', '160x120,320x240,480x640,800x600,1024x768,1366x768');
+                    formData.append('logo_path', 'logo');
+                }
+                if (this.fileLogoMobile) {
+                    formData.append('logo_mobile', this.fileLogoMobile);
+                    formData.append('logo_mobile_formats', '160x120,320x240,480x640,800x600,1024x768,1366x768');
+                    formData.append('logo_mobile_path', 'logo_mobile');
                 }
                 
                 if(this.elementCurrent?.id){
@@ -364,12 +307,11 @@
                         this.processResponse(response.data);
                         if (this.successMsg) {
                             this.state = 'default';
-                             this.elementCurrent = { id: "", id_noticia: "", titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
-                             this.file = null;
-                             if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                                CKEDITOR.instances.conteudo_noticias_anexo.setData("");
-                            }
+                             this.elementCurrent = { id: "", mensagem_contato: "", ocultar: false, logo: "", logo_mobile: "" };
+                             this.fileLogo = null;
+                             this.fileLogoMobile = null;
+                             if(this.$refs.fileInputLogo) this.$refs.fileInputLogo.value = "";
+                             if(this.$refs.fileInputLogoMobile) this.$refs.fileInputLogoMobile.value = "";
                             this.findAllElements(this.pagination.page);
                         }
                     }).catch((error) => {
@@ -383,12 +325,11 @@
 						this.processResponse(response.data);
 						if (this.successMsg) {
 							this.state = 'default';
-							 this.elementCurrent = { id: "", id_noticia: "", titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: "" };
-                             this.file = null;
-                             if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                              if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.conteudo_noticias_anexo) {
-                                CKEDITOR.instances.conteudo_noticias_anexo.setData("");
-                            }
+							 this.elementCurrent = { id: "", mensagem_contato: "", ocultar: false, logo: "", logo_mobile: "" };
+                             this.fileLogo = null;
+                             this.fileLogoMobile = null;
+                             if(this.$refs.fileInputLogo) this.$refs.fileInputLogo.value = "";
+                             if(this.$refs.fileInputLogoMobile) this.$refs.fileInputLogoMobile.value = "";
 							this.findAllElements(this.pagination.page);
 						}
 					}).catch((error) => {
@@ -405,7 +346,7 @@
                     axios.delete(this.serverUrl+"/"+id).then(response => {
                         this.processResponse(response.data);
                         if (this.successMsg || !this.errorMsg) { 
-                             this.elementCurrent = {id:"", id_noticia: "", titulo: "", subtitulo: "", conteudo_noticias_anexo: "", fonte: "", ocultar: false, foto_principal: ""};
+                             this.elementCurrent = { id: "", mensagem_contato: "", ocultar: false, logo: "", logo_mobile: "" };
                              this.state = 'default';
                              this.findAllElements(this.pagination.page);
                         }
@@ -465,4 +406,4 @@
         }
     });
 </script>
-<?php include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/foot.php');?>
+<?php require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/foot.php');?>

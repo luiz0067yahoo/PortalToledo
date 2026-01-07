@@ -1,8 +1,8 @@
 <?php
     require_once ($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
-	require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/model/fotosDAO.php');
+	require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/model/configsDAO.php');
 	require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/controller/controller.php');
-	class controllerFotos 
+	class ControllerConfig 
 	extends controller
 	{
 	    public function find(){
@@ -14,15 +14,12 @@
 		}
          
 	    public function create(){
-		    parent::create();
 		    echo json_encode($this->upload("parent::create"));
 		}
 		public function update($id){
-			parent::update($id);
 		     echo json_encode($this->upload("parent::update"));
 		}
 		public function save(){
-			parent::save();
              echo json_encode($this->upload("parent::save"));
         }		
 		public function del($id){
@@ -36,12 +33,11 @@
         
 		public function __construct(){
 			$params=[];
-	        if(notEmptyParameter(fotosDAO::id))$params[fotosDAO::id]=getParameter(fotosDAO::id);
-	        if(notEmptyParameter(fotosDAO::id_album))$params[fotosDAO::id_album]=getParameter(fotosDAO::id_album);
-	        if(arrayKeyExistsParameter(fotosDAO::nome))$params[fotosDAO::nome]=trim(getParameter(fotosDAO::nome));
-	        if(issetParameter(fotosDAO::ocultar))$params[fotosDAO::ocultar]=getParameter(fotosDAO::ocultar);
-	        $this->settingsImagesUpload=["foto"=>["path"=>"album","formats"=>"160x120,320x240,480x640,800x600,1024x768,1366x768"]];
-			parent::__construct(new fotosDAO($params));
+	        if(notEmptyParameter(configsDAO::id))$params[configsDAO::id]=getParameter(configsDAO::id);
+	        if(issetParameter(configsDAO::mensagem_contato))$params[configsDAO::mensagem_contato]=getParameter(configsDAO::mensagem_contato);
+	        $this->settingsImagesUpload=["logo"=>["path"=>"logo","formats"=>"160x120,320x240,480x640,800x600,1024x768,1366x768"]];
+	        $this->settingsImagesUpload=["logo_mobile"=>["logo_mobile"=>"album","formats"=>"160x120,320x240,480x640,800x600,1024x768,1366x768"]];
+			parent::__construct(new configsDAO($params));
 		}
 	}
 ?>

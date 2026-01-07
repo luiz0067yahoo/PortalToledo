@@ -1,8 +1,13 @@
 <?php 
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
 $base_server_path_files=$_SERVER['DOCUMENT_ROOT'];
 $base_url="https://$_SERVER[HTTP_HOST]";  	
 require_once($GLOBALS["base_server_path_files"].'/route.php');
 require_once($GLOBALS["base_server_path_files"].'/library/functions.php');
+require_once($_SERVER['DOCUMENT_ROOT'] . '/mvc/model/usuariosDAO.php');
+
 Route::add('/contador_acesso',function(){  
 	$GLOBALS["ler_sub_menu"]="";
 	$GLOBALS["ler_titulo_noticia"]="";
@@ -197,6 +202,7 @@ Route::add('/admin/panel',function(){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/panel.php');
 });
 
+
 Route::add('/admin/login',function(){
 	require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/login.php');
 },'get');
@@ -235,31 +241,13 @@ Route::add('/admin/email_recuperar_senha',function(){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/email_recuperar_senha.php');
 });
 
-
-Route::add('/admin/time_session',function(){
-    echo sessionCount();
+Route::add('/admin/apps/explorer',function(){
+     // Shell only, auth via Client Side
+     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/apps/explorer.html');
 },'get');
 
 Route::add('/admin/apps/explorer',function(){
-     if(!isset($_SESSION)) session_start();
-    if(isset($_SESSION["usuario"])){ 
-        require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/apps/explorer.html');
-    }
-    else {
-    //require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/login.php');
-        require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/login_explorer.php');
-    }
-},'get');
-
-Route::add('/admin/apps/explorer',function(){
-     if(!isset($_SESSION)) session_start();
-    if(isset($_SESSION["usuario"])){ 
-        require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/apps/explorer.html');
-    }
-    else {
-    //require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/login.php');
-        require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/login_explorer.php');
-    }
+     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/apps/explorer.html');
 },'post');
 
 Route::add('/admin/explorer',function(){
@@ -275,6 +263,10 @@ Route::add('/admin/explorer',function(){
 
 
 //###############################################################################
+Route::add('/admin/config',function(){
+    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_config.php');
+},'get');
+
 Route::add('/admin/usuarios',function(){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_usuarios.php');
 },'get');
@@ -288,11 +280,11 @@ Route::add('/admin/noticias',function(){
 },'get');
 
 Route::add('/admin/noticiasAnexo',function(){
-    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_noticiasAnexo.php');
+    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_noticias_anexo.php');
 },'get');
 
 Route::add('/admin/tiposAnuncios',function(){
-    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_tiposAnuncios.php');
+    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_tipos_anuncios.php');
 },'get');
 
 Route::add('/admin/anuncios',function(){
@@ -300,7 +292,7 @@ Route::add('/admin/anuncios',function(){
 },'get');
 
 Route::add('/admin/albumFotos',function(){
-    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_albumFotos.php');
+    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_album_fotos.php');
 },'get');
 
 Route::add('/admin/fotos',function(){
@@ -308,7 +300,7 @@ Route::add('/admin/fotos',function(){
 },'get');
 
 Route::add('/admin/albumVideos',function(){
-    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_albumVideos.php');
+    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_album_videos.php');
 },'get');
 
 Route::add('/admin/videos',function(){
@@ -319,6 +311,55 @@ Route::add('/admin/videos',function(){
 
 
 //###############################################################################
+
+//###############################################################################
+require_once($GLOBALS["base_server_path_files"].'/mvc/controller/controllerUsuarios.php');
+Route::add('/server/usuarios',function(){
+   if(new usuariosDAO([])->controlAcess())((new controllerUsuarios())->find());
+},'get');
+
+Route::add('/server/usuarios/(.*)',function($id){
+   if(new usuariosDAO([])->controlAcess())((new controllerUsuarios())->findById($id));
+},'get');
+
+Route::add('/server/usuarios',function(){
+    if(new usuariosDAO([])->controlAcess())((new controllerUsuarios())->create());
+},'post');
+
+Route::add('/server/usuarios/login',function(){
+    ((new controllerUsuarios())->login());
+},'post');
+
+Route::add('/server/usuarios/trocarSenha',function(){
+    if(new usuariosDAO([])->controlAcess())((new controllerUsuarios())->trocarSenha());
+},'post');
+
+Route::add('/server/usuarios/(.*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerUsuarios())->update($id));
+},'put');
+
+Route::add('/server/usuarios/(.*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerUsuarios())->del($id));
+},'delete');
+//###############################################################################
+
+Route::add('/server/usuarios/recovery',function(){
+    $email = getParameter("e_mail");
+    echo json_encode(recovery($email));
+},'post');
+
+Route::add('/server/usuarios/resetPassword',function(){
+    ((new controllerUsuarios())->resetPassword());
+},'post');
+
+Route::add('/server/time_session',function(){
+    if(new usuariosDAO([])->controlAcess())echo functionsJWT::sessionCount();
+},'get');
+
+Route::add('/server/userActive',function(){
+    if(new usuariosDAO([])->controlAcess())((new controllerUsuarios())->userActive());
+},'get');
+
 require_once($GLOBALS["base_server_path_files"].'/mvc/controller/controllerMenus.php');
 Route::add('/server/site/mainMenus',function(){
    ((new controllerMenus())->findMainMenus());
@@ -329,19 +370,23 @@ Route::add('/server/site/subMenus/([0-9]*)',function($idMenu){
 },'get');
 
 Route::add('/server/menus',function(){
-   if(controlAcess())(new controllerMenus())->find();
+   if(new usuariosDAO([])->controlAcess())(new controllerMenus())->find();
 },'get');
 
 Route::add('/server/menus/([0-9]*)',function($id){
-   if(controlAcess())((new controllerMenus())->findById($id));
+   if(new usuariosDAO([])->controlAcess())((new controllerMenus())->findById($id));
 },'get');
 
 Route::add('/server/menus',function(){
-    if(controlAcess())((new controllerMenus())->save());
+    if(new usuariosDAO([])->controlAcess())((new controllerMenus())->create());
+},'post');
+
+Route::add('/server/menus/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerMenus())->update($id));
 },'put');
 
-Route::add('/server/menus',function(){
-    if(controlAcess())((new controllerMenus())->del());
+Route::add('/server/menus/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerMenus())->del($id));
 },'delete');
 //###############################################################################
 
@@ -369,20 +414,23 @@ Route::add('/server/site/photos/(.*)/',function($menuSubMenu){
 },'get');
 
 Route::add('/server/albumFotos',function(){
-   if(controlAcess())((new controllerAlbumFotos())->find());
+   if(new usuariosDAO([])->controlAcess())((new controllerAlbumFotos())->find());
 },'get');
 
 Route::add('/server/albumFotos/([0-9]*)',function($id){
-   if(controlAcess())((new controllerAlbumFotos())->findById($id));
+   if(new usuariosDAO([])->controlAcess())((new controllerAlbumFotos())->findById($id));
 },'get');
 
-
 Route::add('/server/albumFotos',function(){
-    if(controlAcess())((new controllerAlbumFotos())->save());
+    if(new usuariosDAO([])->controlAcess())((new controllerAlbumFotos())->create());
+},'post');
+
+Route::add('/server/albumFotos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerAlbumFotos())->update($id));
 },'put');
 
-Route::add('/server/albumFotos',function(){
-    if(controlAcess())((new controllerAlbumFotos())->del());
+Route::add('/server/albumFotos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerAlbumFotos())->del($id));
 },'delete');
 //###############################################################################
 
@@ -391,19 +439,23 @@ Route::add('/server/albumFotos',function(){
 require_once($GLOBALS["base_server_path_files"].'/mvc/controller/controllerFotos.php');
 
 Route::add('/server/fotos',function(){
-    if(controlAcess())((new controllerFotos())->find());
+    if(new usuariosDAO([])->controlAcess())((new controllerFotos())->find());
 },'get');
 
 Route::add('/server/fotos/([0-9]*)',function($id){
-   if(controlAcess())((new controllerFotos())->findById($id));
+   if(new usuariosDAO([])->controlAcess())((new controllerFotos())->findById($id));
 },'get');
 
 Route::add('/server/fotos',function(){
-    if(controlAcess())((new controllerFotos())->save());
+    if(new usuariosDAO([])->controlAcess())((new controllerFotos())->create());
 },'post');
 
-Route::add('/server/fotos',function(){
-    if(controlAcess())((new controllerFotos())->del());
+Route::add('/server/fotos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerFotos())->update($id));
+},'put');
+
+Route::add('/server/fotos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerFotos())->del($id));
 },'delete');
 //###############################################################################
 
@@ -431,38 +483,46 @@ Route::add('/server/site/videos/(.*)/',function($menuSubMenu){
 },'get');
 
 Route::add('/server/albumVideos',function(){
-   if(controlAcess())((new controllerAlbumVideos())->find());
+   if(new usuariosDAO([])->controlAcess())((new controllerAlbumVideos())->find());
 },'get');
 
 Route::add('/server/albumVideos/([0-9]*)',function($id){
-   if(controlAcess())((new controllerAlbumVideos())->findById($id));
+   if(new usuariosDAO([])->controlAcess())((new controllerAlbumVideos())->findById($id));
 },'get');
 
 Route::add('/server/albumVideos',function(){
-    if(controlAcess())((new controllerAlbumVideos())->save());
+    if(new usuariosDAO([])->controlAcess())((new controllerAlbumVideos())->create());
+},'post');
+
+Route::add('/server/albumVideos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerAlbumVideos())->update($id));
 },'put');
 
-Route::add('/server/albumVideos',function(){
-    if(controlAcess())((new controllerAlbumVideos())->del());
+Route::add('/server/albumVideos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerAlbumVideos())->del($id));
 },'delete');
 //###############################################################################
 
 //###############################################################################
 require($GLOBALS["base_server_path_files"].'/mvc/controller/controllerVideos.php');
 Route::add('/server/videos',function(){
-    if(controlAcess())((new controllerVideos())->find());
+    if(new usuariosDAO([])->controlAcess())((new controllerVideos())->find());
 },'get');
 
 Route::add('/server/videos/([0-9]*)',function($id){
-   if(controlAcess())((new controllerVideos())->findById($id));
+   if(new usuariosDAO([])->controlAcess())((new controllerVideos())->findById($id));
 },'get');
 
 Route::add('/server/videos',function(){
-    if(controlAcess())((new controllerVideos())->save());
+    if(new usuariosDAO([])->controlAcess())((new controllerVideos())->create());
 },'post');
 
-Route::add('/server/videos',function(){
-    if(controlAcess())((new controllerVideos())->del());
+Route::add('/server/videos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerVideos())->update($id));
+},'put');
+
+Route::add('/server/videos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerVideos())->del($id));
 },'delete');
 //###############################################################################
 
@@ -498,76 +558,93 @@ Route::add('/server/site/News/(.*)/(.*)/',function($menuSubMenu){
 
 
 Route::add('/server/noticias',function(){
-   if(controlAcess())((new controllerNoticias())->find());
+   if(new usuariosDAO([])->controlAcess())((new controllerNoticias())->find());
 },'get');
 
 Route::add('/server/noticias/([0-9]*)',function($id){
-   if(controlAcess())((new controllerNoticias())->findById($id));
+   if(new usuariosDAO([])->controlAcess())((new controllerNoticias())->findById($id));
 },'get');
 
 Route::add('/server/noticias',function(){
-    if(controlAcess())((new controllerNoticias())->save());
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticias())->create());
+},'post');
+
+Route::add('/server/noticias/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticias())->update($id));
 },'put');
 
-Route::add('/server/noticias',function(){
-    if(controlAcess())((new controllerNoticias())->del());
+Route::add('/server/noticias/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticias())->del($id));
 },'delete');
 //###############################################################################
 
 
 //###############################################################################
 Route::add('/server/noticiasAnexo',function(){
-   if(controlAcess())((new controllerNoticiasAnexo())->find());
+   if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexo())->find());
 },'get');
 
 Route::add('/server/noticiasAnexo/([0-9]*)',function($id){
-   if(controlAcess())((new controllerNoticiasAnexo())->findById($id));
+   if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexo())->findById($id));
 },'get');
 
 Route::add('/server/noticiasAnexo',function(){
-    if(controlAcess())((new controllerNoticiasAnexo())->save());
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexo())->create());
+},'post');
+
+Route::add('/server/noticiasAnexo/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexo())->update($id));
 },'put');
 
-Route::add('/server/noticiasAnexo',function(){
-    if(controlAcess())((new controllerNoticiasAnexo())->del());
+Route::add('/server/noticiasAnexo/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexo())->del($id));
 },'delete');
 //###############################################################################
 
 
 //###############################################################################
 Route::add('/server/noticiasFotos',function(){
-   if(controlAcess())((new controllerNoticiasFotos())->find());
+   if(new usuariosDAO([])->controlAcess())((new controllerNoticiasFotos())->find());
 },'get');
 
 Route::add('/server/noticiasFotos/([0-9]*)',function($id){
-   if(controlAcess())((new controllerNoticiasFotos())->findById($id));
+   if(new usuariosDAO([])->controlAcess())((new controllerNoticiasFotos())->findById($id));
 },'get');
 
 Route::add('/server/noticiasFotos',function(){
-    if(controlAcess())((new controllerNoticiasFotos())->save());
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasFotos())->create());
+},'post');
+
+Route::add('/server/noticiasFotos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasFotos())->update($id));
 },'put');
 
-Route::add('/server/noticiasFotos',function(){
-    if(controlAcess())((new controllerNoticiasFotos())->del());
+Route::add('/server/noticiasFotos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasFotos())->del($id));
 },'delete');
 //###############################################################################
 
 
 //###############################################################################
+require_once($GLOBALS["base_server_path_files"].'/mvc/controller/controllerTiposAnuncios.php');
 Route::add('/server/tiposAnuncios',function(){
-   if(controlAcess())((new controllerTiposAnuncios())->find());
+   if(new usuariosDAO([])->controlAcess())((new controllerTiposAnuncios())->find());
 },'get');
 
 Route::add('/server/tiposAnuncios/([0-9]*)',function($id){
-   if(controlAcess())((new controllerTiposAnuncios())->findById($id));
+   if(new usuariosDAO([])->controlAcess())((new controllerTiposAnuncios())->findById($id));
 },'get');
 
 Route::add('/server/tiposAnuncios',function(){
-    if(controlAcess())((new controllerTiposAnuncios())->save());
+    if(new usuariosDAO([])->controlAcess())((new controllerTiposAnuncios())->create());
+},'post');
+
+Route::add('/server/tiposAnuncios/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerTiposAnuncios())->update($id));
 },'put');
 
-Route::add('/server/tiposAnuncios',function(){
-    if(controlAcess())((new controllerTiposAnuncios())->del());
+Route::add('/server/tiposAnuncios/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerTiposAnuncios())->del($id));
 },'delete');
 //###############################################################################
 
@@ -579,38 +656,73 @@ Route::add('/server/site/banners/(.*)',function($nameType){
 },'get');
 
 Route::add('/server/anuncios',function(){
-   if(controlAcess())((new controllerAnuncios())->find());
+   if(new usuariosDAO([])->controlAcess())((new controllerAnuncios())->find());
 },'get');
 
 Route::add('/server/anuncios/([0-9]*)',function($id){
-   if(controlAcess())((new controllerAnuncios())->findById($id));
+   if(new usuariosDAO([])->controlAcess())((new controllerAnuncios())->findById($id));
 },'get');
 
 Route::add('/server/anuncios',function(){
-    if(controlAcess())((new controllerAnuncios())->save());
+    if(new usuariosDAO([])->controlAcess())((new controllerAnuncios())->create());
+},'post');
+
+Route::add('/server/anuncios/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerAnuncios())->update($id));
 },'put');
 
-Route::add('/server/anuncios',function(){
-    if(controlAcess())((new controllerAnuncios())->del());
+Route::add('/server/anuncios/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerAnuncios())->del($id));
 },'delete');
 //###############################################################################
 
 
+
 //###############################################################################
-Route::add('/server/usuarios',function(){
-   if(controlAcess())((new controllerUsuarios())->find());
+require_once($GLOBALS["base_server_path_files"].'/mvc/controller/controllerAnunciosFotos.php');
+Route::add('/server/anunciosFotos',function(){
+   if(new usuariosDAO([])->controlAcess())((new controllerAnunciosFotos())->find());
 },'get');
 
-Route::add('/server/usuarios/([0-9]*)',function($id){
-   if(controlAcess())((new controllerUsuarios())->findById($id));
+Route::add('/server/anunciosFotos/([0-9]*)',function($id){
+   if(new usuariosDAO([])->controlAcess())((new controllerAnunciosFotos())->findById($id));
 },'get');
 
-Route::add('/server/usuarios',function(){
-    if(controlAcess())((new controllerUsuarios())->save());
+Route::add('/server/anunciosFotos',function(){
+    if(new usuariosDAO([])->controlAcess())((new controllerAnunciosFotos())->create());
+},'post');
+
+Route::add('/server/anunciosFotos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerAnunciosFotos())->update($id));
 },'put');
 
-Route::add('/server/usuarios',function(){
-    if(controlAcess())((new controllerUsuarios())->del());
+Route::add('/server/anunciosFotos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerAnunciosFotos())->del($id));  
+},'delete');
+//###############################################################################
+
+
+
+//###############################################################################
+require_once($GLOBALS["base_server_path_files"].'/mvc/controller/controllerAnunciosAnexos.php');
+Route::add('/server/anunciosAnexos',function(){
+    if(new usuariosDAO([])->controlAcess())((new controllerAnunciosAnexos())->find());
+},'get');
+
+Route::add('/server/anunciosAnexos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerAnunciosAnexos())->findById($id));
+},'get');
+
+Route::add('/server/anunciosAnexos',function(){
+    if(new usuariosDAO([])->controlAcess())((new controllerAnunciosAnexos())->create());
+},'post');
+
+Route::add('/server/anunciosAnexos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerAnunciosAnexos())->update($id));
+},'put');
+
+Route::add('/server/anunciosAnexos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerAnunciosAnexos())->del($id));
 },'delete');
 //###############################################################################
 
