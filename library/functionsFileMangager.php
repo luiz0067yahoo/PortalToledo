@@ -44,7 +44,7 @@
 		}
 	}
 	
-   if (!function_exists("newFolder")){
+   	if (!function_exists("newFolder")){
 		function newFolder($dir){
 		    
 		    $path=getPathExplorer().$dir;
@@ -57,6 +57,7 @@
             return 'O Arquivo '.$dir.' já existe';
         }
     }
+
     if (!function_exists("newFile")){
 		function newFile($file){
 		    if(
@@ -257,13 +258,17 @@
     	function deleteUploadRedimencion($file_name,$path,$formats){
         	$path_upload=$_SERVER["DOCUMENT_ROOT"].DIRECTORY_SEPARATOR."uploads".DIRECTORY_SEPARATOR;
 	   	    $path_upload_original=$path_upload.$path.DIRECTORY_SEPARATOR."original".DIRECTORY_SEPARATOR;
-        	unlink($path_upload_original.$file_name);
+        	if(file_exists($path_upload_original.$file_name)){
+				unlink($path_upload_original.$file_name);
+			}
     		if($formats!=""){
         		$formats_array=explode(",",$formats);
             	foreach ($formats_array as $format){
     		        list ($width, $height)=explode("x",$format);
-            		$folder_format=$path_upload.$path.$width."x".$height.DIRECTORY_SEPARATOR;
-            		unlink($folder_format.$file_name);
+            		$folder_format=$path_upload.$path."/".$width."x".$height.DIRECTORY_SEPARATOR;
+					if(file_exists($folder_format.$file_name)){
+						unlink($folder_format.$file_name);
+					}
             	}
         	}
 	    }
@@ -272,7 +277,13 @@
     if (!function_exists('redimencion')){
 		function redimencion($origem,$destino,$maxlargura,$maxaltura,$qualidade){
 		    if (file_exists($origem)){
-            	list($largura, $altura) = getimagesize($origem);
+            	$info = getimagesize($origem);
+				if (!$info) return;
+
+				$largura = $info[0];
+				$altura = $info[1];
+				$tipo = $info[2];
+
             	if($altura>$largura){
             		$diferenca=$altura/$maxaltura;
             		$maxlargura=round($largura/$diferenca, 0, PHP_ROUND_HALF_UP);
@@ -281,12 +292,43 @@
             		$diferenca=$largura/$maxlargura;
             		$maxaltura=round($altura/$diferenca, 0, PHP_ROUND_HALF_UP);
             	}
-            	$image_p = ImageCreateTrueColor($maxlargura,$maxaltura)	or die("Cannot Initialize new GD image stream");	
-            	$origem = imagecreatefromjpeg($origem);
-            	imagecopyresampled($image_p, $origem, 0, 0, 0, 0,  $maxlargura, $maxaltura, $largura, $altura);
-            	imagejpeg($image_p, $destino, $qualidade);
+            	
+            	$image_p = imagecreatetruecolor($maxlargura,$maxaltura);
+				$image_orig = false;
+
+				switch ($tipo) {
+					case IMAGETYPE_JPEG:
+						$image_orig = imagecreatefromjpeg($origem);
+						break;
+					case IMAGETYPE_PNG:
+						$image_orig = imagecreatefrompng($origem);
+						imagealphablending($image_p, false);
+						imagesavealpha($image_p, true);
+						break;
+					case IMAGETYPE_GIF:
+						$image_orig = imagecreatefromgif($origem);
+						break;
+				}
+
+				if (!$image_orig) {
+					if($image_p) imagedestroy($image_p);
+					return;
+				}
+
+            	imagecopyresampled($image_p, $image_orig, 0, 0, 0, 0,  $maxlargura, $maxaltura, $largura, $altura);
+            	
+				$ext_dest = strtolower(pathinfo($destino, PATHINFO_EXTENSION));
+				
+				if ($ext_dest == 'png') {
+					imagepng($image_p, $destino);
+				} elseif ($ext_dest == 'gif') {
+					imagegif($image_p, $destino);
+				} else {
+					imagejpeg($image_p, $destino, $qualidade);
+				}
+
             	imagedestroy($image_p);
-            	imagedestroy($origem);
+            	imagedestroy($image_orig);
             }
         }
 	}
@@ -426,4 +468,174 @@
 				}
 			}
 	 }	 
+
+	if (!function_exists("saveBase64ImageRedimencion")) {
+		function saveBase64ImageRedimencion($settings)
+		{
+			$result = [];
+
+			// 1. Obter dados da requisição (Suporte a PUT/POST + JSON)
+			$data = [];
+			
+			// Tenta ler JSON input (comum em Frameworks modernos/PUT)
+			$jsonInput = file_get_contents('php://input');
+			$decodedInput = json_decode($jsonInput, true);
+			
+			if (json_last_error() === JSON_ERROR_NONE && is_array($decodedInput)) {
+				$data = $decodedInput;
+			} else {
+				// Fallback para $_POST (x-www-form-urlencoded ou multipart)
+				$data = $_POST;
+			}
+
+			foreach ($settings as $field => $config) {
+				
+				if (!isset($data[$field])) {
+					continue;
+				}
+
+				$filesInput = $data[$field];
+				
+				// Normaliza para array (single vs multiple files)
+				// Se tiver chaves 'data' e 'namefile', é um único arquivo
+				if (isset($filesInput['data']) && (isset($filesInput['namefile']) || isset($filesInput['filename']))) {
+					$filesInput = [$filesInput];
+				}
+
+				if (!is_array($filesInput)) {
+					continue;
+				}
+
+				$uploadedFiles = [];
+				
+				// Definição de caminhos base
+				// Usa ROOT/uploads/como base, igual ao padrão do sistema
+				$path_upload_base = $_SERVER["DOCUMENT_ROOT"] . DIRECTORY_SEPARATOR . "uploads" . DIRECTORY_SEPARATOR;
+				$targetDir = isset($config['path']) ? trim($config['path'], "/\\") : "";
+				
+				// Cria diretório 'original'
+				$originalPath = $path_upload_base . $targetDir . DIRECTORY_SEPARATOR . "original" . DIRECTORY_SEPARATOR;
+				
+				if (!file_exists($originalPath)) {
+					mkdir($originalPath, 0777, true);
+				}
+
+				foreach ($filesInput as $file) {
+					
+					// Compatibilidade de chaves
+					$imageData = $file['data'] ?? null;
+					$fileName = $file['namefile'] ?? $file['filename'] ?? uniqid().'.jpg';
+
+					if (empty($imageData)) {
+						// Mantém consistência dos índices
+						$uploadedFiles[] = ""; 
+						continue;
+					}
+
+					// Remove header Base64 se existir (data:image/xyz;base64,)
+					if (strpos($imageData, ',') !== false) {
+						$imageData = explode(',', $imageData)[1];
+					}
+
+					$binary = base64_decode($imageData);
+
+					if ($binary === false) {
+						$uploadedFiles[] = "";
+						continue;
+					}
+
+					// Tratamento do nome do arquivo (evitar sobrescrita)
+					$info = pathinfo($fileName);
+					$ext = $info['extension'] ?? 'jpg'; // fallback extension
+					$rawName = $info['filename'];
+					
+					// Sanitiza nome (opcional, mas recomendado)
+					$rawName = preg_replace('/[^a-zA-Z0-9_-]/', '', $rawName);
+					if(empty($rawName)) $rawName = uniqid();
+
+					$finalFileName = $rawName . '.' . $ext;
+					$counter = 0;
+					
+					// Verifica conflito de nome na pasta original
+					while(file_exists($originalPath . $finalFileName)) {
+						$finalFileName = $rawName . '_' . $counter . '.' . $ext;
+						$counter++;
+					}
+
+					$fullPathOriginal = $originalPath . $finalFileName;
+					
+					// Salva arquivo original
+					$saved = file_put_contents($fullPathOriginal, $binary);
+					
+					if ($saved === false) {
+						$uploadedFiles[] = "";
+						continue;
+					}
+
+					// Processa Redimensionamentos (formats: "160x120,320x240")
+					if (isset($config['formats']) && !empty($config['formats'])) {
+						$formats_array = explode(",", $config['formats']);
+						
+						foreach ($formats_array as $format) {
+							$dims = explode("x", $format);
+							if (count($dims) != 2) continue;
+							
+							list($width, $height) = $dims;
+							$width = intval($width);
+							$height = intval($height);
+
+							// Caminho: uploads/menu/160x120/arquivo.ext
+							$formatPath = $path_upload_base . $targetDir . DIRECTORY_SEPARATOR . $width . "x" . $height . DIRECTORY_SEPARATOR;
+							
+							if (!file_exists($formatPath)) {
+								mkdir($formatPath, 0777, true);
+							}
+
+							// Usa função 'redimencion' existente (preserva aspect ratio e qualidade)
+							redimencion($fullPathOriginal, $formatPath . $finalFileName, $width, $height, 100);
+						}
+					}
+
+					$uploadedFiles[] = $finalFileName;
+				}
+
+				$result[$field] = $uploadedFiles;
+			}
+
+			return $result;
+		}
+	}
+
+	if (!function_exists("resizeImage")) {
+		function resizeImage($file, $newWidth, $newHeight, $quality = 90)
+		{
+			list($width, $height, $type) = getimagesize($file);
+
+			$src = imagecreatefromstring(file_get_contents($file));
+
+			if (!$newWidth) {
+				$newWidth = intval($width * ($newHeight / $height));
+			}
+
+			if (!$newHeight) {
+				$newHeight = intval($height * ($newWidth / $width));
+			}
+
+			$dst = imagecreatetruecolor($newWidth, $newHeight);
+
+			imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+			switch ($type) {
+				case IMAGETYPE_JPEG:
+					imagejpeg($dst, $file, $quality);
+					break;
+				case IMAGETYPE_PNG:
+					imagepng($dst, $file);
+					break;
+			}
+
+			imagedestroy($src);
+			imagedestroy($dst);
+		}
+	}
 ?>

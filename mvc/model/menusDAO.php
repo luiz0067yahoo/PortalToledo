@@ -3,7 +3,7 @@ require_once($GLOBALS["base_server_path_files"].'/mvc/model/model.php');
 class menusDAO extends model
 {
 	const table="menus";
-	const id_menu="id_menu";
+	const idMenu="id_menu";
 	const nome="nome";
 	const ocultar="ocultar";
 	const icone="icone";
@@ -17,7 +17,7 @@ class menusDAO extends model
             " convertUrl(" . self::table . "." . self::nome . ") as nome_url ",
         ]);
 	    $this->cleanParams();
-        $this->setParam(self::id_menu,null);
+        $this->setParam(self::idMenu,null);
         $this->setParam(self::nome,["!="=>"home"]);
         $this->setParam(self::ocultar,false);
         $this->setOrders([self::id=>"asc"]);
@@ -26,7 +26,7 @@ class menusDAO extends model
     public function findMainMenusOnlyName(){
         $this->setFields([self::nome]);
 	    $this->cleanParams();
-        $this->setParam(self::id_menu,null);
+        $this->setParam(self::idMenu,null);
         $this->setParam(self::nome,["!="=>"home"]);
         $this->setParam(self::ocultar,false);
         $this->setOrders([self::id=>"asc"]);
@@ -43,13 +43,13 @@ class menusDAO extends model
             " convertUrl(" . self::table . "." . self::nome . ") as nome_url ",
         ]);
         $this->cleanParams();
-        $this->setParam(self::id_menu,$id_menu);
+        $this->setParam(self::idMenu,$id_menu);
         $this->setParam(self::ocultar,false);
         $this->setOrders([self::nome=>"asc"]);
         return $this->find();		
 	}
     public function __construct($model_attributes){
-		parent::__construct($model_attributes,self::table,[self::id_menu,self::nome,self::icone,self::tema,self::ocultar]);
+		parent::__construct($model_attributes,self::table,[self::idMenu,self::nome,self::icone,self::tema,self::ocultar]);
     }
 }
 ?>

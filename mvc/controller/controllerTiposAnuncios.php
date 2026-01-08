@@ -28,7 +28,6 @@
 		public function findById($id){
 			echo json_encode(parent::findById($id));
 		}
-
 		public function __construct(){
 			$params=[];
 	        if(notEmptyParameter(tiposAnunciosDAO::id))$params[tiposAnunciosDAO::id]=getParameter(tiposAnunciosDAO::id);

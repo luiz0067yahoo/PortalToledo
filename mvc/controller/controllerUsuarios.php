@@ -153,11 +153,14 @@ class controllerUsuarios extends controller
             $result=parent::del($id);
             if (isset($result["params"][usuariosDAO::id])) $result["params"][usuariosDAO::id]=$id_cript;
             if (isset($result["elements"][0][usuariosDAO::id])) $result["elements"][0][usuariosDAO::id]=$id_cript;
+            foreach ($this->settingsImagesBase64 as $key => $value){
+                $file_name=resultDataFieldByTitle($result,$key,0);
+                deleteUpload($file_name,$this->settingsImagesBase64[$key]["path"],$this->settingsImagesBase64[$key]["formats"]);
+            }
         }catch (Exception $e) {
         }
         echo json_encode($result); 
     }
-
     public function find()
     {
         $this->model->cleanFields();
@@ -175,7 +178,6 @@ class controllerUsuarios extends controller
         }
         echo json_encode($result);
     }
-
     public function findById($id_cript)
     {
         $this->model->cleanFields();
@@ -188,7 +190,6 @@ class controllerUsuarios extends controller
         if (isset($result["elements"][0][usuariosDAO::id])) $result["elements"][0][usuariosDAO::id]=$id_cript;
         echo json_encode($result);
     }
-
     public function resetPassword()
     {
         $this->model->cleanFields();
@@ -203,7 +204,6 @@ class controllerUsuarios extends controller
 
         echo json_encode($this->model->resetPasswordByCode($code, $nova_senha, $repetir));
     }
-
     public function __construct()
     {
         $params = [];

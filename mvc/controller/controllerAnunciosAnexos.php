@@ -26,13 +26,12 @@
         }		
 		public function del($id){
 		    $result=parent::findById($id);
-		    foreach ($settingsImagesUpload as $key => $value){
+		    foreach ($this->settingsImagesBase64 as $key => $value){
     		    $file_name=resultDataFieldByTitle($result,$key,0);
-    		    deleteUpload($file_name,$settingsImagesUpload[$key]["path"],$settingsImagesUpload[$key]["formats"]);
+    		    deleteUpload($file_name,$this->settingsImagesBase64[$key]["path"],$this->settingsImagesBase64[$key]["formats"]);
             }		
-		    parent::del();
-        }		
-
+		    echo json_encode(parent::del());
+        }			
 		public function __construct(){
 		    $params=[];
 	        if(notEmptyParameter(anunciosAnexosDAO::id))                           $params[anunciosAnexosDAO::id]=getParameter(anunciosAnexosDAO::id);
@@ -46,8 +45,8 @@
 	        if(issetParameter(anunciosAnexosDAO::ocultar))                      $params[anunciosAnexosDAO::ocultar]=getParameter(anunciosAnexosDAO::ocultar);
 			parent::__construct(new anunciosAnexosDAO($params));
 			$this->settingsImagesUpload=[
-            "foto_principal"=>["path"=>"anuncios","formats"=>"160x120,320x240,480x640,800x600,1024x768,1366x768"],
-        ];
+				"foto_principal"=>["path"=>"anuncios_anexos","formats"=>"160x120,320x240,480x640,800x600,1024x768,1366x768"],
+			];
 		}
 	}
 ?>

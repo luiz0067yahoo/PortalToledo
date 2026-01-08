@@ -369,6 +369,10 @@ Route::add('/server/site/subMenus/([0-9]*)',function($idMenu){
    ((new controllerMenus())->findSubMenus($idMenu));
 },'get');
 
+Route::add('/server/site/menusHierarchy',function(){
+   ((new controllerMenus())->findMenusHierarchy());
+},'get');
+
 Route::add('/server/menus',function(){
    if(new usuariosDAO([])->controlAcess())(new controllerMenus())->find();
 },'get');

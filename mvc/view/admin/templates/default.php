@@ -19,7 +19,8 @@ if (!function_exists("top")) {
 			<meta name="googlebot" content="noindex, nofollow">
 			<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-
+			<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+			
 			<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet"
 				integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin="anonymous">
 			<link type="text/css" rel="stylesheet" href="//use.fontawesome.com/releases/v5.8.1/css/all.css"
@@ -64,7 +65,6 @@ if (!function_exists("top")) {
 			<link rel="stylesheet" href="<?php echo $base_url_; ?>/assets/css/lightbox.css">
 
 			<link type="text/css" rel="stylesheet" href="<?php echo $base_url_; ?>/assets/css/forms.css" />
-			<script src="<?php echo $base_url_; ?>/assets/libs/ckeditor/ckeditor.js"></script>
 
 		</head>
 
@@ -79,10 +79,7 @@ if (!function_exists("top")) {
 		{
 			$base_url_ = "https://$_SERVER[HTTP_HOST]";
 			?>
-			<script src="<?php echo $base_url_; ?>/assets/js/bootstrap5.1.1/popper.min.js"></script>
-			<script src="<?php echo $base_url_; ?>/assets/js/bootstrap5.1.1/bootstrap.bundle.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
-            <script src="<?php echo $base_url_; ?>/assets/js/jwt-auth.js"></script>
 			<script src="<?php echo $base_url_; ?>/assets/js/sweetalert2@9.js"></script>
 			<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
 			<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/2.3.5/jspdf.plugin.autotable.js"></script>

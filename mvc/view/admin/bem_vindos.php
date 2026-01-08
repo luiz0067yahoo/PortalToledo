@@ -24,7 +24,7 @@
 
 				<div class="form-group">
 					<div class="input-group ">
-						<a class="btn btn-lg btn-primary btn-block" href="/admin/panel"><input name="acao" class="btn btn-lg btn-primary btn-block" type="button	" value="Entrar"></a>							
+						<a class="btn btn-lg btn-primary btn-block" href="/admin/login"><input name="acao" class="btn btn-lg btn-primary btn-block" type="button	" value="Entrar"></a>							
 					</div>
 				</div>
 				

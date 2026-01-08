@@ -29,7 +29,6 @@
                         </div>
                         
                         <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGroupnome">Nome</label>
                             <div class="input-group-prepend">
                                 <div class="input-group-text h-100">
                                     <i class="fa fa-bars" aria-hidden="true"></i>
@@ -52,7 +51,6 @@
                         </div>
                         
                         <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGroupLargura">Largura</label>
                             <div class="input-group-prepend">
                                 <div class="input-group-text h-100">
                                     <i class="fa fa-bars" aria-hidden="true"></i>
@@ -62,7 +60,6 @@
                         </div>
                         
                         <div class="input-group mb-3">
-                            <label class="sr-only" for="ocultar">ocultar</label>
                             <div class="input-group-prepend">
                                 <div class="input-group-text h-100">
                                     <i class="fa fa-bars" aria-hidden="true"></i>
@@ -78,7 +75,7 @@
                         
                         <button v-if="state=='new'" @click="findAllElements(1); state='find'" name="buscar" type="button" class="btn btn-primary buscar"><i class="fa fa-search" aria-hidden="true"></i> Buscar</button>
                     
-                        <button v-if="state=='default'||state=='new'||state=='edit'||state=='find'" @click="saveElement()" name="salvar" class="btn btn-success salvar"><i class="fa fa-floppy-o" aria-hidden="true"></i> Salvar</button>    
+                        <button v-if="state=='default'||state=='new'||state=='edit'||state=='find'" @click="saveElement()" name="salvar" class="btn btn-success salvar"><i class="fas fa-save"></i></i> Salvar</button>    
                     
                         <button v-if="state=='findById'" @click="state='edit';" name="editar" type="button" class="btn btn-primary editar"><i class="fa fa-edit" aria-hidden="true"></i> Editar</button>
                         
@@ -202,7 +199,9 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>		
-<script>
+<script type="module">
+    import { postCadastro } from '/assets/js/services/api.js';
+    import { fileToBase64 } from '/assets/js/utils/base64.js';
     var app = new Vue({
         el: '#app',
         data: {
@@ -239,6 +238,29 @@
                     b[i] = a[j];
                 }
                 return b.join("");
+            },
+            getToken() {
+                const userData = localStorage.getItem('portalToledoData');
+                if (userData) {
+                    try {
+                        const parsed = JSON.parse(userData);
+                        return parsed.token;
+                    } catch (e) {
+                        return '';
+                    }
+                }
+                return '';
+            },
+            getAuthHeader() {
+                return {
+                    'Authorization': `Bearer ${this.getToken()}`
+                };
+            },
+            getAuthHeaderJSON() {
+                return {
+                    'Authorization': `Bearer ${this.getToken()}`,
+                    'Content-Type': 'application/json'
+                };
             },
             prepareNew() {
                 this.clearMsg();
@@ -280,7 +302,8 @@
             findById(id) {
                 if ((id!=null) && (id!=undefined) && (id.length!=0)) {
                     this.loading = true;
-                    axios.get(this.serverUrl+"/"+id).then(response => {
+                    this.loading = true;
+                    axios.get(this.serverUrl+"/"+id, { headers: this.getAuthHeader() }).then(response => {
                         this.processResponse(response.data);
                         if (this.elements && this.elements.length > 0) {
                              this.elementCurrent = this.elements[0];
@@ -310,7 +333,7 @@
                 if (this.elementCurrent.nome) params.append('nome', this.elementCurrent.nome);
                 if (this.elementCurrent.id) params.append('id', this.elementCurrent.id);
 
-                axios.get(this.serverUrl+"?"+params.toString()).then(response => {
+                axios.get(this.serverUrl+"?"+params.toString(), { headers: this.getAuthHeader() }).then(response => {
                     this.processResponse(response.data);
                 }).catch(error => {
                     console.log(error);
@@ -321,16 +344,11 @@
             },
             saveElement() {
                 this.loading = true;
-                var formData = new FormData();
-                for (var i in this.elementCurrent) {
-                    if (i === 'ocultar') {
-                         formData.append(i, this.elementCurrent[i] ? true : false);
-                    } else {
-                        formData.append(i, this.elementCurrent[i]);
-                    }
-                }
+                const data = { ...this.elementCurrent };
+                data.ocultar = (data.ocultar === true || data.ocultar == 1);
+                
                 if(this.elementCurrent?.id){
-                    axios.put(this.serverUrl+"/"+this.elementCurrent.id, formData).then(response => {
+                    axios.put(this.serverUrl+"/"+this.elementCurrent.id, data, { headers: this.getAuthHeaderJSON() }).then(response => {
                         this.processResponse(response.data);
                         if (this.successMsg) {
                             this.state = 'default';
@@ -344,7 +362,7 @@
                         this.loading = false;
                     });
                 }else{
-					axios.post(this.serverUrl, formData).then(response => {
+					axios.post(this.serverUrl, data, { headers: this.getAuthHeaderJSON() }).then(response => {
 						this.processResponse(response.data);
 						if (this.successMsg) {
 							this.state = 'default';
@@ -375,7 +393,7 @@
             },
             deleteElement(id) {
                 this.loading = true;
-                axios.delete(this.serverUrl+"/"+id).then(response => {
+                axios.delete(this.serverUrl+"/"+id, { headers: this.getAuthHeader() }).then(response => {
                     this.processResponse(response.data);
                     if (this.successMsg || !this.errorMsg) { 
                             this.elementCurrent = {id:"", nome: "", altura: "", largura: "", ocultar: false};

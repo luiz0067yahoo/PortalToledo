@@ -436,7 +436,7 @@
 	        }
 	        $fields= implode(",",$fields_params);
 	        $sql="SELECT ".$fields." FROM ".$table." ".$joins." ORDER BY  ".$table.".id DESC limit 0,1";
-	        return DAOquerySQL($sql,"",true,null);
+	        return ["sql"=>$sql,"params"=>$fields_params];
 	    }
 	}
 
@@ -456,7 +456,7 @@
 	    function DAOquerySelectByIdSQL($table,$fields_params,$joins,$id){
 	        $conditionsParams=["id"=>$id];
 			$limitParams=["page"=>1,"row_count"=>1];
-	        return DAOquerySelectSQL($table,$fields_params,$joins,$conditionsParams,"","","",$limitParams);
+			return ["sql"=>$sql,"params"=>$fields_params];
 	    }
 	}
 
@@ -467,3 +467,4 @@
 	        return DAOquerySelect($table,$fields_params,$joins,$conditionsParams,"","","",$limitParams);
 	    }
 	}
+?>

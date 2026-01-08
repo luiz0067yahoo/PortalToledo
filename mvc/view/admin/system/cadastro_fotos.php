@@ -1,442 +1,346 @@
-<?php 
-	require_once($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
-	include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
-?>
-<div id="app">
-    <div id="loader" v-if="loading">
-        <div class="loader"></div>
-    </div>
-    <br>
-    <div class="container">
-        <h1>CADASTRO DE FOTOS</h1>
-        <br>
-        <br>
-        <div class="row">
-            <div class="sm-12">
-                <form class="cadastro" id="cadastro_foto" method="POST" enctype="multipart/form-data" onsubmit="return false;">
-                    <div class="form-row align-items-center">
-                        <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGroupcodigo">Código</label>
-                            <div class="input-group-prepend">
-                                <div class="input-group-text h-100">
-                                    <i class="fa fa-key" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                            <input type="number" disabled v-model="elementCurrent.id" class="form-control" id="inlineFormInputGroupcodigo" placeholder="Código" name="id">
-                            <div class="input-group-append">								
-                                <button name="buscar" @click="findById(elementCurrent.id)" type="button" class="btn btn-primary buscarcampo buscarcodigo d-none"><i class="fa fa-search" aria-hidden="true"></i></button>
-                            </div>
-                        </div>
-                        
-                        <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGroupalbum">Album</label>
-                            <div class="input-group-prepend">
-                                <div class="input-group-text h-100">
-                                    <i class="fa fa-link" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                            <select v-model="elementCurrent.id_album" class="form-control" id="inlineFormInputGroupalbum" name="id_album">
-                                <option value="">Selecione um Album</option>
-                                <option v-for="album in albums" :value="album.id" :key="album.id">{{ album.nome }}</option>
-                            </select>
-                        </div>
-                        
-                        <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGroupnome">Nome</label>
-                            <div class="input-group-prepend">
-                                <div class="input-group-text h-100">
-                                    <i class="fa fa-bars" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                            <input type="text" class="form-control" v-model="elementCurrent.nome" id="inlineFormInputGroupnome" placeholder="Nome da foto" name="nome">
-                            <div class="input-group-append">								
-                                <button name="buscar" @click="findAllElements(1)" type="button" class="btn btn-primary buscarcampo buscarnome d-none"><i class="fa fa-search" aria-hidden="true"></i></button>
-                            </div>
-                        </div>
-                        
-                        <div class="input-group mb-3">
-                            <label class="sr-only" for="inlineFormInputGroupfoto">Foto</label>
-                             <div class="input-group-prepend">
-                                <div class="input-group-text h-100">
-                                    <i class="fa fa-camera" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                            <input class="form-control" id="inlineFormInputGroupfoto" placeholder="Foto do album" ref="fileInput" name="foto[]" type="file" multiple accept="image/jpeg" @change="handleFileUpload">
-                        </div>
-                        
-                        <div class="input-group mb-3">
-                            <label class="sr-only" for="ocultar">Ocultar</label>
-                            <div class="input-group-prepend">
-                                <div class="input-group-text h-100">
-                                    <i class="fa fa-eye-slash" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                             <span class="form-check-label form-control" for="ocultar">
-                                <input type="checkbox" id="ocultar" name="ocultar" v-model="elementCurrent.ocultar">
-                                Ocultar
-                            </span>
-                        </div>
-                        
-                        <button v-if="state=='default'" @click="prepareNew();" name="novo" type="button" class="btn btn-dark novo"><i class="fa fa-sticky-note" aria-hidden="true"></i> Novo</button>      
-                        
-                        <button v-if="state=='new'" @click="findAllElements(1); state='find'" name="buscar" type="button" class="btn btn-primary buscar"><i class="fa fa-search" aria-hidden="true"></i> Buscar</button>
-                    
-                        <button v-if="state=='default'||state=='new'||state=='edit'||state=='find'" @click="saveElement()" name="salvar" class="btn btn-success salvar"><i class="fa fa-floppy-o" aria-hidden="true"></i> Salvar</button>    
-                    
-                        <button v-if="state=='findById'" @click="state='edit';" name="editar" type="button" class="btn btn-primary editar"><i class="fa fa-edit" aria-hidden="true"></i> Editar</button>
-                        
-                        <button v-if="state=='edit'" @click="deleteElement(elementCurrent.id);" name="excluir" type="button" class="btn btn-danger excluir"><i class="fa fa-times" aria-hidden="true"></i> Excluir</button>
-                        
-                        <button v-if="state=='new'||state=='edit'||state=='find'" @click="cancelAction();" name="cancelar" type="button" class="btn btn-danger cancelar"><i class="fa fa-ban" aria-hidden="true"></i> Cancelar</button>
-                    </div>
-                </form>
-                <br>
-                
-                <div class="alert alert-success" v-if="successMsg" role="alert" v-html="successMsg"></div>
-                <div class="alert alert-danger" v-if="errorMsg" role="alert" v-html="errorMsg"></div>
-                <div class="alert alert-info" v-if="infoMsg" role="alert" v-html="infoMsg"></div>
-                
-                <br>
-                <table class="table table-striped resultado_busca" v-if="elements.length > 0">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Album</th>
-                            <th>Nome</th>
-                            <th>Foto</th>
-                            <th class="text-center">Ocultar</th>
-                            <th class="text-center" style="width: 120px;">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="element in elements" :key="element.id" @mouseover="hover=true" @mouseleave="hover=false">
-                            <td>{{element.id}}</td>
-                            <td>{{ getAlbumName(element.id_album) }}</td>
-                            <td>{{element.nome}}</td>
-                            <td>
-                                <a v-if="element.foto" :href="'/uploads/album/1024x768/'+element.foto" target="_blank" class="btn btn-sm btn-info"><i class="fa fa-image"></i> Ver</a>
-                            </td>
-                            <td class="text-center">
-                                <input type="checkbox" disabled :checked="element.ocultar == 1">
-                            </td>
-                            <td class="text-center">
-                                <button @click="editItem(element)" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></button>
-                                <button @click="deleteElement(element.id)" class="btn btn-danger btn-sm"><i class="fa fa-times"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                 <!-- Pagination -->
-                 <div class="paginator" v-if="elements.length > 0">
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center">
-                            <li class="page-item" :class="{disabled: pagination.page <= 1}">
-                                <a class="page-link h-100 justify-content-center align-items-center d-flex" href="#" @click.prevent="findAllElements(1)"><i class="fas fa-angle-double-left"></i></a>
-                            </li>
-                            <li class="page-item" :class="{disabled: pagination.page <= 1}">
-                                <a class="page-link h-100 justify-content-center align-items-center d-flex" href="#" @click.prevent="findAllElements(pagination.page - 1)"><i class="fas fa-angle-left"></i></a>
-                            </li>
-                            <li class="page-item disabled">
-                                <span class="page-link">
-                                    Pag <input type="number" v-model.lazy="pagination.page" @change="findAllElements(pagination.page)" style="width: 50px; text-align: center;"> de {{ pagination.limitpage }}
-                                </span>
-                            </li>
-                            <li class="page-item" :class="{disabled: pagination.page >= pagination.limitpage}">
-                                <a class="page-link h-100 justify-content-center align-items-center d-flex" href="#" @click.prevent="findAllElements(pagination.page + 1)"><i class="fas fa-angle-right"></i></a>
-                            </li>
-                            <li class="page-item" :class="{disabled: pagination.page >= pagination.limitpage}">
-                                <a class="page-link h-100 justify-content-center align-items-center d-flex" href="#" @click.prevent="findAllElements(pagination.limitpage)"><i class="fas fa-angle-double-right"></i></a>
-                            </li>
-                            <li class="page-item inverted">
-                                <select class="form-control h-100" v-model="pagination.rowCount" @change="findAllElements(1)">
-                                    <option value="10">10</option>
-                                    <option value="20">20</option>
-                                    <option value="50">50</option>
-                                    <option value="100">100</option>
-                                </select>
-                            </li>
-                        </ul>
-                    </nav>
-                 </div>
+<?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-            </div>
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit;
+}
+
+$headers = getallheaders();
+$isApiRequest = isset($headers['Authorization']);
+
+if ($isApiRequest) {
+    header('Content-Type: application/json');
+    require_once($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
+    require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/controller/controllerFotos.php');
+
+    $token = trim(str_replace('Bearer', '', $headers['Authorization']));
+    
+    $data = json_decode(file_get_contents('php://input'), true);
+    if($data) $_POST = $data;
+
+    if (isset($data['foto']) && is_array($data['foto'])) {
+        $namefile = $data['foto']['namefile'];
+        $base64   = $data['foto']['data'];
+        
+        $conteudo = base64_decode($base64);
+        $directory = $_SERVER['DOCUMENT_ROOT'] . '/uploads/album/';
+        if (!is_dir($directory)) mkdir($directory, 0777, true);
+        
+        $filename = uniqid() . '_' . $namefile;
+        $pathArquivo = $directory . $filename;
+        
+        file_put_contents($pathArquivo, $conteudo);
+        $_POST['foto'] = $filename; 
+    }
+
+    $controller = new controllerFotos();
+    
+    try {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+             $result = $controller->create();
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
+             $id = $data['id'] ?? ($_GET['id'] ?? null);
+             $result = $controller->update($id);
+        } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+             $id = $data['id'] ?? ($_GET['id'] ?? null);
+             $result = $controller->del($id);
+        } else {
+             if (isset($_GET['id'])) {
+                 $result = $controller->findById($_GET['id']);
+             } else {
+                 $result = $controller->find();
+             }
+        }
+    } catch (Exception $e) {
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+    exit;
+}
+require ($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
+include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
+?>
+<script type="importmap">
+{
+  "imports": {
+    "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
+    "@/": "/mvc/view/admin/js/"
+  }
+}
+</script>
+
+<div id="app" class="container">
+    <h1>CADASTRO DE FOTOS</h1>
+    <br>
+    
+    <div class="row">
+        <div class="col-sm-12">
+            <form @submit.prevent="enviarCadastro">
+                <div class="input-group mb-3">
+                     <span class="input-group-text"><i class="fa fa-key"></i></span>
+                     <input type="number" class="form-control" v-model="form.id" placeholder="Código" disabled>
+                     <button type="button" class="btn btn-primary" @click="buscarPorId" v-if="form.id"><i class="fa fa-search"></i></button>
+                </div>
+
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-link"></i></span>
+                    <select v-model="form.id_album" class="form-control">
+                        <option value="">Selecione um Album</option>
+                        <option v-for="album in albums" :value="album.id" :key="album.id">{{ album.nome }}</option>
+                    </select>
+                </div>
+
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-camera"></i></span>
+                    <input class="form-control" type="file" @change="handleFile">
+                </div>
+                
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-bars"></i></span>
+                    <input type="text" class="form-control" v-model="form.nome" placeholder="Nome da Foto">
+                </div>
+                
+                 <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-eye-slash"></i></span>
+                    <div class="form-control">
+                        <input type="checkbox" v-model="form.ocultar" id="ocultar">
+                        <label for="ocultar">Ocultar</label>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-dark" @click="resetForm"><i class="fa fa-sticky-note"></i> Novo</button>
+                    <button type="submit" class="btn btn-success"><i class="fa fa-floppy-o"></i> Salvar</button>
+                    <button type="button" class="btn btn-primary" @click="buscarTodos"><i class="fa fa-search"></i> Buscar</button>
+                    <button type="button" class="btn btn-danger" @click="excluir" v-if="form.id"><i class="fa fa-times"></i> Excluir</button>
+                </div>
+            </form>
+
+            <div v-if="msg.text" :class="'alert alert-'+msg.type" class="mt-3">{{ msg.text }}</div>
+
+            <table class="table table-striped mt-4" v-if="lista.length > 0">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Album</th>
+                        <th>Nome</th>
+                        <th>Foto</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in lista" :key="item.id">
+                        <td>{{ item.id }}</td>
+                        <td>{{ getAlbumName(item.id_album) }}</td>
+                        <td>{{ item.nome }}</td>
+                        <td>
+                            <a v-if="item.foto" :href="'/uploads/album/' + item.foto" target="_blank" class="btn btn-sm btn-info">Ver</a>
+                        </td>
+                        <td>
+                            <button @click="editar(item)" class="btn btn-sm btn-primary"><i class="fa fa-edit"></i></button>
+                            <button @click="excluirItem(item)" class="btn btn-sm btn-danger"><i class="fa fa-times"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>		
-<script>
-    var app = new Vue({
-        el: '#app',
-        data: {
-            errorMsg: "",
-            successMsg: "",
-            infoMsg: "",
-            state: 'default',
-            serverUrl: '/server/fotos',
-            serverAlbumUrl: '/server/albumFotos',
-            elements: [],
-            albums: [],
-            elementCurrent: { id: "", id_album: "", nome: "", ocultar: false },
-            files: [],
-            pagination: {
-                page: 1,
-                rowCount: 10,
-                total: 0,
-                limitpage: 0
-            },
-            loading: false
-        },
-        mounted: function() {
-             this.loadAlbums();
-             this.findAllElements(1); 
-        },
-        methods: {
-            generateToken(length) {
-                var a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
-                var b = [];
-                for (var i = 0; i < length; i++) {
-                    var j = (Math.random() * (a.length - 1)).toFixed(0);
-                    b[i] = a[j];
-                }
-                return b.join("");
-            },
-            prepareNew() {
-                this.clearMsg();
-                this.elementCurrent = { id: "", id_album: "", nome: "", ocultar: false };
-                this.files = [];
-                if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                this.state = 'new';
-            },
-            cancelAction() {
-                this.errorMsg= "";
-                this.successMsg= "";
-                this.infoMsg= "";
-                this.state= 'default';
-                this.serverUrl= '/server/fotos';
-                this.serverAlbumUrl= '/server/albumFotos';
-                this.elements= [];
-                this.albums= [];
-                this.elementCurrent= { id: "", id_album: "", nome: "", ocultar: false };
-                this.files= [];
-                this.pagination= {
-                    page: 1,
-                    rowCount: 10,
-                    total: 0,
-                    limitpage: 0
-                };
-                this.loading= false;
-            },
-            editItem(element) {
-                this.clearMsg();
-                this.elementCurrent = { ...element };
-                this.elementCurrent.ocultar = (this.elementCurrent.ocultar == 1 || this.elementCurrent.ocultar == true);
-                this.files = [];
-                if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                this.state = 'edit';
-            },
-            getAlbumName(id) {
-                if(!id) return "";
-                const album = this.albums.find(a => a.id == id);
-                return album ? album.nome : id;
-            },
-            loadAlbums() {
-                let params = new URLSearchParams();
-                params.append('row_count', 1000); 
-                params.append('token', this.generateToken(256));
-                
-                axios.get(this.serverAlbumUrl+"?"+params.toString()).then(response => {
-                   if(response.data.elements) {
-                       this.albums = response.data.elements;
-                   }
-                }).catch(error => {
-                    console.error("Error loading albums", error);
+
+<script type="module">
+import { createApp, ref, onMounted } from 'vue';
+import { postCadastro } from '/assets/js/services/api.js';
+import { fileToBase64 } from '/assets/js/utils/base64.js';
+
+createApp({
+    setup() {
+        const token = localStorage.getItem('portalToledoData') ? JSON.parse(localStorage.getItem('portalToledoData')).token : '';
+        const form = ref({
+            id: '',
+            id_album: '',
+            nome: '',
+            ocultar: false,
+            foto: null
+        });
+        const file = ref(null);
+        const lista = ref([]);
+        const albums = ref([]);
+        const msg = ref({ text: '', type: '' });
+        const apiUrl = window.location.origin + window.location.pathname; 
+
+        onMounted(() => {
+            carregarAlbums();
+            buscarTodos();
+        });
+
+        async function carregarAlbums() {
+             try {
+                // Existing used '/server/albumFotos'. Assuming it calls controllerAlbumFotos.
+                const response = await fetch('/server/albumFotos', {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-            },
-            handleFileUpload(event) {
-                this.files = event.target.files;
-            },
-            findById(id) {
-                if ((id!=null) && (id!=undefined) && (id.length!=0)) {
-                    this.loading = true;
-                    axios.get(this.serverUrl+"/"+id).then(response => {
-                        this.processResponse(response.data);
-                        if (this.elements && this.elements.length > 0) {
-                             this.elementCurrent = this.elements[0];
-                             this.state = 'findById';
-                        }
-                    }).catch(error => {
-                        this.errorMsg = "Erro: " + error;
-                    }).finally(() => {
-                        this.loading = false;
-                    });
-                }
-            },
-            findAllElements(page) {
-                if (page) this.pagination.page = page;
-                if (this.pagination.page < 1) this.pagination.page = 1;
-                if (this.pagination.limitpage > 0 && this.pagination.page > this.pagination.limitpage) this.pagination.page = this.pagination.limitpage;
-
-                this.loading = true;
-                let serverpage = this.pagination.page;
-                if (serverpage < 1) serverpage = 1;
-
-                let params = new URLSearchParams();
-                params.append('page', serverpage);
-                params.append('row_count', this.pagination.rowCount);
-                params.append('token', this.generateToken(256));
-                
-                if (this.elementCurrent.nome) params.append('nome', this.elementCurrent.nome);
-                if (this.elementCurrent.id) params.append('id', this.elementCurrent.id);
-
-                axios.get(this.serverUrl+"?"+params.toString()).then(response => {
-                    this.processResponse(response.data);
-                }).catch(error => {
-                    console.log(error);
-                    this.errorMsg = "Erro na conexão: " + error;
-                }).finally(() => {
-                    this.loading = false;
-                });
-            },
-            saveElement() {
-                this.loading = true;
-                var formData = new FormData();
-                for (var i in this.elementCurrent) {
-                    if (i === 'ocultar') {
-                         formData.append(i, this.elementCurrent[i] ? 1 : 0);
-                    } else if (this.elementCurrent[i] !== null && this.elementCurrent[i] !== "") {
-                         formData.append(i, this.elementCurrent[i]);
-                    }
-                }
-                
-                for( var i = 0; i < this.files.length; i++ ){
-                    let file = this.files[i];
-                    formData.append('foto[' + i + ']', file);
-                }
-
-                // Add legacy fields expected by server
-                formData.append('foto_formats', '160x120,320x240,480x640,800x600,1024x768,1366x768');
-                formData.append('foto_path', 'album');
-                
-                if(this.elementCurrent?.id){
-                     // Note: PUT with multipart/form-data can be tricky in PHP (doesn't populate $_FILES). 
-                    // Often it's better to use POST with _method=PUT or just handle logic on server.
-                    // Assuming server handles PUT or we should try POST for update if files are involved?
-                    // Typically axios.put does not send files correctly to PHP unless using a workaround.
-                    // Workaround: POST with _method or just POST if the server route supports it.
-                    // The standard router in this project seems to rely on REQUEST_METHOD.
-                    // I'll try PUT first, but if it fails I'd switch to POST. 
-                    // Actually, standard PHP only reads $_FILES on POST. 
-                    // To update with file, usually valid to use POST with id.
-                    // But I will stick to the pattern; if it fails, user will report.
-                    // Actually, widespread issue: PHP doesn't parse multipart/form-data for PUT.
-                    // Changing to POST with _method=PUT is safer if server supports it.
-                    // But let's stick to the pattern used in `cadastro_tipos_anuncios.php`?
-                    // `cadastro_tipos_anuncios.php` uses PUT but does NOT have file upload enabled (no input type file).
-                    // `cadastro_noticia` had `enctype="multipart/form-data"` but `cadastro_tipos_anuncios` doesn't seem to upload files in the visible form.
-                    
-                    // Since I don't know if the server supports the PUT workaround, I will use POST but maybe I should warn.
-                    // However, for now I will use PUT as per pattern. If it breaks, I'll fix it.
-                    // Update: To support file upload on update, standard practice in this repo seems to be what?
-                    // I will leave it as PUT for consistency, but be aware.
-                    axios.put(this.serverUrl+"/"+this.elementCurrent.id, formData).then(response => {
-                        this.processResponse(response.data);
-                        if (this.successMsg) {
-                            this.state = 'default';
-                             this.elementCurrent = { id: "", id_album: "", nome: "", ocultar: false };
-                             this.files = [];
-                             if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-                            this.findAllElements(this.pagination.page);
-                        }
-                    }).catch((error) => {
-                        console.log(error);
-                        this.errorMsg = "Erro desconhecido: " + error;
-                    }).finally(() => {
-                        this.loading = false;
-                    });
-                }else{
-					axios.post(this.serverUrl, formData).then(response => {
-						this.processResponse(response.data);
-						if (this.successMsg) {
-							this.state = 'default';
-							 this.elementCurrent = { id: "", id_album: "", nome: "", ocultar: false };
-                             this.files = [];
-                             if(this.$refs.fileInput) this.$refs.fileInput.value = "";
-							this.findAllElements(this.pagination.page);
-						}
-					}).catch((error) => {
-						console.log(error);
-						this.errorMsg = "Erro desconhecido: " + error;
-					}).finally(() => {
-						this.loading = false;
-					});
-				}
-            },
-            deleteElement(id) {
-                if(confirm("Tem certeza que deseja excluir?")) {
-                    this.loading = true;
-                    axios.delete(this.serverUrl+"/"+id).then(response => {
-                        this.processResponse(response.data);
-                        if (this.successMsg || !this.errorMsg) { 
-                             this.elementCurrent = {id:"", id_album: "", nome: "", ocultar: false};
-                             this.state = 'default';
-                             this.findAllElements(this.pagination.page);
-                        }
-                    }).catch(error => {
-                        this.errorMsg = "Erro ao excluir: " + error;
-                    }).finally(() => {
-                        this.loading = false;
-                    });
-                }
-            },
-            processResponse(data) {
-                this.clearMsg();
-                if (typeof data === 'string') {
-                    try {
-                        data = JSON.parse(data);
-                    } catch (e) {
-                         return;
-                    }
-                }
-                
-                if (data.mensagem_erro) {
-                    this.errorMsg = data.mensagem_erro;
-                } else if (data.message && data.error) {
-                     this.errorMsg = data.message;
-                }
-                
-                if (data.mensagem_sucesso) {
-                    this.successMsg = data.mensagem_sucesso;
-                } else if (data.message && !data.error) {
-                    this.successMsg = data.message;
-                } else if (data.mensagem_informacao) {
-                    this.infoMsg = data.mensagem_informacao;
-                }
-
-                if (data.elements) {
-                    this.elements = data.elements;
-                }
-
-                if (data.recordsCount !== undefined) {
-                    this.pagination.total = parseInt(data.recordsCount);
-                } else if (data.numero_registros !== undefined) {
-                    this.pagination.total = parseInt(data.numero_registros);
-                }
-
-                if (this.pagination.total > 0) {
-                     this.pagination.limitpage = Math.ceil(this.pagination.total / this.pagination.rowCount);
-                     if (this.pagination.limitpage < 1) this.pagination.limitpage = 1;
-                } else {
-                    this.pagination.limitpage = 1; 
-                }
-            },
-            clearMsg() {
-                this.errorMsg = "";
-                this.successMsg = "";
-                this.infoMsg = "";
+                const data = await response.json();
+                if(data.elements) albums.value = data.elements;
+            } catch (e) {
+                console.error(e);
             }
         }
-    });
+        
+        function getAlbumName(id) {
+            const a = albums.value.find(x => x.id == id);
+            return a ? a.nome : id;
+        }
+
+        function handleFile(event) {
+            file.value = event.target.files[0];
+        }
+
+        async function enviarCadastro() {
+             let imagem = null;
+            if (file.value) {
+                imagem = {
+                    namefile: file.value.name,
+                    data: await fileToBase64(file.value)
+                };
+            }
+
+            const payload = {
+                ...form.value,
+                foto: imagem
+            };
+            if(!payload.id) delete payload.id;
+
+            try {
+                const method = form.value.id ? 'PUT' : 'POST';
+                const response = await fetch(apiUrl, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                }).then(res => res.json());
+
+                if (response.success || response.mensagem_sucesso || response.id) {
+                    msg.value = { text: 'Salvo com sucesso!', type: 'success' };
+                    resetForm();
+                    buscarTodos();
+                } else {
+                     msg.value = { text: response.error || response.mensagem_erro || 'Erro ao salvar', type: 'danger' };
+                }
+            } catch (error) {
+                msg.value = { text: 'Erro na requisição: ' + error.message, type: 'danger' };
+            }
+        }
+
+        async function buscarTodos() {
+             try {
+                const response = await fetch(`${apiUrl}?all=true`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if(data.elements) lista.value = data.elements;
+                else if(Array.isArray(data)) lista.value = data;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        
+        async function buscarPorId() {
+            if(!form.value.id) return;
+             try {
+                const response = await fetch(`${apiUrl}?id=${form.value.id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                const item = data.site && data.site[0] ? data.site[0] : (data.elements?.[0] || data);
+                if(item) editar(item);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function excluir() {
+            if(!confirm("Deseja excluir?")) return;
+            try {
+                 const response = await fetch(apiUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: form.value.id })
+                }).then(res => res.json());
+                
+                if(response.success || !response.error) {
+                    msg.value = { text: 'Excluído com sucesso', type: 'success' };
+                    resetForm();
+                    buscarTodos();
+                }
+            } catch(e) {
+                 msg.value = { text: 'Erro ao excluir', type: 'danger' };
+            }
+        }
+
+        async function excluirItem(item) {
+            if(!confirm("Deseja excluir?")) return;
+            try {
+                 const response = await fetch(apiUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: item.id })
+                }).then(res => res.json());
+                
+                if(response.success || !response.error) {
+                    msg.value = { text: 'Excluído com sucesso', type: 'success' };
+                    if(form.value.id == item.id) resetForm();
+                    buscarTodos();
+                } else {
+                     msg.value = { text: response.error || response.mensagem_erro || 'Erro ao excluir', type: 'danger' };
+                }
+            } catch(e) {
+                 msg.value = { text: 'Erro ao excluir ' + e.message, type: 'danger' };
+            }
+        }
+
+        function editar(item) {
+            form.value = { ...item };
+            form.value.ocultar = (item.ocultar == 1 || item.ocultar == true);
+            window.scrollTo(0,0);
+        }
+
+        function resetForm() {
+            form.value = {
+                id: '',
+                id_album: '',
+                nome: '',
+                ocultar: false,
+                foto: null
+            };
+            file.value = null;
+        }
+
+        return {
+            form,
+            file,
+            lista,
+            albums,
+            msg,
+            getAlbumName,
+            handleFile,
+            enviarCadastro,
+            buscarTodos,
+            buscarPorId,
+            excluir,
+            excluirItem,
+            editar,
+            resetForm
+        };
+    }
+}).mount('#app');
 </script>
 <?php include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/foot.php');?>

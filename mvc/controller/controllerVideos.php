@@ -2,7 +2,7 @@
 	require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/model/videosDAO.php');
 	require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/controller/controller.php');
 	class controllerVideos extends controller{
-        public function find(){
+		public function find(){
 			$this->model->setOrders([$this->model::id=>"DESC"]);
             echo json_encode(parent::find());		
 		}
@@ -22,7 +22,6 @@
 		public function del($id){
 		    echo json_encode(parent::del($id));
         }
-
 		public function __construct(){
 			$params=[];
 	        if(notEmptyParameter(videosDAO::id))$params[videosDAO::id]=getParameter(videosDAO::id);

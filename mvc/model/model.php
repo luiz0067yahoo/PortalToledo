@@ -12,7 +12,8 @@ class model
     private $groups;
     private $orders;
     public $limit;
-
+    public $json_exit;
+    
     const id = "id";
     const date_insert = "date_insert";
     const date_update = "date_update";
@@ -280,7 +281,7 @@ class model
             if (strrpos(DAOqueryUpdate($this->table, $params, $conditions_params), "Error") != -1)
                 return DAOquerySelectById($this->table, $this->fields, $this->joins, $id);
         } catch (Exception $Errorr) {
-            
+            return $Errorr;
         }
     }
 
@@ -433,6 +434,7 @@ class model
     public function destroy($id)
     {
         $list = array();
+        $this->json_exit = array();
         try {
             $conditions_params = array(self::id => $id);
             DAOqueryDelete($this->table, $conditions_params);

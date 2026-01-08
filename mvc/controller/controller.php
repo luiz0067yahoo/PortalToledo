@@ -7,6 +7,7 @@
 		private	$action;
 		private	$params;
 		protected $settingsImagesUpload;
+		protected $settingsImagesBase64;
 		protected $findParams;
 		public function __construct(model $model){
 			$this->model=$model;
@@ -21,6 +22,7 @@
 			if(!isset($this->model->limit["row_count"]))
 			    $this->model->limit["row_count"]=10;
 			$this->settingsImagesUpload=[];
+			$this->settingsImagesBase64=[];
 		}
 	    public function upload($call_back_function){
 		    $files_uploads=uploadImageRedimencion($this->settingsImagesUpload);
@@ -48,6 +50,49 @@
 		    }
 		    return $result;
 	    }
+
+		public function saveBase64($call_back_function)
+		{
+			$files_uploads = saveBase64ImageRedimencion($this->settingsImagesBase64);
+			$biggerCountFiles = 0;
+			$result = [];
+
+			foreach ($files_uploads as $key => $files) {
+				if (($biggerCountFiles == 0) || ($biggerCountFiles < count($files))) {
+					$biggerCountFiles = count($files);
+				}
+			}
+			
+			for ($i = 0; $i < $biggerCountFiles; $i++) {
+
+				foreach ($files_uploads as $key => $files) {
+
+					if (count($files) > $i) {
+						$this->model->setParam($key, $files[$i]);
+
+						if (empty($files[$i])) {
+							$this->model->unParam($key);
+						}
+					}
+				}
+
+				$item = call_user_func($call_back_function);
+				if (isset($result["elements"])) {
+					$result["elements"] += $item["elements"];
+				} else {
+					$result = $item;
+				}
+
+				// se for update, salva apenas uma imagem
+				if (!empty($this->model->getParam("id"))) {
+					break;
+				}
+			}
+			if(empty($result)){
+				$result = call_user_func($call_back_function);
+			}
+			return $result;
+		}
 		public function getModel(){
 			return $this->model;
 		}

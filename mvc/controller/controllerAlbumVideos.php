@@ -16,7 +16,7 @@
 			$this->model->setOrders([$this->model::id=>"DESC"]);
             echo json_encode(parent::find());		
 		}
-			public function findById($id){
+		public function findById($id){
 			echo json_encode(parent::findById($id));
 		}
 	    public function findSlideShow($menuSubMenu){
@@ -31,7 +31,6 @@
                 $page=0;  
             echo json_encode($this->model->findMenuAlbum($menuSubMenu,$page,27)["elements"]);
         }
-
 		public function __construct(){
 		     $params=[];
 	        if(notEmptyParameter(albumVideosDAO::id))$params[albumVideosDAO::id]=getParameter(albumVideosDAO::id);

@@ -26,13 +26,12 @@
         }		
 		public function del($id){
 		    $result=parent::findById($id);
-		    foreach ($settingsImagesUpload as $key => $value){
+		    foreach ($this->settingsImagesBase64 as $key => $value){
     		    $file_name=resultDataFieldByTitle($result,$key,0);
-    		    deleteUpload($file_name,$settingsImagesUpload[$key]["path"],$settingsImagesUpload[$key]["formats"]);
+    		    deleteUpload($file_name,$this->settingsImagesBase64[$key]["path"],$this->settingsImagesBase64[$key]["formats"]);
             }		
-		    parent::del($id);
-        }		
-
+		    echo json_encode(parent::del());
+        }
 		public function __construct(){
 		    $params=[];
 	        if(notEmptyParameter(noticiasAnexosDAO::id))                         $params[noticiasAnexosDAO::id]=getParameter(noticiasAnexosDAO::id);

@@ -61,12 +61,7 @@
         },
         mounted() {
             // Check if already logged in
-            const token = localStorage.getItem('token');
-            if (token) {
-                // Optional: Verify token existence? But usually we just redirect.
-                // If it's expired, panel will redirect back.
-               window.location.href = '/admin/panel';
-            }
+            const portalToledoData = JSON.parse(localStorage.getItem('portalToledoData'));
         },
         methods: {
             async doLogin() {
@@ -81,15 +76,25 @@
                 // functionsForms looks for them.
                 
                 try {
-                    const response = await axios.post('/server/usuarios/login', formData);
+                    const responseLogin = await axios.post('/server/usuarios/login', formData);
                     
-                    if (response.data && response.data.token) {
-                        localStorage.setItem('token', response.data.token);
-                        // Store user info if needed
-                        if (response.data.user) {
-                            localStorage.setItem('user', JSON.stringify(response.data.user));
+                    if (responseLogin.data && responseLogin.data.token) {
+                        const token = responseLogin.data.token;
+                       
+                        const responseUser = await axios.get('/server/userActive', {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        const portalToledoData = {
+                            token: token,
+                            userId: responseUser.data.id,
+                            userName: responseUser.data.nome,
+                            userEmail: responseUser.data.email
                         }
-                        
+
+                        localStorage.setItem('portalToledoData', JSON.stringify(portalToledoData));
+
                         this.message = 'Login realizado com sucesso! Redirecionando...';
                         this.messageClass = 'alert-success';
                         

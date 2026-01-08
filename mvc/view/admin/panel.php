@@ -227,7 +227,9 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
          So I should put my script AFTER foot.php include, OR rely on foot.php including the libs.
     -->
     <?php include $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/foot.php' ?>
-    
+<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+
     <script>
         var app = new Vue({
             el: '#app',
@@ -267,35 +269,44 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
             },
             methods: {
                 checkAuth() {
-                     const token = localStorage.getItem('token');
-                     if (!token) {
+                    const portalToledoData = JSON.parse(localStorage.getItem('portalToledoData'));
+                    
+                    if (!portalToledoData) {
                          window.location.href = '/admin/login';
                          return;
-                     }
-                     this.parseToken(token);
+                    }
+
+                    this.userName = portalToledoData.userName;
+                    const token = portalToledoData.token;
+                    
+                    this.checkSessionTime(token);
                 },
-                parseToken(token) {
+                async checkSessionTime(token) {
                     try {
-                       const base64Url = token.split('.')[1];
-                       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                       const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                           return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                       }).join(''));
-                       const payload = JSON.parse(jsonPayload);
-                       
-                       if (payload.nome) this.userName = payload.nome;
-                       if (payload.exp) {
-                           this.startTimer(payload.exp);
-                       }
-                   } catch (e) {
-                       console.error('Invalid token', e);
-                       this.logout();
-                   }
+                        const response = await axios.get('/server/time_session', {
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
+                        });
+                        this.currentTime = response.data;
+                        setTimeout(() => {
+                            this.checkSessionTime(token);
+                        }, 500);
+                    } catch (error) {
+                        console.error('Erro ao buscar time_session:', error);
+                    }
                 },
+                    // parseToken logic removed in favor of portalToledoData usage as per request
                 onTokenRefreshed(e) {
                     const newToken = e.detail;
                     console.log("Panel updated with new token info");
-                    this.parseToken(newToken);
+                    
+                    const portalToledoData = JSON.parse(localStorage.getItem('portalToledoData'));
+                    if (portalToledoData) {
+                        portalToledoData.token = newToken;
+                        localStorage.setItem('portalToledoData', JSON.stringify(portalToledoData));
+                        this.checkSessionTime(newToken);
+                    }
                 },
                 startTimer(expTimestamp) {
                     if (this.timerInterval) clearInterval(this.timerInterval);
@@ -338,7 +349,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
                     }
                 },
                 logout() {
-                    localStorage.removeItem('token');
+                    localStorage.removeItem('portalToledoData');
                     window.location.href = '/admin/login';
                 }
             }
