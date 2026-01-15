@@ -4,13 +4,13 @@ require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/model/menusDAO.php');
 class noticiasDAO extends model
 {
 	const table="noticias";
-	const id_menu="id_menu";
-	const foto_principal="foto_principal";
+	const idMenu="id_menu";
+	const fotoPrincipal="foto_principal";
 	const titulo="titulo";
 	const subtitulo="subtitulo";
-	const conteudo_noticia="conteudo_noticia";
+	const conteudoNoticia="conteudo_noticia";
 	const fonte="fonte";
-	const slide_show="slide_show";
+	const slideShow="slide_show";
 	const acesso="acesso";
 	const ocultar="ocultar";
 	public function findSlideShow($menuSubMenu){
@@ -150,7 +150,7 @@ class noticiasDAO extends model
         return $this->find();		
     }
     public function __construct($model_attributes){
-		parent::__construct($model_attributes,self::table,[self::id_menu,self::foto_principal,self::titulo,self::subtitulo,self::conteudo_noticia,self::fonte,self::acesso,self::slide_show,self::ocultar]);
+		parent::__construct($model_attributes,self::table,[self::idMenu,self::fotoPrincipal,self::titulo,self::subtitulo,self::conteudoNoticia,self::fonte,self::acesso,self::slideShow,self::ocultar]);
     }
 }
   

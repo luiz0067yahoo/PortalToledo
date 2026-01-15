@@ -77,10 +77,13 @@
 				}
 
 				$item = call_user_func($call_back_function);
-				if (isset($result["elements"])) {
-					$result["elements"] += $item["elements"];
-				} else {
+				if (empty($result)) {
 					$result = $item;
+				} else {
+					$result["elements"] = array_merge(
+						$result["elements"],
+						$item["elements"]
+					);
 				}
 
 				// se for update, salva apenas uma imagem

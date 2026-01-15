@@ -354,12 +354,37 @@ createApp({
 
         const cancelAction = () => {
             clearMsg();
-            state.value = 'default';
-            prepareNew(); // Resets everything including images
-            elements.value = [];
-            pagination.value = { page: 1, rowCount: 10, total: 0, limitpage: 0 };
-            carregarParentMenus();
+            // State
             loading.value = false;
+            state.value = 'default'; 
+            showModal.value = false;
+            itemToDelete.value = null;
+            modalImage.value = null;
+
+            // Data
+            errorMsg.value = "";
+            successMsg.value = "";
+            infoMsg.value = "";
+            elementCurrent.value = { 
+                id: '',
+                id_menu: '',
+                nome: '',
+                ocultar: false,
+                icone: ''
+            };
+            elements.value = [];
+            pagination.value = {
+                page: 1,
+                rowCount: 10,
+                total: 0,
+                limitpage: 0
+            };
+            parentMenus.value = [];
+            
+            // File handling variables
+            files.icone.value = null;
+            icone_base64.value = '';
+            iconePreview.value = '';
         };
 
         const editItem = (element) => {

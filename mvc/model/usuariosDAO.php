@@ -277,14 +277,21 @@ class usuariosDAO extends model
     }
 
     public function controlAcess() {
-        $jwt = explode(" ", $_SERVER['HTTP_AUTHORIZATION'])[1];
-        $validate = functionsJWT::validate($jwt);
-        if ($validate && $validate['exp'] > time()) {
-            return ($this->userActive()[self::id]==functionsJWT::getUserId());
+        if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            http_response_code(401);
+            echo json_encode(["mensagem_erro" => "Acesso negado."]);
+            return false;
         }
-        http_response_code(401);
-        echo json_encode(["mensagem_erro" => "Acesso negado."]);
-        return false;
+        else{
+            $jwt = explode(" ", $_SERVER['HTTP_AUTHORIZATION'])[1];
+            $validate = functionsJWT::validate($jwt);
+            if ($validate && $validate['exp'] > time()) {
+                return ($this->userActive()[self::id]==functionsJWT::getUserId());
+            }
+            http_response_code(401);
+            echo json_encode(["mensagem_erro" => "Acesso negado."]);
+            return false;
+        }
     }
 
    

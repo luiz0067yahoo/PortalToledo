@@ -1,164 +1,215 @@
 <?php
-header('Access-Control-Allow-Origin: *');
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    header('Content-Type: application/json');
-
-    // 🔐 Authorization Bearer
-    $headers = getallheaders();
-    if (!isset($headers['Authorization'])) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Authorization não enviado']);
-        exit;
-    }
-
-    $token = trim(str_replace('Bearer', '', $headers['Authorization']));
-
-    // 👉 validarToken($token);
-
-    // 📥 JSON
-    $data = json_decode(file_get_contents('php://input'), true);
-    if (!$data) {
-        http_response_code(400);
-        echo json_encode(['error' => 'JSON inválido']);
-        exit;
-    }
-
-    // 📌 Campos comuns
-    require_once($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
-    
-    $titulo = $data['titulo'] ?? '';
-    $subtitulo = $data['subtitulo'] ?? '';
-    $conteudo = $data['conteudo'] ?? ''; // conteudo_anuncios_anexo
-    $fonte = $data['fonte'] ?? '';
-    $ocultar = $data['ocultar'] ?? 0;
-    $id_anuncio = $data['id_anuncio'] ?? null;
-    $id = $data['id'] ?? null;
-
-    $pathArquivo = null;
-
-    // 📷 Upload Anexo/Arquivo
-    if (isset($data['arquivo']) && !empty($data['arquivo'])) {
-        $namefile = $data['arquivo']['namefile'];
-        $base64   = $data['arquivo']['data'];
-
-        $conteudoArquivo = base64_decode($base64);
-        $pathArquivo = 'uploads/anuncios_anexos/' . uniqid() . '_' . $namefile;
-        
-        if (!is_dir('uploads/anuncios_anexos/')) {
-           mkdir('uploads/anuncios_anexos/', 0777, true);
-        }
-
-        file_put_contents($pathArquivo, $conteudoArquivo);
-        $pathArquivo = basename($pathArquivo);
-    }
-
-    // 💾 salvarNoBanco(...);
-
-    echo json_encode([
-        'success' => true,
-        'message' => 'Cadastro realizado com sucesso'
-    ]);
-    exit;
-}
+require_once($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
 include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 ?>
-<div id="app">
-    <div class="container">
-        <h1>CADASTRO DE ANEXO ANÚNCIOS</h1>
-        <br>
+
+
+<script type="importmap">
+{
+  "imports": {
+    "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+  }
+}
+</script>
+
+<div id="app" class="container">
+    <h1>CADASTRO DE ANEXO DE ANÚNCIOS</h1>
+    <br>
+
+    <div id="loader" v-if="loading">
+        <div class="loader"></div>
+    </div>
+
+    <form @submit.prevent>
         <div class="row">
-            <div class="sm-12">
-                <!-- Dropdown de anuncios idealmente seria carregado aqui via outra API -->
-                <input v-model="id_anuncio" class="form-control mb-2" placeholder="ID Anúncio (Temporário)" />
-                
-                <input v-model="titulo" class="form-control mb-2" placeholder="Título" />
-                <input v-model="subtitulo" class="form-control mb-2" placeholder="Subtítulo" />
-                <textarea v-model="conteudo" class="form-control mb-2" placeholder="Conteúdo"></textarea>
-                <input v-model="fonte" class="form-control mb-2" placeholder="Fonte" />
-                
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" v-model="ocultar" id="ocultar">
-                    <label class="form-check-label" for="ocultar">Ocultar</label>
+            <div class="col-sm-12">
+
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-bullhorn"></i></span>
+                    <input v-model="elementCurrent.id_anuncio"
+                           class="form-control"
+                           placeholder="ID do Anúncio">
                 </div>
 
-                <input type="file" @change="onFileChange" class="form-control mb-2" />
-                <button @click="enviarCadastro" class="btn btn-success">Salvar</button>
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-heading"></i></span>
+                    <input v-model="elementCurrent.titulo"
+                           class="form-control"
+                           placeholder="Título">
+                </div>
+
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-align-left"></i></span>
+                    <input v-model="elementCurrent.subtitulo"
+                           class="form-control"
+                           placeholder="Subtítulo">
+                </div>
+
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-file-alt"></i></span>
+                    <textarea v-model="elementCurrent.conteudo"
+                              class="form-control"
+                              placeholder="Conteúdo"></textarea>
+                </div>
+
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-link"></i></span>
+                    <input v-model="elementCurrent.fonte"
+                           class="form-control"
+                           placeholder="Fonte">
+                </div>
+
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-eye-slash"></i></span>
+                    <div class="form-control">
+                        <input type="checkbox" v-model="elementCurrent.ocultar" id="ocultar">
+                        <label for="ocultar"> Ocultar</label>
+                    </div>
+                </div>
+
+                <!-- Preview do arquivo -->
+                <div v-if="temArquivoParaMostrar" class="mb-3">
+                    <span class="badge bg-secondary">{{ arquivoNome }}</span>
+                    <button class="btn btn-danger btn-sm ms-2" @click="removeFile">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa fa-paperclip"></i></span>
+                    <input type="file"
+                           class="form-control"
+                           @change="handleFile">
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success" @click="saveElement">
+                        <i class="fa fa-save"></i> Salvar
+                    </button>
+                    <button class="btn btn-danger" @click="cancelAction">
+                        <i class="fa fa-ban"></i> Cancelar
+                    </button>
+                </div>
+
             </div>
         </div>
-        <br>
-        <div v-if="message" class="alert alert-info">{{ message }}</div>
-    </div>
+    </form>
+
+    <div v-if="successMsg" class="alert alert-success mt-3">{{ successMsg }}</div>
+    <div v-if="errorMsg" class="alert alert-danger mt-3">{{ errorMsg }}</div>
 </div>
 
 <script type="module">
-    import { createApp, ref } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
-    import { postCadastro } from '/assets/js/services/api.js';
-    import { fileToBase64 } from '/assets/js/utils/base64.js';
+import { createApp, ref, computed } from 'vue';
+import { fileToBase64 } from '/assets/js/utils/base64.js';
 
-    createApp({
-        setup() {
-             const token = localStorage.getItem('portalToledoData') ? JSON.parse(localStorage.getItem('portalToledoData')).token : '';
-            
-            const titulo = ref('');
-            const subtitulo = ref('');
-            const conteudo = ref('');
-            const fonte = ref('');
-            const ocultar = ref(false);
-            const id_anuncio = ref('');
-            const message = ref('');
-            const file = ref(null);
+createApp({
+    setup() {
+        const loading = ref(false);
+        const successMsg = ref('');
+        const errorMsg = ref('');
 
-            function onFileChange(e) {
-                file.value = e.target.files[0];
-            }
+        const elementCurrent = ref({
+            titulo: '',
+            subtitulo: '',
+            conteudo: '',
+            fonte: '',
+            id_anuncio: '',
+            ocultar: false
+        });
 
-            async function enviarCadastro() {
-                let arquivo = null;
+        const arquivoBase64 = ref('');
+        const arquivoNome = ref('');
 
-                if (file.value) {
-                    arquivo = {
-                        namefile: file.value.name,
-                        data: await fileToBase64(file.value)
-                    };
-                }
+        const temArquivoParaMostrar = computed(() => !!arquivoNome.value);
 
-                const payload = {
-                    titulo: titulo.value,
-                    subtitulo: subtitulo.value,
-                    conteudo: conteudo.value,
-                    fonte: fonte.value,
-                    ocultar: ocultar.value,
-                    id_anuncio: id_anuncio.value,
-                    arquivo: arquivo
-                };
+        const getToken = () => {
+            const data = localStorage.getItem('portalToledoData');
+            return data ? JSON.parse(data).token : '';
+        };
 
-                const response = await postCadastro(
-                    '/mvc/view/admin/system/cadastro_anuncio_anexos.php', 
-                    payload,
-                    token
-                );
+        const handleFile = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-                console.log(response);
-                if(response.success) {
-                    message.value = response.message;
-                } else {
-                    message.value = response.error || 'Erro ao salvar';
-                }
-            }
+            arquivoNome.value = file.name;
+            const base64 = await fileToBase64(file);
+            arquivoBase64.value = base64.split(',')[1];
+        };
 
-            return {
-                titulo,
-                subtitulo,
-                conteudo,
-                fonte,
-                ocultar,
-                id_anuncio,
-                file,
-                message,
-                onFileChange,
-                enviarCadastro
+        const removeFile = () => {
+            arquivoNome.value = '';
+            arquivoBase64.value = '';
+        };
+
+        const saveElement = async () => {
+            loading.value = true;
+            successMsg.value = '';
+            errorMsg.value = '';
+
+            const payload = {
+                ...elementCurrent.value,
+                arquivo: arquivoBase64.value ? {
+                    namefile: arquivoNome.value,
+                    data: arquivoBase64.value
+                } : null
             };
-        }
-    }).mount('#app');
+
+            try {
+                const response = await fetch(location.href, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + getToken()
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    successMsg.value = data.message;
+                    prepareNew();
+                } else {
+                    errorMsg.value = data.error || 'Erro ao salvar';
+                }
+            } catch (e) {
+                errorMsg.value = 'Erro de conexão';
+            } finally {
+                loading.value = false;
+            }
+        };
+
+        const prepareNew = () => {
+            elementCurrent.value = {
+                titulo: '',
+                subtitulo: '',
+                conteudo: '',
+                fonte: '',
+                id_anuncio: '',
+                ocultar: false
+            };
+            removeFile();
+        };
+
+        const cancelAction = () => {
+            prepareNew();
+        };
+
+        return {
+            loading,
+            elementCurrent,
+            arquivoNome,
+            temArquivoParaMostrar,
+            handleFile,
+            removeFile,
+            saveElement,
+            cancelAction,
+            successMsg,
+            errorMsg
+        };
+    }
+}).mount('#app');
 </script>
-<?php include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/foot.php');?>
+
+<?php include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/foot.php'); ?>

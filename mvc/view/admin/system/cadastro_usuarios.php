@@ -1,48 +1,4 @@
 <?php
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit;
-}
-
-$headers = getallheaders();
-$isApiRequest = isset($headers['Authorization']);
-
-if ($isApiRequest) {
-    header('Content-Type: application/json');
-    require_once($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
-    require_once($_SERVER['DOCUMENT_ROOT'].'/mvc/controller/controllerUsuarios.php');
-
-    $token = trim(str_replace('Bearer', '', $headers['Authorization']));
-    
-    $data = json_decode(file_get_contents('php://input'), true);
-    if($data) $_POST = $data;
-
-    $controller = new controllerUsuarios();
-    
-    try {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-             $result = $controller->create();
-        } elseif ($_SERVER['REQUEST_METHOD'] === 'PUT') {
-             $id = $data['id'] ?? ($_GET['id'] ?? null);
-             $result = $controller->update($id);
-        } elseif ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-             $id = $data['id'] ?? ($_GET['id'] ?? null);
-             $result = $controller->del($id);
-        } else {
-             if (isset($_GET['id'])) {
-                 $result = $controller->findById($_GET['id']);
-             } else {
-                 $result = $controller->find(); // Usually find() returns all
-             }
-        }
-    } catch (Exception $e) {
-        echo json_encode(['error' => $e->getMessage()]);
-    }
-    exit;
-}
 require ($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
 include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 ?>
