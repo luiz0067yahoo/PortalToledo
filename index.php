@@ -279,8 +279,12 @@ Route::add('/admin/noticias',function(){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_noticias.php');
 },'get');
 
-Route::add('/admin/noticiasAnexo',function(){
+Route::add('/admin/noticiasAnexo/([0-9]+)',function($id){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_noticias_anexo.php');
+},'get');
+
+Route::add('/admin/noticiasFotos/([0-9]+)',function($id){
+    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_noticias_fotos.php');
 },'get');
 
 Route::add('/admin/tiposAnuncios',function(){
@@ -289,6 +293,14 @@ Route::add('/admin/tiposAnuncios',function(){
 
 Route::add('/admin/anuncios',function(){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_anuncios.php');
+},'get');
+
+Route::add('/admin/anunciosFotos/([0-9]+)',function($idAnuncio){
+    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_anuncios_fotos.php');
+},'get');
+
+Route::add('/admin/anunciosAnexo/([0-9]+)',function($idAnuncio){
+    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_anuncios_anexo.php');
 },'get');
 
 Route::add('/admin/albumFotos',function(){
