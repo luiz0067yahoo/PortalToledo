@@ -2,35 +2,49 @@
 require ($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
 include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 ?>
-
-<!-- Add Axios for consistency -->
-<link rel="stylesheet" href="https://cdn.ckeditor.com/ckeditor5/47.3.0/ckeditor5.css">
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill-table-better@1/dist/quill-better-table.css">
 <style>
     .modal-overlay {
         position: fixed;
         top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-.modal-content-custom {
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
-    min-width: 300px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-.modal-actions {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .modal-content-custom {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        min-width: 300px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+</style>
+<style>
+   /* Tire ou ajuste muito esse valor negativo — causa problemas sérios */
+    .ql-table-menus-container,
+    .ql-table-properties-form {
+        z-index: 2147483647 !important;
+        background-color: #fff;
+        margin-top: -300px;
+    }
+
+    /* Melhor controle de posicionamento do popover/menus */
+    .ql-table-better-menu {
+        z-index: 2147483647 !important;
+    }
 </style>
 <!-- ... cabeçalho e estilos semelhantes ao do noticias ... -->
 
@@ -92,18 +106,16 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                     <small class="text-muted">Tamanhos sugeridos: 1200×630, 800×600, 1024×768</small>
                 </div>
                 
-                <!-- CKEditor aqui (você pode manter o container #editor) -->
+                <!-- initQuill aqui (você pode manter o container #editor) -->
                 <div class="mb-3">
                     <label class="form-label fw-bold">Conteúdo da notícia</label>
-                    <textarea 
-                        id="editor" 
-                        v-model="elementCurrent.conteudo_noticia"
-                        style="display:none;"
-                        ></textarea>
-                    </div>
+                </div>
+                <div class="mb-3">
+                    <div id="conteudo_noticia" name="conteudo_noticia"  class="form-control" style="height:400px;"></div>
+                </div>
                     
-                    <!-- Fonte -->
-                    <div class="input-group mb-3">
+                <!-- Fonte -->
+                <div class="input-group mb-3">
                         <span class="input-group-text"><i class="fa fa-newspaper"></i></span>
                         <input type="text" class="form-control" v-model="elementCurrent.fonte" placeholder="Fonte (opcional)">
                 </div>
@@ -228,7 +240,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
     <!-- Modal Delete -->
     <div class="modal-overlay" v-if="showModal">
         <div class="modal-content-custom">
-            <h4 v-if="itemToDelete" class="mb-4">{{ itemToDelete.nome }}</h4>
+            <h4 v-if="itemToDelete" class="mb-4">{{ itemToDelete.titulo }}</h4>
             <div class="modal-actions">
                 <button class="btn btn-primary" @click="confirmDelete">Sim</button>
                 <button class="btn btn-danger" @click="closeModal">Não</button>
@@ -242,51 +254,107 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
             <img :src="modalImage" style="max-width: 90vw; max-height: 90vh; border: 2px solid white; box-shadow: 0 0 15px rgba(0,0,0,0.5);">
         </div>
     </div>
+
+
+
+    <!-- ==================== MODAL INSERIR TABELA ==================== -->
+    <div class="modal-overlay" v-if="showModalTable">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">Inserir Nova Tabela</h5>
+                <button 
+                type="button" 
+                class="btn-close" 
+                @click="closeModalTable()"
+                aria-label="Fechar"
+                ></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row g-3">
+                <div class="col-6">
+                    <label for="tableRowsInput" class="form-label">Linhas</label>
+                    <input 
+                    id="tableRowsInput"
+                    type="number" 
+                    v-model.number="tableRows" 
+                    class="form-control text-center"
+                    min="1"
+                    step="1"
+                    placeholder="ex: 4"
+                    :class="{ 'is-invalid': tableRows < 1 && tableRows !== '' }"
+                    required
+                    >
+                </div>
+
+                <div class="col-6">
+                    <label for="tableColumnsInput" class="form-label">Colunas</label>
+                    <input 
+                    id="tableColumnsInput"
+                    type="number" 
+                    v-model.number="tableColumns" 
+                    class="form-control text-center"
+                    min="1"
+                    step="1"
+                    placeholder="ex: 5"
+                    :class="{ 'is-invalid': tableColumns < 1 && tableColumns !== '' }"
+                    required
+                    >
+                </div>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-light">
+                <button 
+                type="button" 
+                class="btn btn-outline-secondary px-4" 
+                @click="closeModalTable()"
+                >
+                Cancelar
+                </button>
+                
+                <button 
+                type="button" 
+                class="btn btn-primary px-5"
+                :disabled="tableRows < 1 || tableColumns < 1"
+                @click="insertTableQuill"
+                >
+                Inserir Tabela
+                </button>
+            </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+
 <script type="importmap">
 {
   "imports": {
-    "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
-    "@/": "/mvc/view/admin/js/"
+    "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
   }
 }
 </script>
-<script src="https://cdn.ckeditor.com/ckeditor5/47.4.0/ckeditor5.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
-<script src="https://cdn.ckeditor.com/ckeditor5/47.4.0/ckeditor5.umd.js"></script>
-		<script>
-		const {
-			ClassicEditor,
-			Essentials,
-			Bold,
-			Italic,
-			Font,
-			Paragraph
-		} = CKEDITOR;
-
-		ClassicEditor
-			.create( document.querySelector( '#editor' ), {
-				licenseKey: '<YOUR_LICENSE_KEY>', // Create a free account on https://portal.ckeditor.com/checkout?plan=free
-				plugins: [ Essentials, Bold, Italic, Font, Paragraph ],
-				toolbar: [
-					'undo', 'redo', '|', 'bold', 'italic', '|',
-					'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor'
-				]
-			} )
-				.then( editor => {
-					window.editor = editor;
-				} )
-				.catch( error => {
-					console.error( error );
-				} );
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill-table-better@1/dist/quill-table-better.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"></script>
 <script type="module">
-    import { createApp, ref, onMounted, computed } from 'vue';
+import { createApp, ref, onMounted, computed, watch } from 'vue';
 // import { fileToBase64 } from '/assets/js/utils/base64.js';  // se ainda usar
+
+let quillConteudoNoticia=null;
 
 createApp({
     setup() {
         // State
+
+        // Variáveis reativas
+        const showModalTable = ref(false);
+        const tableRows = ref(3);       // valor inicial mais amigável
+        const tableColumns = ref(4);
+
+        // Data
         const loading = ref(false);
         const state = ref('default'); 
         const showModal = ref(false);
@@ -310,6 +378,183 @@ createApp({
             foto_principal: '',           // ou foto_principal, mas mantendo compatibilidade com nome do noticias
         });
         
+
+        const initQuill = () => {
+            if (quillConteudoNoticia) return;
+
+            // Registro do módulo (obrigatório antes de instanciar Quill)
+            Quill.register({ 'modules/table-better': QuillTableBetter }, true);
+
+            quillConteudoNoticia = new Quill('#conteudo_noticia', {
+                theme: 'snow',
+                modules: {
+                    toolbar: {
+                        container: [
+                            ['bold', 'italic', 'underline', 'strike'],
+                            ['blockquote', 'code-block'],
+                            [{ 'header': [1, 2, 3, false] }],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'color': [] }, { 'background': [] }],
+                            ['link', 'image'],
+                            ['table-better'],           // ← Botão de inserir tabela aparece aqui!
+                            ['clean']
+                        ],
+                        handlers: {
+                            'image': imageHandler
+                        }
+                    },
+                    table: false,                   // Desativa o table nativo do Quill
+                    'table-better': {
+                        language: 'pt_BR',          // tenta pt_BR; se não existir, cai em en_US
+                        menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'copy', 'delete'],
+                        toolbarTable: true,         // Ativa o botão de inserir tabela na toolbar
+                        operationMenu: {
+                            items: {
+                                unmergeCells: {
+                                    text: 'Dividir células (Unmerge)'
+                                }
+                            },
+                            color: {
+                                colors: ['#fff', '#000', '#f00', '#0f0', '#00f'],
+                                text: 'Cor de fundo:'
+                            }
+                        }
+                    },
+                    keyboard: {
+                        bindings: QuillTableBetter.keyboardBindings
+                    }
+                },
+                placeholder: 'Escreva sua notícia aqui...'
+            });
+
+            console.log('Quill inicializado com tabelas avançadas (quill-table-better)');
+        };
+
+       // Near the top of setup()
+        const editorInstance = ref(null);
+        
+        const insertTableQuill = () => {
+            const rows = Number(tableRows.value);
+            const cols = Number(tableColumns.value);
+
+            if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 1 || cols < 1) {
+                alert('Informe valores inteiros válidos maiores que zero.');
+                return;
+            }
+
+            if (!quillConteudoNoticia) {
+                console.error('Editor Quill não está inicializado');
+                return;
+            }
+
+            const tableModule = quillConteudoNoticia.getModule('table-better');
+            
+            if (!tableModule?.insertTable) {
+                alert('Módulo table-better não foi carregado corretamente.');
+                console.error('tableModule:', tableModule);
+                return;
+            }
+
+            try {
+                tableModule.insertTable(rows, cols);
+                console.log(`Tabela ${rows}×${cols} inserida com sucesso`);
+            } catch (err) {
+                console.error('Erro ao inserir tabela:', err);
+                alert('Não foi possível inserir a tabela. Veja o console.');
+            }
+
+            // Fecha modal e limpa campos
+            closeModalTable();
+        };
+
+        const openShowModalTable = () => {
+            if (!quillConteudoNoticia) {
+                alert('Editor não está pronto ainda.');
+                return;
+            }
+            tableRows.value = 4;
+            tableColumns.value = 5;
+            // Abre o modal do Bootstrap
+            showModalTable.value = true;
+            console.log(tableRows.value, tableColumns.value);
+        };
+
+        const closeModalTable = () => {
+            showModalTable.value = false;
+            tableRows.value = 3;
+            tableColumns.value = 4;
+        };
+
+        const cleanQuillConteudoNoticia = () => {
+            quillConteudoNoticia.setText('');
+        }
+
+        const setQuillConteudoNoticia = (html='') => {
+            try{
+                const delta = quillConteudoNoticia.clipboard.convert({ html: html });
+                //quillConteudoNoticia.setContents(delta, 'silent');
+                quillConteudoNoticia.setText(html);
+            }
+            catch(e){
+                console.log(e);
+            }
+
+        };
+
+        const imageHandler = () => {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+
+            input.onchange = async () => {
+                const file = input.files[0];
+                if (!file) return;
+
+                // Range atual (onde inserir a imagem)
+                const range = quillConteudoNoticia.getSelection(true) || { index: 0 };
+
+                // Placeholder enquanto carrega
+                quillConteudoNoticia.insertEmbed(range.index, 'image', 
+                    'https://placehold.co/400x200?text=Carregando...');
+                quillConteudoNoticia.setSelection(range.index + 1);
+
+                try {
+                    const formData = new FormData();
+                    formData.append('image', file);  // ← nome que seu PHP espera
+
+                    const response = await axios.post(
+                        '/server/noticias/quillUpload', 
+                        formData,
+                        {
+                            headers: {
+                                ...getAuthHeader(),           // seu token de autenticação
+                                'Content-Type': 'multipart/form-data',
+                                'Authorization': `Bearer ${getToken()}`
+                            }
+                        }
+                    );
+
+                    const data = response.data;
+
+                    if (data.success && data.url) {
+                        // Remove placeholder
+                        quillConteudoNoticia.deleteText(range.index, 1);
+                        // Insere a imagem real
+                        quillConteudoNoticia.insertEmbed(range.index, 'image', data.url);
+                        quillConteudoNoticia.setSelection(range.index + 1);
+                    } else {
+                        alert('Falha no upload: ' + (data.message || 'Erro desconhecido'));
+                        quillConteudoNoticia.deleteText(range.index, 1);
+                    }
+                } catch (error) {
+                    console.error('Erro no upload da imagem:', error);
+                    alert('Erro ao enviar imagem. Verifique sua conexão ou tente novamente.');
+                    quillConteudoNoticia.deleteText(range.index, 1);
+                }
+            };
+        };
+
         const elements = ref([]);
         const pagination = ref({
             page: 1,
@@ -329,6 +574,8 @@ createApp({
         const foto_principalPreview = ref('');
 
         // Computed properties for Image Preview
+
+
         const imagemPreviewOuAtual = computed(() => {
             if (foto_principalPreview.value) {
                 return foto_principalPreview.value;
@@ -432,13 +679,14 @@ createApp({
 
         const prepareNew = () => {
             clearMsg();
-            elementCurrent.value = { id: '', id_menu: '', nome: '', ocultar: false, foto_principal: '' };
+            elementCurrent.value = { id: '', id_menu: '',foto_principal: '', titulo: '', subtitulo: '', conteudo_noticia: '', fonte: '', acesso: '', ocultar: false, slide_show: false, destaque: false };
             files.foto_principal.value = null;
             foto_principalPreview.value = '';
             foto_principal_base64.value = '';
             const fileInput = document.querySelector('input[type="file"]');
             if(fileInput) fileInput.value = '';
             state.value = 'new';
+            cleanQuillConteudoNoticia();
         };
 
         const cancelAction = () => {
@@ -461,6 +709,8 @@ createApp({
                 titulo: '',
                 subtitulo: '',
                 fonte: '',
+                slide_show: false,
+                destaque: false,
                 ocultar: false,
             };
             elements.value = [];
@@ -476,13 +726,18 @@ createApp({
             files.foto_principal.value = null;
             foto_principal_base64.value = '';
             foto_principalPreview.value = '';
+
+            cleanQuillConteudoNoticia();
         };
 
         const editItem = (element) => {
             clearMsg();
             elementCurrent.value = { ...element };
             elementCurrent.value.ocultar = (element.ocultar == 1 || element.ocultar == true);
-            
+            elementCurrent.value.destaque    = (element.destaque == 1 || element.destaque == true);
+            elementCurrent.value.slide_show    = (element.slide_show == 1 || element.slide_show == true);
+
+            setTimeout(() => setQuillConteudoNoticia(element.conteudo_noticia), 200);
             // Reset new file selection on edit start
             files.foto_principal.value = null;
             foto_principalPreview.value = '';
@@ -491,10 +746,12 @@ createApp({
             if(fileInput) fileInput.value = '';
 
             state.value = 'edit';
+    
+            cleanQuillConteudoNoticia();
         };
 
         const carregarParentMenus = async () => {
-             try {
+                try {
                 const response = await axios.get(`/server/site/menusHierarchy`, { headers: getAuthHeader() });
                 const data = response.data;
                 if(data.elements) parentMenus.value = data.elements;
@@ -560,11 +817,15 @@ createApp({
                 if(data.site && data.site.length > 0) {
                      elementCurrent.value = data.site[0];
                      state.value = 'findById';
-                     elementCurrent.value.ocultar = (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
+                     elementCurrent.value.destaque    = (elementCurrent.value.destaque == 1 || elementCurrent.value.destaque == true);
+                     elementCurrent.value.slide_show    = (elementCurrent.value.slide_show == 1 || elementCurrent.value.slide_show == true);
+                     elementCurrent.value.ocultar =     (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
                 } else if (elements.value && elements.value.length > 0) {
                      elementCurrent.value = elements.value[0];
                      state.value = 'findById';
-                     elementCurrent.value.ocultar = (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
+                     elementCurrent.value.destaque    = (elementCurrent.value.destaque == 1 || elementCurrent.value.destaque == true);
+                     elementCurrent.value.slide_show    = (elementCurrent.value.slide_show == 1 || elementCurrent.value.slide_show == true);
+                     elementCurrent.value.ocultar =     (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
                 }
             }).catch(error => {
                 errorMsg.value = "Erro: " + error;
@@ -601,6 +862,7 @@ createApp({
 
         const saveElement = async () => {
             loading.value = true;
+            elementCurrent.value.conteudo_noticia = quillConteudoNoticia.root.innerHTML;
             const data = { ...elementCurrent.value };
             
             // Sending base64 as requested
@@ -674,47 +936,30 @@ createApp({
             showModal.value = false;
             itemToDelete.value = null;
         };
-
+      
         const openImageModal = (url) => { modalImage.value = url; };
         const closeImageModal = () => { modalImage.value = null; };
 
-        onMounted(async () => {
-            carregarParentMenus();
-            findAllElements(1);
-
-            try {
-                
-                console.log("ClassicEditor importado com sucesso:", !!ClassicEditor);
-
-                const editor = await ClassicEditor.create(document.querySelector('#editor-container'), {
-                    language: 'pt-br',
-                    placeholder: 'Digite o conteúdo da notícia aqui...',
-                    toolbar: [
-                        'heading', '|',
-                        'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|',
-                        'outdent', 'indent', '|',
-                        'imageUpload', 'blockQuote', 'insertTable', '|',
-                        'undo', 'redo'
-                    ]
-                });
-
-                console.log("Editor criado com sucesso!", editor);
-
-                // Sincronização bidirecional
-                editor.model.document.on('change:data', () => {
-                    elementCurrent.value.conteudo_noticia = editor.getData();
-                });
-
-                // Quando o Vue atualizar o model → atualiza o editor
-                watch(() => elementCurrent.value.conteudo_noticia, (newValue) => {
-                    if (editor.getData() !== newValue) {
-                        editor.setData(newValue || '');
-                    }
-                }, { immediate: true });
-
-            } catch (error) {
-                console.error("ERRO CRÍTICO AO CRIAR CKEDITOR:", error);
+        watch(() => state.value, (v) => {
+            if (v === 'new' || v === 'edit') {
+                //setTimeout(initQuill, 200);
             }
+        });
+
+        onMounted(async () => {
+            await carregarParentMenus();
+            await findAllElements(1);            
+            // Verifique se o elemento existe antes de chamar
+            setTimeout(() => {  initQuill(); }, 200);
+            setTimeout(() => {                                  
+                // Botão para inserir tabela com tamanho personalizado
+                const btnInsertTable = document.querySelector('.ql-table-better');
+                if (btnInsertTable) {
+                    btnInsertTable.addEventListener('click', () => {
+                        openShowModalTable();
+                    });
+                }                
+            }, 400);
         });
 
         return {
@@ -747,7 +992,17 @@ createApp({
             imagemPreviewOuAtual,
             temImagemParaMostrar,
             removeImage,
-            fileInput
+            fileInput,
+
+            // Os que faltam e causam o erro atual:
+            showModalTable,
+            tableRows,
+            tableColumns,
+
+            // Métodos relacionados ao modal de tabela
+            closeModalTable,
+            insertTableQuill,
+            openShowModalTable
         };
     }
 }).mount('#app');

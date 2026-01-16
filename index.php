@@ -569,6 +569,10 @@ Route::add('/server/noticias/([0-9]*)',function($id){
    if(new usuariosDAO([])->controlAcess())((new controllerNoticias())->findById($id));
 },'get');
 
+Route::add('/server/noticias/quillUpload',function(){
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticias())->quillUpload());
+},'post');
+
 Route::add('/server/noticias',function(){
     if(new usuariosDAO([])->controlAcess())((new controllerNoticias())->create());
 },'post');

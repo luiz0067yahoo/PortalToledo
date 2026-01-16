@@ -5,6 +5,58 @@
 
     class controllerNoticias extends controller
     {
+
+        public function quillUpload(){
+            header('Content-Type: application/json');
+            if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'No file or upload error']);
+                exit;
+            }
+
+            $file = $_FILES['image'];
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (!in_array($file['type'], $allowedTypes)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Only JPG, PNG, GIF, WebP allowed']);
+                exit;
+            }
+
+            if ($file['size'] > $maxSize) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'File too large (max 5MB)']);
+                exit;
+            }
+
+            // Generate unique name
+            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = uniqid('img_') . '_' . time() . '.' . $extension;
+
+            // Choose your folder (make sure it's writable!)
+            $uploadDir = $_SERVER['DOCUMENT_ROOT'].'/uploads/explorer/';
+            $uploadPath = $uploadDir . $filename;
+
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                // Return public accessible URL
+                $publicUrl = '/uploads/explorer/' . $filename;   // ← adjust according to your domain/structure
+
+                echo json_encode([
+                    'success' => true,
+                    'url'     => $publicUrl
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Failed to save file']);
+            }
+
+        }
+
         public function save(){
             echo json_encode(
                 parent::saveBase64(function(){
@@ -22,8 +74,8 @@
         }
 
         public function update($id){
+            $this->model->setParam(noticiasDAO::fotoPrincipal,"");
             $result = parent::findById($id);
-
             foreach ($this->settingsImagesBase64 as $key => $value){
                 if(count($result["elements"]) > 0){
                     $file_name = $result["elements"][0][$key] ?? null;
@@ -71,11 +123,7 @@
         public function findById($id){
             echo json_encode(parent::findById($id));
         }
-
-        /* =========================
-           Métodos específicos
-        ========================= */
-
+     
         public function findSlideShow($menuSubMenu){
             echo json_encode(
                 $this->model->findSlideShow($menuSubMenu)["elements"]
@@ -130,8 +178,11 @@
             if(issetParameter(noticiasDAO::ocultar))
                 $params[noticiasDAO::ocultar] = getParameter(noticiasDAO::ocultar);
 
-            parent::__construct(new noticiasDAO($params));
+            if(issetParameter(noticiasDAO::destaque))
+                $params[noticiasDAO::destaque] = getParameter(noticiasDAO::destaque);
 
+            parent::__construct(new noticiasDAO($params));
+            
             $this->settingsImagesBase64 = [
                 noticiasDAO::fotoPrincipal => [
                     "path"    => "noticias",

@@ -12,6 +12,7 @@ class noticiasDAO extends model
 	const fonte="fonte";
 	const slideShow="slide_show";
 	const acesso="acesso";
+	const destaque="destaque";
 	const ocultar="ocultar";
 	public function findSlideShow($menuSubMenu){
             $menu=explode("/",$menuSubMenu)[0];
@@ -150,7 +151,7 @@ class noticiasDAO extends model
         return $this->find();		
     }
     public function __construct($model_attributes){
-		parent::__construct($model_attributes,self::table,[self::idMenu,self::fotoPrincipal,self::titulo,self::subtitulo,self::conteudoNoticia,self::fonte,self::acesso,self::slideShow,self::ocultar]);
+		parent::__construct($model_attributes,self::table,[self::idMenu,self::fotoPrincipal,self::titulo,self::subtitulo,self::conteudoNoticia,self::fonte,self::acesso,self::slideShow,self::destaque,self::ocultar]);
     }
 }
   
