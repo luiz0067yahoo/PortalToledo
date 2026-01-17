@@ -279,11 +279,11 @@ Route::add('/admin/noticias',function(){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_noticias.php');
 },'get');
 
-Route::add('/admin/noticiasAnexo/([0-9]+)',function($id){
+Route::add('/admin/noticiasAnexo/([0-9]+)',function($idNoticia){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_noticias_anexo.php');
 },'get');
 
-Route::add('/admin/noticiasFotos/([0-9]+)',function($id){
+Route::add('/admin/noticiasFotos/([0-9]+)',function($idNoticia){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_noticias_fotos.php');
 },'get');
 
@@ -623,6 +623,7 @@ Route::add('/server/noticiasAnexo/([0-9]*)',function($id){
 
 
 //###############################################################################
+require_once($GLOBALS["base_server_path_files"].'/mvc/controller/controllerNoticiasFotos.php');
 Route::add('/server/noticiasFotos',function(){
    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasFotos())->find());
 },'get');

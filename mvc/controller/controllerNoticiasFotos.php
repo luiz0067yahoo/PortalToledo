@@ -5,6 +5,7 @@
 
     class controllerNoticiasFotos extends controller
     {
+        
         public function save(){
             echo json_encode(
                 parent::saveBase64(function(){
@@ -22,6 +23,8 @@
         }
 
         public function update($id){
+            $this->model->setParam(noticiasFotosDAO::foto,"");
+
             $result = parent::findById($id);
 
             foreach ($this->settingsImagesBase64 as $key => $value){
@@ -64,11 +67,20 @@
         }
 
         public function find(){
-            $this->model->setOrders([$this->model::id => "DESC"]);
+			$this->model->addField(" noticias.titulo as noticia  ");
+			$this->model->setJoins(
+				" left join noticias on(".noticiasFotosDAO::table.".".noticiasFotosDAO::idNoticia."=noticias.id) "
+			);
+			$this->model->setOrders([$this->model::id=>"DESC"]);
             echo json_encode(parent::find());
         }
 
         public function findById($id){
+			$this->model->addField(" noticias.nome as anuncio ");
+			$this->model->setJoins(
+				" left join noticias on(".noticiasFotosDAO::table.".".noticiasFotosDAO::idNoticia."=noticias.id) "
+			);
+			$this->model->setOrders([$this->model::id=>"DESC"]);
             echo json_encode(parent::findById($id));
         }
 
@@ -78,11 +90,11 @@
             if(notEmptyParameter(noticiasFotosDAO::id))
                 $params[noticiasFotosDAO::id] = getParameter(noticiasFotosDAO::id);
 
-            if(notEmptyParameter(noticiasFotosDAO::id_noticias))
-                $params[noticiasFotosDAO::id_noticias] = getParameter(noticiasFotosDAO::id_noticias);
+            if(notEmptyParameter(noticiasFotosDAO::idNoticia))
+                $params[noticiasFotosDAO::idNoticia] = getParameter(noticiasFotosDAO::idNoticia);
 
             if(arrayKeyExistsParameter(noticiasFotosDAO::nome))
-                $params[noticiasFotosDAO::nome] = trim(getParameter(noticiasFotosDAO::nome));
+                $params[noticiasFotosDAO::nome] = trim(getParameter(noticiasFotosDAO::nome)?? '');
 
             if(issetParameter(noticiasFotosDAO::ocultar))
                 $params[noticiasFotosDAO::ocultar] = getParameter(noticiasFotosDAO::ocultar);
@@ -91,7 +103,7 @@
 
             $this->settingsImagesBase64 = [
                 noticiasFotosDAO::foto => [
-                    "path"    => "noticias",
+                    "path"    => "noticias_fotos",
                     "formats" => "160x120,320x240,480x640,800x600,1024x768,1366x768"
                 ]
             ];
