@@ -15,6 +15,7 @@ class usuariosDAO extends model
     const code = "code";
     const codeTime = "code_time";
 
+    const senhaAtual = "senha_atual";
     const novaSenha = "nova_senha";
     const repetirNovaSenha = "repetir_nova_senha";
 
@@ -92,6 +93,41 @@ class usuariosDAO extends model
         return ["mensagem_erro" => $mensagem_erro];
     }
 
+    public function renewToken()
+    {
+        try {
+            if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+                $HTTP_AUTHORIZATION = explode(" ", $_SERVER['HTTP_AUTHORIZATION']);
+                if(count($HTTP_AUTHORIZATION)==2){
+                    $token = $HTTP_AUTHORIZATION[1];
+                    $validate_token = functionsJWT::validate($token);
+                    $validate_user = $this->userActive($token);
+                    if($validate_user && array_key_exists("id", $validate_user)){
+                        $user_id = $validate_user["id"];
+                        $session_id = bin2hex(random_bytes(16)); // ou uniqid(
+
+                        $payload = [
+                            'user_id'    => functionsJWT::encrypt($user_id, JWT_SECRET_KEY_2),
+                            'session_id' => functionsJWT::encrypt($session_id, JWT_SECRET_KEY_2),
+                            'iss'        => 'https://portaltoledo.com',
+                            'aud'        => 'https://portaltoledo.com',
+                            'iat'        => time(),
+                            'exp'        => time() + (JWT_TIME) // 1 Hour expiration
+                        ];
+                        $newToken = functionsJWT::generate($payload);
+
+                        $login_log = new loginDAO([]);
+                        $login_log->renewToken($user_id,$token,$newToken);
+                        return ["token" => $newToken];
+                    }
+                }
+            }
+        }
+        catch(Error $error) {
+            $mensagem_erro = $error->getMessage();
+        }
+        return ["mensagem_erro" => $mensagem_erro];
+    }
    
     public function trocarSenha($id, $senha_atual, $nova_senha, $repetir)
     {
@@ -99,9 +135,7 @@ class usuariosDAO extends model
             return ["mensagem_erro" => "As senhas não conferem"];
         }
 
-        $this->cleanParams();
         $user = $this->findById($id);
-
         if (!isset($user["elements"][0])) {
             return ["mensagem_erro" => "Usuário não encontrado"];
         }
@@ -119,36 +153,11 @@ class usuariosDAO extends model
             self::tentativas => 0
         ]);
 
+
         $this->update($id);
 
         return ["mensagem_sucesso" => "Senha alterada com sucesso"];
     }
-
-	public function refreshToken() {
-        $user_id = $this->getAuthUserId();
-        if (!$user_id) {
-            return ["mensagem_erro" => "Token inválido ou expirado."];
-        }
-
-        // Reemitir token com novos dados
-        $current_time = time();
-        $session_id = uniqid('sess_', true);
-
-        $jwt = $this->setDataToken([
-            'user_id'     => $this->encryptData($user_id, JWT_SECRET_KEY_2),
-            'session_id'  => $this->encryptData($session_id, JWT_SECRET_KEY_2),
-            'iss'         => 'https://seusite.com',
-            'aud'         => 'https://seusite.com',
-            'iat'         => $current_time,
-            'exp'         => $current_time + JWT_TIME,
-        ]);
-
-        return [
-            'token' => $jwt,
-            'expires_in' => JWT_TIME
-        ];
-    }
-   
     	
 	public function __construct($model_attributes)
 	{
@@ -264,16 +273,21 @@ class usuariosDAO extends model
     {        
         $result=["mensagem_erro" => "Erro ao realizar logout."];
         if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-            $token = explode(" ", $_SERVER['HTTP_AUTHORIZATION'])[1];
-            $validate_token = functionsJWT::validate($token);
-            $validate_user = $this->userActive($token);
-            $login_log = new loginDAO([]);
-            $login=$login_log->logout($validate_user[self::id],$token);
-            return ["mensagem_sucesso" => "Logout realizado com sucesso."];
+            $HTTP_AUTHORIZATION = explode(" ", $_SERVER['HTTP_AUTHORIZATION']);
+            if(count($HTTP_AUTHORIZATION)==2){
+                $token = $HTTP_AUTHORIZATION[1];
+                $validate_token = functionsJWT::validate($token);
+                $validate_user = $this->userActive($token);
+                $login_log = new loginDAO([]);
+                if($validate_user && array_key_exists(self::id,$validate_user)){
+                    $user_id=$validate_user[self::id];
+                    $login=$login_log->logout($user_id,$token);
+                    return ["mensagem_sucesso" => "Logout realizado com sucesso."];
+                }
+            }
         }
         return $result;
     }
-
 
     public function userActive($token)
     {
@@ -286,7 +300,23 @@ class usuariosDAO extends model
 
         $login_log = new loginDAO([]);
         $login=$login_log->findUserIdToken($user[self::id],$token);
-        if($login["data_fim"]==null &&$login["hora_fim"]==null){
+        if (
+            ($login!=null)&&(is_object($login)||(is_array($login)))
+            &&
+            (
+                (
+                    array_key_exists(loginDAO::dataFim,$login) 
+                    &&
+                    $login[loginDAO::dataFim]==null
+                )
+                &&
+                (
+                    array_key_exists(loginDAO::horaFim,$login)
+                    &&
+                    $login[loginDAO::horaFim]==null   // ← also typo here: "hora_fim" vs "horaFim"
+                ) 
+            ) 
+        ){
             return $user;
         }
         return false;
@@ -310,11 +340,10 @@ class usuariosDAO extends model
         if(!$result){
             http_response_code(401);
             echo json_encode(["mensagem_erro" => "Acesso negado."]);
+            $this->logout();
         }
         return $result;
     }
-
-   
 
 }
 ?>

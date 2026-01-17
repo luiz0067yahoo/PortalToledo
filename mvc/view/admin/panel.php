@@ -258,9 +258,6 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
             },
             mounted() {
                 window.addEventListener('resize', this.onResize);
-                // Listen for Token Refresh events from jwt-auth.js
-                window.addEventListener('token-refreshed', this.onTokenRefreshed);
-                
                 this.checkAuth();
             },
             beforeDestroy() {
@@ -270,71 +267,29 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
             methods: {
                 checkAuth() {
                     const portalToledoData = JSON.parse(localStorage.getItem('portalToledoData'));
-                    
                     if (!portalToledoData) {
                          window.location.href = '/admin/login';
                          return;
                     }
-
-                    this.userName = portalToledoData.userName;
-                    const token = portalToledoData.token;
-                    
-                    this.checkSessionTime(token);
+                    this.userName = this.getUserName();                    
+                    this.renewToken();
+                    this.checkSessionTime();
                 },
-                async checkSessionTime(token) {
+                async checkSessionTime() {
                     try {
                         const response = await axios.get('/server/time_session', {
                             headers: {
-                                Authorization: `Bearer ${token}`
+                                Authorization: `Bearer ${this.getToken()}`
                             }
                         });
                         this.currentTime = response.data;
                         setTimeout(() => {
-                            this.checkSessionTime(token);
+                            this.checkSessionTime();
                         }, 1000);
                     } catch (error) {
                         console.error('Erro ao buscar time_session:', error);
                     }
-                },
-                    // parseToken logic removed in favor of portalToledoData usage as per request
-                onTokenRefreshed(e) {
-                    const newToken = e.detail;
-                    console.log("Panel updated with new token info");
-                    
-                    const portalToledoData = JSON.parse(localStorage.getItem('portalToledoData'));
-                    if (portalToledoData) {
-                        portalToledoData.token = newToken;
-                        localStorage.setItem('portalToledoData', JSON.stringify(portalToledoData));
-                        this.checkSessionTime(newToken);
-                    }
-                },
-                startTimer(expTimestamp) {
-                    if (this.timerInterval) clearInterval(this.timerInterval);
-                    
-                    const now = Math.floor(Date.now() / 1000);
-                    this.totalSeconds = expTimestamp - now;
-                    
-                    if (this.totalSeconds <= 0) {
-                        this.logout();
-                        return;
-                    }
-                    
-                    this.updateDisplayTime();
-                    this.timerInterval = setInterval(() => {
-                        this.totalSeconds--;
-                        if (this.totalSeconds <= 0) {
-                            clearInterval(this.timerInterval);
-                            this.logout();
-                        } else {
-                            this.updateDisplayTime();
-                        }
-                    }, 1000);
-                },
-                updateDisplayTime() {
-                    let m = Math.floor(this.totalSeconds / 60).toString().padStart(2, '0');
-                    let s = (this.totalSeconds % 60).toString().padStart(2, '0');
-                    this.currentTime = `${m}:${s}`;
-                },
+                },                
                 onResize() {
                     this.windowWidth = window.innerWidth;
                 },
@@ -352,6 +307,10 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
                     const portalToledoData = JSON.parse(localStorage.getItem('portalToledoData'));
                     return portalToledoData.token;
                 },
+                getUserName(){
+                    const portalToledoData = JSON.parse(localStorage.getItem('portalToledoData'));
+                    return portalToledoData.userName;
+                },
                 async logout() {
                     try {
                         const response = await axios.post('/server/usuarios/logout', {}, {
@@ -359,23 +318,46 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
                                 Authorization: `Bearer ${this.getToken()}`
                             }
                         });
-
                         if (response.status === 200 || response.status === 204) {
-                            localStorage.removeItem('portalToledoData');
-                            // redirecionar...
-                            return true;
+                            //
                         }
-
                         throw new Error('Logout retornou status inesperado');
-
                     } catch (error) {
                         console.error('Falha no logout:', error);
-                        return false;
-                        // Aqui você pode decidir NÃO limpar o token se quiser ser mais rigoroso
-                        // (geralmente não é a melhor UX)
+                    }
+                    localStorage.removeItem('portalToledoData');
+                    top.location.href = '/admin/login';// redirecionar...
+                },
+                async renewToken(){                   
+                    try {
+                        const responseRenewToken = await axios.post('/server/usuarios/renewToken', {}, {
+                            headers: {
+                                Authorization: `Bearer ${this.getToken()}`
+                            }
+                        });                        
+                        if (responseRenewToken.data && responseRenewToken.data.token) {
+                            const token = responseRenewToken.data.token;
+                            const responseUser = await axios.get('/server/userActive', {
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                }
+                            });
+                            const portalToledoData = {
+                                token: token,
+                                userId: responseUser.data.id,
+                                userName: responseUser.data.nome,
+                                userEmail: responseUser.data.email
+                            }
+                            localStorage.setItem('portalToledoData', JSON.stringify(portalToledoData));
+                        } else {
+                            console.error('Token inválido');
+                            this.logout();
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        this.logout();
                     }
                 }
-                
             }
         });
     </script>

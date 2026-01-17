@@ -85,7 +85,7 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php');
             userName: ''
         },
         mounted() {
-             const token = localStorage.getItem('token');
+             const token = this.getToken();
              if (!token) {
                  window.location.href = '/admin/login';
                  return;
@@ -104,6 +104,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php');
             }
         },
         methods: {
+            getToken(){
+                const portalToledoData = JSON.parse(localStorage.getItem('portalToledoData'));
+                return portalToledoData.token;
+            },
             async doChangePassword() {
                 this.loading = true;
                 this.message = '';
@@ -115,7 +119,11 @@ require_once($_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php');
                 
                 try {
                     // Using the new Controller route which gets ID from Token
-                    const response = await axios.post('/server/usuarios/trocarSenha', formData);
+                    const response = await axios.post('/server/usuarios/trocarSenha', formData,{
+                        headers: {
+                            'Authorization': `Bearer ${this.getToken()}`
+                        }
+                    });
                     
                     if (response.data && response.data.mensagem_sucesso) {
                          this.message = response.data.mensagem_sucesso;

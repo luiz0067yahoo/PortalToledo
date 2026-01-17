@@ -16,6 +16,12 @@ class loginDAO extends model
 		parent::__construct($model_attributes,self::table,[self::idUsuario,self::horaInicio,self::horaFim,self::dataInicio,self::dataFim,self::token]);
     }
 
+	public function renewToken($idUsuario,$token,$newToken){
+	    $this->cleanParams();
+        $this->setParam(self::token,$newToken);
+        return DAOqueryUpdate(self::table, $this->getParams(), [self::idUsuario=>$idUsuario,self::token=>$token]);		
+    }
+	
 	public function logout($idUsuario,$token){
 	    $this->cleanParams();
         $this->setParam(self::dataFim,date("Y-m-d"));
@@ -28,8 +34,11 @@ class loginDAO extends model
         $this->setParam(self::idUsuario,$idUsuario);
         $this->setParam(self::token,$token);
         $this->setOrders([self::id=>"desc"]);
-        return $this->find()["elements"][0];		
+		if(count($this->find()["elements"])>=1){
+			return $this->find()["elements"][0];		
+		}
+		return null;
     }
 }
   
-?>	
+?>

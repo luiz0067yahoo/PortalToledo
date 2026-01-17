@@ -1,6 +1,8 @@
 <?php 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-ini_set('display_errors', '1');
+
 
 $base_server_path_files=$_SERVER['DOCUMENT_ROOT'];
 $base_url="https://$_SERVER[HTTP_HOST]";  	
@@ -211,6 +213,10 @@ Route::add('/admin/login',function(){
 	require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/login.php');
 },'post');
 
+Route::add('/admin/trocar_senha',function(){
+	require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/trocar_senha.php');
+},'get');
+
 Route::add('/admin/esqueceu_a_senha',function(){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/esqueceu_a_senha.php');
 },"get");
@@ -330,6 +336,10 @@ Route::add('/server/usuarios',function(){
 
 Route::add('/server/usuarios/login',function(){
     ((new controllerUsuarios())->login());
+},'post');
+
+Route::add('/server/usuarios/renewToken',function(){
+    ((new controllerUsuarios())->renewToken());
 },'post');
 
 Route::add('/server/usuarios/logout',function(){

@@ -135,9 +135,15 @@
     	        foreach ($params as $key => $value  )
     	            $fields_values.=($fields_values=="")?" ".$key." = :".$key." "  : ", ".$key." = :".$key." ";
     	        foreach ($conditionsParams as $key => $value  )
-    	            $conditions=($conditions=="")?"(".$key." = :".$key.")"  :$conditions." and (".$key." = :".$key.")";
+    	            $conditions=($conditions=="")?"(".$key." = :cond_".$key.")"  :$conditions." and (".$key." = :cond_".$key.")";
     	        $sql="UPDATE ".$table." SET ".$fields_values." WHERE ( ".$conditions." );";
-    	        $params=($params+$conditionsParams);
+				
+				$keys = array_keys($conditionsParams);
+				foreach ($keys as $key) {
+					$conditionsParams["cond_{$key}"] = $conditionsParams[$key];
+					unset($conditionsParams[$key]);
+				}
+				$params=($params+$conditionsParams);
     	        return [
 					"sql"=>$sql,
 					"params"=>$params,
@@ -456,8 +462,9 @@
 	    function DAOquerySelectByIdSQL($table,$fields_params,$joins,$id){
 	        $conditionsParams=["id"=>$id];
 			$limitParams=["page"=>1,"row_count"=>1];
+			$fields= implode(",",$fields_params);
 			$sql="SELECT ".$fields." FROM ".$table." ".$joins." WHERE ".$table.".id = :id  limit 0,1";
-			return ["sql"=>$sql,"params"=>$fields_params];
+			return ["sql"=>$sql,"fields_params"=>$fields_params,"params"=>$conditionsParams];
 	    }
 	}
 

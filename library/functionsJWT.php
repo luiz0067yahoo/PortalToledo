@@ -67,8 +67,6 @@ class functionsJWT {
         return json_decode(self::base64url_decode($payload), true);
     }
 
-
-
     public static function controlAcess() {
         $jwt = explode(" ", $_SERVER['HTTP_AUTHORIZATION'])[1];
         $validate = self::validate($jwt);
@@ -102,6 +100,18 @@ class functionsJWT {
         return null;
     }
     
+    public static function getToken() {
+        // Verifica se o header Authorization existe e está no formato Bearer
+        if (!isset($_SERVER['HTTP_AUTHORIZATION']) || 
+            !str_starts_with($_SERVER['HTTP_AUTHORIZATION'], 'Bearer ')) {
+            return null;
+        }
+
+        // Extrai o token JWT
+        $token = explode(" ", $_SERVER['HTTP_AUTHORIZATION'])[1];
+
+        return $token;
+    }
 
     public static function getUserId()
     {
@@ -135,7 +145,7 @@ class functionsJWT {
     {
         $payload = self::getPayload();
         if ($payload&&isset($payload['exp'])) {
-            return date("G:i:s",$payload['exp']-time());
+            return date("H:i:s",$payload['exp']-time());
         }
         return false;
     }
