@@ -291,7 +291,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
                         this.currentTime = response.data;
                         setTimeout(() => {
                             this.checkSessionTime(token);
-                        }, 500);
+                        }, 1000);
                     } catch (error) {
                         console.error('Erro ao buscar time_session:', error);
                     }
@@ -348,10 +348,34 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
                         this.isToggled = true;
                     }
                 },
-                logout() {
-                    localStorage.removeItem('portalToledoData');
-                    window.location.href = '/admin/login';
+                getToken(){
+                    const portalToledoData = JSON.parse(localStorage.getItem('portalToledoData'));
+                    return portalToledoData.token;
+                },
+                async logout() {
+                    try {
+                        const response = await axios.post('/server/usuarios/logout', {}, {
+                            headers: {
+                                Authorization: `Bearer ${this.getToken()}`
+                            }
+                        });
+
+                        if (response.status === 200 || response.status === 204) {
+                            localStorage.removeItem('portalToledoData');
+                            // redirecionar...
+                            return true;
+                        }
+
+                        throw new Error('Logout retornou status inesperado');
+
+                    } catch (error) {
+                        console.error('Falha no logout:', error);
+                        return false;
+                        // Aqui você pode decidir NÃO limpar o token se quiser ser mais rigoroso
+                        // (geralmente não é a melhor UX)
+                    }
                 }
+                
             }
         });
     </script>

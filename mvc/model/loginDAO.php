@@ -4,15 +4,31 @@ class loginDAO extends model
 {
         
 	const table="login";
-	const id_usuarios="id_usuarios";
-	const hora_inicio="hora_inicio";
-	const hora_fim="hora_fim";
-	const data_inicio="data_inicio";
-	const data_fim="data_fim";
+	const idUsuario="id_usuario";
+	const token="token";
+	const dataInicio="data_inicio";
+	const horaInicio="hora_inicio";
+	const dataFim="data_fim";
+	const horaFim="hora_fim";
 	//id_usuarios,hora_inicio,hora_fim,data_inicio,data_fim
   
     public function __construct($model_attributes){
-		parent::__construct($model_attributes,self::table,[self::id_usuarios,self::hora_inicio,self::hora_fim,self::data_inicio,self::data_fim]);
+		parent::__construct($model_attributes,self::table,[self::idUsuario,self::horaInicio,self::horaFim,self::dataInicio,self::dataFim,self::token]);
+    }
+
+	public function logout($idUsuario,$token){
+	    $this->cleanParams();
+        $this->setParam(self::dataFim,date("Y-m-d"));
+        $this->setParam(self::horaFim,date("H:i:s"));
+        return $this->update([self::idUsuario=>$idUsuario,self::token=>$token]);		
+    }
+
+	public function findUserIdToken($idUsuario,$token){
+	    $this->cleanParams();
+        $this->setParam(self::idUsuario,$idUsuario);
+        $this->setParam(self::token,$token);
+        $this->setOrders([self::id=>"desc"]);
+        return $this->find()["elements"][0];		
     }
 }
   

@@ -274,12 +274,22 @@ class model
     public function update($id)
     {
         $this->setParam(self::date_update, date("Y-m-d H:i:s"));
+        $conditions_params =[];
         try {
-            $conditions_params = array(self::id => $id);
+            if(is_object($id)||is_array($id)){
+                $conditions_params = $id;
+            }else{
+                $conditions_params = array(self::id => $id);
+            }
             $params = array_diff_key($this->params, $conditions_params);
             $params[self::date_update] = date("Y-m-d H:i:s");
-            if (strrpos(DAOqueryUpdate($this->table, $params, $conditions_params), "Error") != -1)
-                return DAOquerySelectById($this->table, $this->fields, $this->joins, $id);
+            if (strrpos(DAOqueryUpdate($this->table, $params, $conditions_params), "Error") != -1){
+                if(is_object($id)||is_array($id)){
+                    return DAOquerySelectById($this->table, $this->fields, $this->joins, $id);
+                }else{
+                    return DAOquerySelect($this->table, $this->fields, $this->joins,$conditions_params,"","","",[]);
+                }
+            }
         } catch (Exception $Errorr) {
             return $Errorr;
         }
@@ -287,17 +297,24 @@ class model
 
     public function updateSQL($id)
     {
+        $result=[];
         $this->setParam(self::date_update, date("Y-m-d H:i:s"));
+        $conditions_params =[];
         try {
-            $conditions_params = array(self::id => $id);
+            if(is_object($id)||is_array($id)){
+                $conditions_params = $id;
+            }else{
+                $conditions_params = array(self::id => $id);
+            }
             $params = array_diff_key($this->params, $conditions_params);
             $params[self::date_update] = date("Y-m-d H:i:s");
-            $update=DAOqueryUpdateSQL($this->table, $params, $conditions_params);
-            $selectById= DAOquerySelectById($this->table, $this->fields, $this->joins, $id);
-        return [
-                "selectById"=>$selectById,
-                "update"=>$update
-            ];
+            $result["update"]=DAOqueryUpdateSQL($this->table, $params, $conditions_params);
+            if(is_object($id)||is_array($id)){
+                $result["select"]=DAOquerySelectById($this->table, $this->fields, $this->joins, $id);
+            }else{
+                $result["select"]=DAOquerySelect($this->table, $this->fields, $this->joins,$conditions_params,"","","",[]);
+            }
+            return $result;
         } catch (Exception $Errorr) {
             return $Errorr;
         }
@@ -361,6 +378,7 @@ class model
         } catch (Exception $Errorr) {
         }
     }
+
     public function findByIdSQL($id)
     {
         try {

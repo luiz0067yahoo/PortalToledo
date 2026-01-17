@@ -211,16 +211,6 @@ Route::add('/admin/login',function(){
 	require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/login.php');
 },'post');
 
-Route::add('/admin/logout',function(){
-	logout();
-    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/login.php');
-},"post");
-
-Route::add('/admin/logout',function(){
-	logout();
-    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/login.php');
-},"get");
-
 Route::add('/admin/esqueceu_a_senha',function(){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/esqueceu_a_senha.php');
 },"get");
@@ -340,6 +330,10 @@ Route::add('/server/usuarios',function(){
 
 Route::add('/server/usuarios/login',function(){
     ((new controllerUsuarios())->login());
+},'post');
+
+Route::add('/server/usuarios/logout',function(){
+    ((new controllerUsuarios())->logout());
 },'post');
 
 Route::add('/server/usuarios/trocarSenha',function(){

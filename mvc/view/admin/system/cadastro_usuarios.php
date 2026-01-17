@@ -23,7 +23,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                      <input type="number" class="form-control" v-model="form.id" placeholder="Código" disabled>
                      <button type="button" class="btn btn-primary" @click="buscarPorId" v-if="form.id"><i class="fa fa-search"></i></button>
                 </div>
-
+ 
                 <div class="input-group mb-3">
                     <span class="input-group-text"><i class="fa fa-bars"></i></span>
                     <input type="text" class="form-control" v-model="form.nome" placeholder="Nome">

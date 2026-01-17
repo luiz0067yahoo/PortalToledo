@@ -80,6 +80,20 @@ class controllerUsuarios extends controller
         echo json_encode($result);
     }
 
+    public function logout()
+    {
+		
+	
+        $result = $this->model->logout();
+        // Falha no login
+        if (isset($result['mensagem_erro'])) {
+			http_response_code(401);
+            echo json_encode($result);
+            return;
+        }
+        echo json_encode($result);
+    }
+
     public function trocarSenha()
     {
         $this->model->cleanFields();
@@ -166,7 +180,7 @@ class controllerUsuarios extends controller
         $this->model->cleanFields();
         $this->model->addField(usuariosDAO::id);
         $this->model->addField(usuariosDAO::nome);
-        $this->model->addField(usuariosDAO::e_mail);
+        $this->model->addField(usuariosDAO::email);
         $this->model->setOrders([$this->model::id => "DESC"]);
         try {
             $result=parent::find();
@@ -183,7 +197,7 @@ class controllerUsuarios extends controller
         $this->model->cleanFields();
         $this->model->addField(usuariosDAO::id);
         $this->model->addField(usuariosDAO::nome);
-        $this->model->addField(usuariosDAO::e_mail);
+        $this->model->addField(usuariosDAO::email);
         $id=functionsJWT::decrypt($id_cript, JWT_SECRET_KEY_2);
         $result=$this->model->findById($id);
         if (isset($result["params"][usuariosDAO::id])) $result["params"][usuariosDAO::id]=$id_cript;
@@ -205,13 +219,13 @@ class controllerUsuarios extends controller
         echo json_encode($this->model->resetPasswordByCode($code, $nova_senha, $repetir));
     }
     public function __construct()
-    {
+    { 
         $params = [];
         if (notEmptyParameter(usuariosDAO::id)) $params[usuariosDAO::id] = getParameter(usuariosDAO::id);
         if (arrayKeyExistsParameter(usuariosDAO::nome)) $params[usuariosDAO::nome] = trim(getParameter(usuariosDAO::nome));
         if (arrayKeyExistsParameter(usuariosDAO::login)) $params[usuariosDAO::login] = getParameter(usuariosDAO::login);
         if (arrayKeyExistsParameter(usuariosDAO::senha)) $params[usuariosDAO::senha] = getParameter(usuariosDAO::senha);
-        if (arrayKeyExistsParameter(usuariosDAO::e_mail)) $params[usuariosDAO::e_mail] = getParameter(usuariosDAO::e_mail);
+        if (arrayKeyExistsParameter(usuariosDAO::email)) $params[usuariosDAO::email] = getParameter(usuariosDAO::email);
         parent::__construct(new usuariosDAO($params));
     }
 }
