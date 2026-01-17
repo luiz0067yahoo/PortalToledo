@@ -6,9 +6,10 @@ class configsDAO extends model
 	const logo="logo";
 	const logoMobile="logo_mobile";
 	const mensagemContato="mensagem_contato";
+	const ocultar="ocultar";
 
     public function __construct($model_attributes){
-		parent::__construct($model_attributes,self::table,[self::logo,self::logoMobile,self::mensagemContato]);
+		parent::__construct($model_attributes,self::table,[self::logo,self::logoMobile,self::mensagemContato,self::ocultar]);
     }
 } 
   

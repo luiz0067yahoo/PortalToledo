@@ -345,671 +345,671 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 <script src="https://cdn.jsdelivr.net/npm/quill-table-better@1/dist/quill-table-better.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"></script>
 <script type="module">
-import { createApp, ref, onMounted, computed, watch } from 'vue';
-// import { fileToBase64 } from '/assets/js/utils/base64.js';  // se ainda usar
+    import { createApp, ref, onMounted, computed, watch } from 'vue';
+    // import { fileToBase64 } from '/assets/js/utils/base64.js';  // se ainda usar
 
-let quillConteudoNoticia=null;
+    let quillConteudoNoticia=null;
 
-createApp({
-    setup() {
-        // State
-
-        // Variáveis reativas
-        const showModalTable = ref(false);
-        const tableRows = ref(3);       // valor inicial mais amigável
-        const tableColumns = ref(4);
-
-        // Data
-        const loading = ref(false);
-        const state = ref('default'); 
-        const showModal = ref(false);
-        const itemToDelete = ref(null);
-        const modalImage = ref(null);
-        
-        // Data
-        const errorMsg = ref("");
-        const successMsg = ref("");
-        const infoMsg = ref("");
-        const elementCurrent = ref({
-            id: '',
-            id_menu: '',
-            titulo: '',
-            subtitulo: '',
-            conteudo_noticia: '',
-            fonte: '',
-            slide_show: false,
-            destaque: false,
-            ocultar: false,
-            foto_principal: '',           // ou foto_principal, mas mantendo compatibilidade com nome do noticias
-        });
-        
-
-        const initQuill = () => {
-            if (quillConteudoNoticia) return;
-
-            // Registro do módulo (obrigatório antes de instanciar Quill)
-            Quill.register({ 'modules/table-better': QuillTableBetter }, true);
-
-            quillConteudoNoticia = new Quill('#conteudo_noticia', {
-                theme: 'snow',
-                modules: {
-                    toolbar: {
-                        container: [
-                            ['bold', 'italic', 'underline', 'strike'],
-                            ['blockquote', 'code-block'],
-                            [{ 'header': [1, 2, 3, false] }],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                            [{ 'color': [] }, { 'background': [] }],
-                            ['link', 'image'],
-                            ['table-better'],           // ← Botão de inserir tabela aparece aqui!
-                            ['clean']
-                        ],
-                        handlers: {
-                            'image': imageHandler
-                        }
-                    },
-                    table: false,                   // Desativa o table nativo do Quill
-                    'table-better': {
-                        language: 'pt_BR',          // tenta pt_BR; se não existir, cai em en_US
-                        menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'copy', 'delete'],
-                        toolbarTable: true,         // Ativa o botão de inserir tabela na toolbar
-                        operationMenu: {
-                            items: {
-                                unmergeCells: {
-                                    text: 'Dividir células (Unmerge)'
-                                }
-                            },
-                            color: {
-                                colors: ['#fff', '#000', '#f00', '#0f0', '#00f'],
-                                text: 'Cor de fundo:'
-                            }
-                        }
-                    },
-                    keyboard: {
-                        bindings: QuillTableBetter.keyboardBindings
-                    }
-                },
-                placeholder: 'Escreva sua notícia aqui...'
-            });
-
-            console.log('Quill inicializado com tabelas avançadas (quill-table-better)');
-        };
-
-       // Near the top of setup()
-        const editorInstance = ref(null);
-        
-        const insertTableQuill = () => {
-            const rows = Number(tableRows.value);
-            const cols = Number(tableColumns.value);
-
-            if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 1 || cols < 1) {
-                alert('Informe valores inteiros válidos maiores que zero.');
-                return;
-            }
-
-            if (!quillConteudoNoticia) {
-                console.error('Editor Quill não está inicializado');
-                return;
-            }
-
-            const tableModule = quillConteudoNoticia.getModule('table-better');
-            
-            if (!tableModule?.insertTable) {
-                alert('Módulo table-better não foi carregado corretamente.');
-                console.error('tableModule:', tableModule);
-                return;
-            }
-
-            try {
-                tableModule.insertTable(rows, cols);
-                console.log(`Tabela ${rows}×${cols} inserida com sucesso`);
-            } catch (err) {
-                console.error('Erro ao inserir tabela:', err);
-                alert('Não foi possível inserir a tabela. Veja o console.');
-            }
-
-            // Fecha modal e limpa campos
-            closeModalTable();
-        };
-
-        const openShowModalTable = () => {
-            if (!quillConteudoNoticia) {
-                alert('Editor não está pronto ainda.');
-                return;
-            }
-            tableRows.value = 4;
-            tableColumns.value = 5;
-            // Abre o modal do Bootstrap
-            showModalTable.value = true;
-            console.log(tableRows.value, tableColumns.value);
-        };
-
-        const closeModalTable = () => {
-            showModalTable.value = false;
-            tableRows.value = 3;
-            tableColumns.value = 4;
-        };
-
-        const cleanQuillConteudoNoticia = () => {
-            quillConteudoNoticia.setText('');
-        }
-
-        const setQuillConteudoNoticia = (html='') => {
-            try{
-                const delta = quillConteudoNoticia.clipboard.convert({ html: html });
-                //quillConteudoNoticia.setContents(delta, 'silent');
-                quillConteudoNoticia.setText(html);
-            }
-            catch(e){
-                console.log(e);
-            }
-
-        };
-
-        const imageHandler = () => {
-            const input = document.createElement('input');
-            input.setAttribute('type', 'file');
-            input.setAttribute('accept', 'image/*');
-            input.click();
-
-            input.onchange = async () => {
-                const file = input.files[0];
-                if (!file) return;
-
-                // Range atual (onde inserir a imagem)
-                const range = quillConteudoNoticia.getSelection(true) || { index: 0 };
-
-                // Placeholder enquanto carrega
-                quillConteudoNoticia.insertEmbed(range.index, 'image', 
-                    'https://placehold.co/400x200?text=Carregando...');
-                quillConteudoNoticia.setSelection(range.index + 1);
-
-                try {
-                    const formData = new FormData();
-                    formData.append('image', file);  // ← nome que seu PHP espera
-
-                    const response = await axios.post(
-                        '/server/noticias/quillUpload', 
-                        formData,
-                        {
-                            headers: {
-                                ...getAuthHeader(),           // seu token de autenticação
-                                'Content-Type': 'multipart/form-data',
-                                'Authorization': `Bearer ${getToken()}`
-                            }
-                        }
-                    );
-
-                    const data = response.data;
-
-                    if (data.success && data.url) {
-                        // Remove placeholder
-                        quillConteudoNoticia.deleteText(range.index, 1);
-                        // Insere a imagem real
-                        quillConteudoNoticia.insertEmbed(range.index, 'image', data.url);
-                        quillConteudoNoticia.setSelection(range.index + 1);
-                    } else {
-                        alert('Falha no upload: ' + (data.message || 'Erro desconhecido'));
-                        quillConteudoNoticia.deleteText(range.index, 1);
-                    }
-                } catch (error) {
-                    console.error('Erro no upload da imagem:', error);
-                    alert('Erro ao enviar imagem. Verifique sua conexão ou tente novamente.');
-                    quillConteudoNoticia.deleteText(range.index, 1);
-                }
-            };
-        };
-
-        const elements = ref([]);
-        const pagination = ref({
-            page: 1,
-            rowCount: 10,
-            total: 0,
-            limitpage: 0
-        });
-        const parentMenus = ref([]);
-        
-        // Config
-        const serverUrl = '/server/noticias';
-     // File handling variables
-        const files = {
-            foto_principal: ref(null)
-        };
-        const foto_principal_base64 = ref('');
-        const foto_principalPreview = ref('');
-
-        // Computed properties for Image Preview
-
-
-        const imagemPreviewOuAtual = computed(() => {
-            if (foto_principalPreview.value) {
-                return foto_principalPreview.value;
-            }
-            if (elementCurrent.value.foto_principal) {
-                return `/uploads/noticias/original/${elementCurrent.value.foto_principal}`;
-            }
-            return '';
-        });
-
-        const temImagemParaMostrar = computed(() => {
-            return !!imagemPreviewOuAtual.value;
-        });
-
-        // Refs
-        const fileInput = ref(null);
-
-        // Method to handle file selection
-        function handleFile(e) {
-            const file = e.target.files[0];
-            files.foto_principal.value = file;
-
-            if (file) {
-                // FileReader to generate preview and base64 immediately
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const result = event.target.result;
-                    // Set preview (DataURL)
-                    foto_principalPreview.value = result;
-                    
-                    // Extract Base64 string (remove "data:image/png;base64,")
-                    const base64String = result.split(',')[1];
-                    foto_principal_base64.value = base64String;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                foto_principalPreview.value = '';
-                foto_principal_base64.value = '';
-            }
-        }
-
-        // Method to remove image
-        function removeImage() {
-            // Clear current server image
-            elementCurrent.value.foto_principal = '';
-            
-            // Clear preview
-            foto_principalPreview.value = '';
-            foto_principal_base64.value = '';
-            
-            // Clear file object
-            files.foto_principal.value = null;
-
-            // Clear input DOM element
-            if (fileInput.value) {
-                fileInput.value.value = '';
-            }
-        }
-
-        // Methods
-        const generateToken = (length) => {
-            var a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
-            var b = [];
-            for (var i = 0; i < length; i++) {
-                var j = (Math.random() * (a.length - 1)).toFixed(0);
-                b[i] = a[j];
-            }
-            return b.join("");
-        };
-
-        const getToken = () => {
-             const userData = localStorage.getItem('portalToledoData');
-             if (userData) {
-                 try {
-                     return JSON.parse(userData).token;
-                 } catch (e) {
-                     return '';
-                 }
-             }
-             return '';
-        };
-
-        const getAuthHeader = () => {
-            return {
-                'Authorization': `Bearer ${getToken()}`
-            };
-        };
-        
-        const getAuthHeaderJSON = () => {
-            return {
-                'Authorization': `Bearer ${getToken()}`,
-                'Content-Type': 'application/json'
-            };
-        };
-
-        const clearMsg = () => {
-            errorMsg.value = "";
-            successMsg.value = "";
-            infoMsg.value = "";
-        };
-
-        const prepareNew = () => {
-            clearMsg();
-            elementCurrent.value = { id: '', id_menu: '',foto_principal: '', titulo: '', subtitulo: '', conteudo_noticia: '', fonte: '', acesso: '', ocultar: false, slide_show: false, destaque: false };
-            files.foto_principal.value = null;
-            foto_principalPreview.value = '';
-            foto_principal_base64.value = '';
-            const fileInput = document.querySelector('input[type="file"]');
-            if(fileInput) fileInput.value = '';
-            state.value = 'new';
-            cleanQuillConteudoNoticia();
-        };
-
-        const cancelAction = () => {
-            clearMsg();
+    createApp({
+        setup() {
             // State
-            loading.value = false;
-            state.value = 'default'; 
-            showModal.value = false;
-            itemToDelete.value = null;
-            modalImage.value = null;
+
+            // Variáveis reativas
+            const showModalTable = ref(false);
+            const tableRows = ref(3);       // valor inicial mais amigável
+            const tableColumns = ref(4);
 
             // Data
-            errorMsg.value = "";
-            successMsg.value = "";
-            infoMsg.value = "";
-            elementCurrent.value = { 
+            const loading = ref(false);
+            const state = ref('default'); 
+            const showModal = ref(false);
+            const itemToDelete = ref(null);
+            const modalImage = ref(null);
+            
+            // Data
+            const errorMsg = ref("");
+            const successMsg = ref("");
+            const infoMsg = ref("");
+            const elementCurrent = ref({
                 id: '',
                 id_menu: '',
-                foto_principal: '',
                 titulo: '',
                 subtitulo: '',
+                conteudo_noticia: '',
                 fonte: '',
                 slide_show: false,
                 destaque: false,
                 ocultar: false,
+                foto_principal: '',           // ou foto_principal, mas mantendo compatibilidade com nome do noticias
+            });
+            
+
+            const initQuill = () => {
+                if (quillConteudoNoticia) return;
+
+                // Registro do módulo (obrigatório antes de instanciar Quill)
+                Quill.register({ 'modules/table-better': QuillTableBetter }, true);
+
+                quillConteudoNoticia = new Quill('#conteudo_noticia', {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: {
+                            container: [
+                                ['bold', 'italic', 'underline', 'strike'],
+                                ['blockquote', 'code-block'],
+                                [{ 'header': [1, 2, 3, false] }],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                [{ 'color': [] }, { 'background': [] }],
+                                ['link', 'image'],
+                                ['table-better'],           // ← Botão de inserir tabela aparece aqui!
+                                ['clean']
+                            ],
+                            handlers: {
+                                'image': imageHandler
+                            }
+                        },
+                        table: false,                   // Desativa o table nativo do Quill
+                        'table-better': {
+                            language: 'pt_BR',          // tenta pt_BR; se não existir, cai em en_US
+                            menus: ['column', 'row', 'merge', 'table', 'cell', 'wrap', 'copy', 'delete'],
+                            toolbarTable: true,         // Ativa o botão de inserir tabela na toolbar
+                            operationMenu: {
+                                items: {
+                                    unmergeCells: {
+                                        text: 'Dividir células (Unmerge)'
+                                    }
+                                },
+                                color: {
+                                    colors: ['#fff', '#000', '#f00', '#0f0', '#00f'],
+                                    text: 'Cor de fundo:'
+                                }
+                            }
+                        },
+                        keyboard: {
+                            bindings: QuillTableBetter.keyboardBindings
+                        }
+                    },
+                    placeholder: 'Escreva sua notícia aqui...'
+                });
+
+                console.log('Quill inicializado com tabelas avançadas (quill-table-better)');
             };
-            elements.value = [];
-            pagination.value = {
+
+        // Near the top of setup()
+            const editorInstance = ref(null);
+            
+            const insertTableQuill = () => {
+                const rows = Number(tableRows.value);
+                const cols = Number(tableColumns.value);
+
+                if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 1 || cols < 1) {
+                    alert('Informe valores inteiros válidos maiores que zero.');
+                    return;
+                }
+
+                if (!quillConteudoNoticia) {
+                    console.error('Editor Quill não está inicializado');
+                    return;
+                }
+
+                const tableModule = quillConteudoNoticia.getModule('table-better');
+                
+                if (!tableModule?.insertTable) {
+                    alert('Módulo table-better não foi carregado corretamente.');
+                    console.error('tableModule:', tableModule);
+                    return;
+                }
+
+                try {
+                    tableModule.insertTable(rows, cols);
+                    console.log(`Tabela ${rows}×${cols} inserida com sucesso`);
+                } catch (err) {
+                    console.error('Erro ao inserir tabela:', err);
+                    alert('Não foi possível inserir a tabela. Veja o console.');
+                }
+
+                // Fecha modal e limpa campos
+                closeModalTable();
+            };
+
+            const openShowModalTable = () => {
+                if (!quillConteudoNoticia) {
+                    alert('Editor não está pronto ainda.');
+                    return;
+                }
+                tableRows.value = 4;
+                tableColumns.value = 5;
+                // Abre o modal do Bootstrap
+                showModalTable.value = true;
+                console.log(tableRows.value, tableColumns.value);
+            };
+
+            const closeModalTable = () => {
+                showModalTable.value = false;
+                tableRows.value = 3;
+                tableColumns.value = 4;
+            };
+
+            const cleanQuillConteudoNoticia = () => {
+                quillConteudoNoticia.setText('');
+            }
+
+            const setQuillConteudoNoticia = (html='') => {
+                try{
+                    const delta = quillConteudoNoticia.clipboard.convert({ html: html });
+                    //quillConteudoNoticia.setContents(delta, 'silent');
+                    quillConteudoNoticia.setText(html);
+                }
+                catch(e){
+                    console.log(e);
+                }
+
+            };
+
+            const imageHandler = () => {
+                const input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                input.setAttribute('accept', 'image/*');
+                input.click();
+
+                input.onchange = async () => {
+                    const file = input.files[0];
+                    if (!file) return;
+
+                    // Range atual (onde inserir a imagem)
+                    const range = quillConteudoNoticia.getSelection(true) || { index: 0 };
+
+                    // Placeholder enquanto carrega
+                    quillConteudoNoticia.insertEmbed(range.index, 'image', 
+                        'https://placehold.co/400x200?text=Carregando...');
+                    quillConteudoNoticia.setSelection(range.index + 1);
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('image', file);  // ← nome que seu PHP espera
+
+                        const response = await axios.post(
+                            '/server/noticias/quillUpload', 
+                            formData,
+                            {
+                                headers: {
+                                    ...getAuthHeader(),           // seu token de autenticação
+                                    'Content-Type': 'multipart/form-data',
+                                    'Authorization': `Bearer ${getToken()}`
+                                }
+                            }
+                        );
+
+                        const data = response.data;
+
+                        if (data.success && data.url) {
+                            // Remove placeholder
+                            quillConteudoNoticia.deleteText(range.index, 1);
+                            // Insere a imagem real
+                            quillConteudoNoticia.insertEmbed(range.index, 'image', data.url);
+                            quillConteudoNoticia.setSelection(range.index + 1);
+                        } else {
+                            alert('Falha no upload: ' + (data.message || 'Erro desconhecido'));
+                            quillConteudoNoticia.deleteText(range.index, 1);
+                        }
+                    } catch (error) {
+                        console.error('Erro no upload da imagem:', error);
+                        alert('Erro ao enviar imagem. Verifique sua conexão ou tente novamente.');
+                        quillConteudoNoticia.deleteText(range.index, 1);
+                    }
+                };
+            };
+
+            const elements = ref([]);
+            const pagination = ref({
                 page: 1,
                 rowCount: 10,
                 total: 0,
                 limitpage: 0
+            });
+            const parentMenus = ref([]);
+            
+            // Config
+            const serverUrl = '/server/noticias';
+        // File handling variables
+            const files = {
+                foto_principal: ref(null)
             };
-            parentMenus.value = [];
-            
-            // File handling variables
-            files.foto_principal.value = null;
-            foto_principal_base64.value = '';
-            foto_principalPreview.value = '';
+            const foto_principal_base64 = ref('');
+            const foto_principalPreview = ref('');
 
-            cleanQuillConteudoNoticia();
-        };
+            // Computed properties for Image Preview
 
-        const editItem = (element) => {
-            clearMsg();
-            elementCurrent.value = { ...element };
-            elementCurrent.value.ocultar = (element.ocultar == 1 || element.ocultar == true);
-            elementCurrent.value.destaque    = (element.destaque == 1 || element.destaque == true);
-            elementCurrent.value.slide_show    = (element.slide_show == 1 || element.slide_show == true);
 
-            setTimeout(() => setQuillConteudoNoticia(element.conteudo_noticia), 200);
-            // Reset new file selection on edit start
-            files.foto_principal.value = null;
-            foto_principalPreview.value = '';
-            foto_principal_base64.value = '';
-            const fileInput = document.querySelector('input[type="file"]');
-            if(fileInput) fileInput.value = '';
+            const imagemPreviewOuAtual = computed(() => {
+                if (foto_principalPreview.value) {
+                    return foto_principalPreview.value;
+                }
+                if (elementCurrent.value.foto_principal) {
+                    return `/uploads/noticias/original/${elementCurrent.value.foto_principal}`;
+                }
+                return '';
+            });
 
-            state.value = 'edit';
-    
-            cleanQuillConteudoNoticia();
-        };
+            const temImagemParaMostrar = computed(() => {
+                return !!imagemPreviewOuAtual.value;
+            });
 
-        const carregarParentMenus = async () => {
-                try {
-                const response = await axios.get(`/server/site/menusHierarchy`, { headers: getAuthHeader() });
-                const data = response.data;
-                if(data.elements) parentMenus.value = data.elements;
-            } catch (e) {
-                console.error(e);
-            }
-        };
-        
-        const getMenuName = (id) => {
-            const m = parentMenus.value.find(x => x.id == id);
-            return m ? m.nome : id;
-        };
+            // Refs
+            const fileInput = ref(null);
 
-        const processResponse = (data) => {
-            clearMsg();
-            if (typeof data === 'string') {
-                try {
-                    data = JSON.parse(data);
-                } catch (e) {
-                     return;
+            // Method to handle file selection
+            function handleFile(e) {
+                const file = e.target.files[0];
+                files.foto_principal.value = file;
+
+                if (file) {
+                    // FileReader to generate preview and base64 immediately
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const result = event.target.result;
+                        // Set preview (DataURL)
+                        foto_principalPreview.value = result;
+                        
+                        // Extract Base64 string (remove "data:image/png;base64,")
+                        const base64String = result.split(',')[1];
+                        foto_principal_base64.value = base64String;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    foto_principalPreview.value = '';
+                    foto_principal_base64.value = '';
                 }
             }
-            
-            if (data.mensagem_erro) {
-                errorMsg.value = data.mensagem_erro;
-            } else if (data.message && data.error) {
-                 errorMsg.value = data.message;
-            }
-            
-            if (data.mensagem_sucesso) {
-                successMsg.value = data.mensagem_sucesso;
-            } else if (data.message && !data.error) {
-                successMsg.value = data.message;
-            } else if (data.mensagem_informacao) {
-                infoMsg.value = data.mensagem_informacao;
-            }
 
-            if (data.elements) {
-                elements.value = data.elements;
-            }
-
-             if (data.recordsCount !== undefined) {
-                pagination.value.total = parseInt(data.recordsCount);
-            } else if (data.numero_registros !== undefined) {
-                pagination.value.total = parseInt(data.numero_registros);
-            }
-
-            if (pagination.value.total > 0) {
-                 pagination.value.limitpage = Math.ceil(pagination.value.total / pagination.value.rowCount);
-                 if (pagination.value.limitpage < 1) pagination.value.limitpage = 1;
-            } else {
-                pagination.value.limitpage = 1; 
-            }
-        };
-
-        const findById = (id) => {
-             if(!id) return;
-             loading.value = true;
-             axios.get(`${serverUrl}/${id}`, { headers: getAuthHeader() }).then(response => {
-                const data = response.data;
-                processResponse(data);
-                // Handle different response structures for single item if needed
-                if(data.site && data.site.length > 0) {
-                     elementCurrent.value = data.site[0];
-                     state.value = 'findById';
-                     elementCurrent.value.destaque    = (elementCurrent.value.destaque == 1 || elementCurrent.value.destaque == true);
-                     elementCurrent.value.slide_show    = (elementCurrent.value.slide_show == 1 || elementCurrent.value.slide_show == true);
-                     elementCurrent.value.ocultar =     (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
-                } else if (elements.value && elements.value.length > 0) {
-                     elementCurrent.value = elements.value[0];
-                     state.value = 'findById';
-                     elementCurrent.value.destaque    = (elementCurrent.value.destaque == 1 || elementCurrent.value.destaque == true);
-                     elementCurrent.value.slide_show    = (elementCurrent.value.slide_show == 1 || elementCurrent.value.slide_show == true);
-                     elementCurrent.value.ocultar =     (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
-                }
-            }).catch(error => {
-                errorMsg.value = "Erro: " + error;
-            }).finally(() => {
-                loading.value = false;
-            });
-        };
-
-        const findAllElements = (page) => {
-            if (page) pagination.value.page = page;
-            if (pagination.value.page < 1) pagination.value.page = 1;
-            if (pagination.value.limitpage > 0 && pagination.value.page > pagination.value.limitpage) pagination.value.page = pagination.value.limitpage;
-
-            loading.value = true;
-            let serverpage = pagination.value.page;
-            if (serverpage < 1) serverpage = 1;
-
-            let params = new URLSearchParams();
-            params.append('page', serverpage);
-            params.append('row_count', pagination.value.rowCount);
-            params.append('token', generateToken(256));
-            
-            if (elementCurrent.value.nome) params.append('nome', elementCurrent.value.nome);
-
-            axios.get(`${serverUrl}?${params.toString()}`, { headers: getAuthHeader() }).then(response => {
-                processResponse(response.data);
-            }).catch(error => {
-                console.log(error);
-                errorMsg.value = "Erro na conexão: " + error;
-            }).finally(() => {
-                loading.value = false;
-            });
-        };
-
-        const saveElement = async () => {
-            loading.value = true;
-            elementCurrent.value.conteudo_noticia = quillConteudoNoticia.root.innerHTML;
-            const data = { ...elementCurrent.value };
-            
-            // Sending base64 as requested
-            if (foto_principal_base64.value) {
-                // Requested field
-                data.foto_principal_base64 = foto_principal_base64.value;
+            // Method to remove image
+            function removeImage() {
+                // Clear current server image
+                elementCurrent.value.foto_principal = '';
                 
-                // Compatibility with existing backend (controllerMenus expects 'foto_principal' array for saveBase64)
-                data.foto_principal = {
-                    namefile: files.foto_principal.value ? files.foto_principal.value.name : 'image.jpg',
-                    data: foto_principal_base64.value
-                };
-            }
+                // Clear preview
+                foto_principalPreview.value = '';
+                foto_principal_base64.value = '';
+                
+                // Clear file object
+                files.foto_principal.value = null;
 
-            data.ocultar = (data.ocultar === true || data.ocultar == 1);
-
-            let url = serverUrl;
-            let method = 'post'; // axios methods are lower case
-
-            if (data.id) {
-                url = `${serverUrl}/${data.id}`;
-                method = 'put';
-            }
-            
-            // Axios dynamic method call
-            axios[method](url, data, { headers: getAuthHeaderJSON() }).then(response => {
-                processResponse(response.data);
-                if (successMsg.value) {
-                    // Reset to default state on success
-                    prepareNew(); 
-                    state.value = 'default';
-                    findAllElements(pagination.value.page);
+                // Clear input DOM element
+                if (fileInput.value) {
+                    fileInput.value.value = '';
                 }
-            }).catch((error) => {
-                console.log(error);
-                errorMsg.value = "Erro desconhecido: " + error;
-            }).finally(() => {
-                loading.value = false;
-            });
-        };
+            }
 
-        const deleteElement = (id) => {
-            loading.value = true;
-            axios.delete(serverUrl+"/"+id, { headers: getAuthHeader() }).then(response => {
-                processResponse(response.data);
-                if (successMsg.value || !errorMsg.value) { 
-                        prepareNew();
+            // Methods
+            const generateToken = (length) => {
+                var a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
+                var b = [];
+                for (var i = 0; i < length; i++) {
+                    var j = (Math.random() * (a.length - 1)).toFixed(0);
+                    b[i] = a[j];
+                }
+                return b.join("");
+            };
+
+            const getToken = () => {
+                const userData = localStorage.getItem('portalToledoData');
+                if (userData) {
+                    try {
+                        return JSON.parse(userData).token;
+                    } catch (e) {
+                        return '';
+                    }
+                }
+                return '';
+            };
+
+            const getAuthHeader = () => {
+                return {
+                    'Authorization': `Bearer ${getToken()}`
+                };
+            };
+            
+            const getAuthHeaderJSON = () => {
+                return {
+                    'Authorization': `Bearer ${getToken()}`,
+                    'Content-Type': 'application/json'
+                };
+            };
+
+            const clearMsg = () => {
+                errorMsg.value = "";
+                successMsg.value = "";
+                infoMsg.value = "";
+            };
+
+            const prepareNew = () => {
+                clearMsg();
+                elementCurrent.value = { id: '', id_menu: '',foto_principal: '', titulo: '', subtitulo: '', conteudo_noticia: '', fonte: '', acesso: '', ocultar: false, slide_show: false, destaque: false };
+                files.foto_principal.value = null;
+                foto_principalPreview.value = '';
+                foto_principal_base64.value = '';
+                const fileInput = document.querySelector('input[type="file"]');
+                if(fileInput) fileInput.value = '';
+                state.value = 'new';
+                cleanQuillConteudoNoticia();
+            };
+
+            const cancelAction = () => {
+                clearMsg();
+                // State
+                loading.value = false;
+                state.value = 'default'; 
+                showModal.value = false;
+                itemToDelete.value = null;
+                modalImage.value = null;
+
+                // Data
+                errorMsg.value = "";
+                successMsg.value = "";
+                infoMsg.value = "";
+                elementCurrent.value = { 
+                    id: '',
+                    id_menu: '',
+                    foto_principal: '',
+                    titulo: '',
+                    subtitulo: '',
+                    fonte: '',
+                    slide_show: false,
+                    destaque: false,
+                    ocultar: false,
+                };
+                elements.value = [];
+                pagination.value = {
+                    page: 1,
+                    rowCount: 10,
+                    total: 0,
+                    limitpage: 0
+                };
+                parentMenus.value = [];
+                
+                // File handling variables
+                files.foto_principal.value = null;
+                foto_principal_base64.value = '';
+                foto_principalPreview.value = '';
+
+                cleanQuillConteudoNoticia();
+            };
+
+            const editItem = (element) => {
+                clearMsg();
+                elementCurrent.value = { ...element };
+                elementCurrent.value.ocultar = (element.ocultar == 1 || element.ocultar == true);
+                elementCurrent.value.destaque    = (element.destaque == 1 || element.destaque == true);
+                elementCurrent.value.slide_show    = (element.slide_show == 1 || element.slide_show == true);
+
+                setTimeout(() => setQuillConteudoNoticia(element.conteudo_noticia), 200);
+                // Reset new file selection on edit start
+                files.foto_principal.value = null;
+                foto_principalPreview.value = '';
+                foto_principal_base64.value = '';
+                const fileInput = document.querySelector('input[type="file"]');
+                if(fileInput) fileInput.value = '';
+
+                state.value = 'edit';
+        
+                cleanQuillConteudoNoticia();
+            };
+
+            const carregarParentMenus = async () => {
+                    try {
+                    const response = await axios.get(`/server/site/menusHierarchy`, { headers: getAuthHeader() });
+                    const data = response.data;
+                    if(data.elements) parentMenus.value = data.elements;
+                } catch (e) {
+                    console.error(e);
+                }
+            };
+            
+            const getMenuName = (id) => {
+                const m = parentMenus.value.find(x => x.id == id);
+                return m ? m.nome : id;
+            };
+
+            const processResponse = (data) => {
+                clearMsg();
+                if (typeof data === 'string') {
+                    try {
+                        data = JSON.parse(data);
+                    } catch (e) {
+                        return;
+                    }
+                }
+                
+                if (data.mensagem_erro) {
+                    errorMsg.value = data.mensagem_erro;
+                } else if (data.message && data.error) {
+                    errorMsg.value = data.message;
+                }
+                
+                if (data.mensagem_sucesso) {
+                    successMsg.value = data.mensagem_sucesso;
+                } else if (data.message && !data.error) {
+                    successMsg.value = data.message;
+                } else if (data.mensagem_informacao) {
+                    infoMsg.value = data.mensagem_informacao;
+                }
+
+                if (data.elements) {
+                    elements.value = data.elements;
+                }
+
+                if (data.recordsCount !== undefined) {
+                    pagination.value.total = parseInt(data.recordsCount);
+                } else if (data.numero_registros !== undefined) {
+                    pagination.value.total = parseInt(data.numero_registros);
+                }
+
+                if (pagination.value.total > 0) {
+                    pagination.value.limitpage = Math.ceil(pagination.value.total / pagination.value.rowCount);
+                    if (pagination.value.limitpage < 1) pagination.value.limitpage = 1;
+                } else {
+                    pagination.value.limitpage = 1; 
+                }
+            };
+
+            const findById = (id) => {
+                if(!id) return;
+                loading.value = true;
+                axios.get(`${serverUrl}/${id}`, { headers: getAuthHeader() }).then(response => {
+                    const data = response.data;
+                    processResponse(data);
+                    // Handle different response structures for single item if needed
+                    if(data.site && data.site.length > 0) {
+                        elementCurrent.value = data.site[0];
+                        state.value = 'findById';
+                        elementCurrent.value.destaque    = (elementCurrent.value.destaque == 1 || elementCurrent.value.destaque == true);
+                        elementCurrent.value.slide_show    = (elementCurrent.value.slide_show == 1 || elementCurrent.value.slide_show == true);
+                        elementCurrent.value.ocultar =     (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
+                    } else if (elements.value && elements.value.length > 0) {
+                        elementCurrent.value = elements.value[0];
+                        state.value = 'findById';
+                        elementCurrent.value.destaque    = (elementCurrent.value.destaque == 1 || elementCurrent.value.destaque == true);
+                        elementCurrent.value.slide_show    = (elementCurrent.value.slide_show == 1 || elementCurrent.value.slide_show == true);
+                        elementCurrent.value.ocultar =     (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
+                    }
+                }).catch(error => {
+                    errorMsg.value = "Erro: " + error;
+                }).finally(() => {
+                    loading.value = false;
+                });
+            };
+
+            const findAllElements = (page) => {
+                if (page) pagination.value.page = page;
+                if (pagination.value.page < 1) pagination.value.page = 1;
+                if (pagination.value.limitpage > 0 && pagination.value.page > pagination.value.limitpage) pagination.value.page = pagination.value.limitpage;
+
+                loading.value = true;
+                let serverpage = pagination.value.page;
+                if (serverpage < 1) serverpage = 1;
+
+                let params = new URLSearchParams();
+                params.append('page', serverpage);
+                params.append('row_count', pagination.value.rowCount);
+                params.append('token', generateToken(256));
+                
+                if (elementCurrent.value.nome) params.append('nome', elementCurrent.value.nome);
+
+                axios.get(`${serverUrl}?${params.toString()}`, { headers: getAuthHeader() }).then(response => {
+                    processResponse(response.data);
+                }).catch(error => {
+                    console.log(error);
+                    errorMsg.value = "Erro na conexão: " + error;
+                }).finally(() => {
+                    loading.value = false;
+                });
+            };
+
+            const saveElement = async () => {
+                loading.value = true;
+                elementCurrent.value.conteudo_noticia = quillConteudoNoticia.root.innerHTML;
+                const data = { ...elementCurrent.value };
+                
+                // Sending base64 as requested
+                if (foto_principal_base64.value) {
+                    // Requested field
+                    data.foto_principal_base64 = foto_principal_base64.value;
+                    
+                    // Compatibility with existing backend (controllerMenus expects 'foto_principal' array for saveBase64)
+                    data.foto_principal = {
+                        namefile: files.foto_principal.value ? files.foto_principal.value.name : 'image.jpg',
+                        data: foto_principal_base64.value
+                    };
+                }
+
+                data.ocultar = (data.ocultar === true || data.ocultar == 1);
+
+                let url = serverUrl;
+                let method = 'post'; // axios methods are lower case
+
+                if (data.id) {
+                    url = `${serverUrl}/${data.id}`;
+                    method = 'put';
+                }
+                
+                // Axios dynamic method call
+                axios[method](url, data, { headers: getAuthHeaderJSON() }).then(response => {
+                    processResponse(response.data);
+                    if (successMsg.value) {
+                        // Reset to default state on success
+                        prepareNew(); 
                         state.value = 'default';
                         findAllElements(pagination.value.page);
+                    }
+                }).catch((error) => {
+                    console.log(error);
+                    errorMsg.value = "Erro desconhecido: " + error;
+                }).finally(() => {
+                    loading.value = false;
+                });
+            };
+
+            const deleteElement = (id) => {
+                loading.value = true;
+                axios.delete(serverUrl+"/"+id, { headers: getAuthHeader() }).then(response => {
+                    processResponse(response.data);
+                    if (successMsg.value || !errorMsg.value) { 
+                            prepareNew();
+                            state.value = 'default';
+                            findAllElements(pagination.value.page);
+                    }
+                }).catch(error => {
+                    errorMsg.value = "Erro ao excluir: " + error;
+                }).finally(() => {
+                    loading.value = false;
+                });
+            };
+            
+            const requestDelete = (element) => {
+                itemToDelete.value = element;
+                showModal.value = true;
+            };
+
+            const confirmDelete = () => {
+                if (itemToDelete.value) {
+                    deleteElement(itemToDelete.value.id);
                 }
-            }).catch(error => {
-                errorMsg.value = "Erro ao excluir: " + error;
-            }).finally(() => {
-                loading.value = false;
-            });
-        };
+                closeModal();
+            };
+
+            const closeModal = () => {
+                showModal.value = false;
+                itemToDelete.value = null;
+            };
         
-        const requestDelete = (element) => {
-            itemToDelete.value = element;
-            showModal.value = true;
-        };
+            const openImageModal = (url) => { modalImage.value = url; };
+            const closeImageModal = () => { modalImage.value = null; };
 
-        const confirmDelete = () => {
-            if (itemToDelete.value) {
-                deleteElement(itemToDelete.value.id);
-            }
-            closeModal();
-        };
+            watch(() => state.value, (v) => {
+                if (v === 'new' || v === 'edit') {
+                    //setTimeout(initQuill, 200);
+                }
+            });
 
-        const closeModal = () => {
-            showModal.value = false;
-            itemToDelete.value = null;
-        };
-      
-        const openImageModal = (url) => { modalImage.value = url; };
-        const closeImageModal = () => { modalImage.value = null; };
+            onMounted(async () => {
+                await carregarParentMenus();
+                await findAllElements(1);            
+                // Verifique se o elemento existe antes de chamar
+                setTimeout(() => {  initQuill(); }, 200);
+                setTimeout(() => {                                  
+                    // Botão para inserir tabela com tamanho personalizado
+                    const btnInsertTable = document.querySelector('.ql-table-better');
+                    if (btnInsertTable) {
+                        btnInsertTable.addEventListener('click', () => {
+                            openShowModalTable();
+                        });
+                    }                
+                }, 400);
+            });
 
-        watch(() => state.value, (v) => {
-            if (v === 'new' || v === 'edit') {
-                //setTimeout(initQuill, 200);
-            }
-        });
+            return {
+                loading,
+                state,
+                showModal,
+                itemToDelete,
+                modalImage,
+                errorMsg,
+                successMsg,
+                infoMsg,
+                elementCurrent,
+                elements,
+                pagination,
+                parentMenus,
+                handleFile,
+                prepareNew,
+                cancelAction,
+                editItem,
+                saveElement,
+                requestDelete,
+                confirmDelete,
+                closeModal,
+                openImageModal,
+                closeImageModal,
+                findById,
+                findAllElements,
+                getMenuName,
+                // Exposed for Template
+                imagemPreviewOuAtual,
+                temImagemParaMostrar,
+                removeImage,
+                fileInput,
 
-        onMounted(async () => {
-            await carregarParentMenus();
-            await findAllElements(1);            
-            // Verifique se o elemento existe antes de chamar
-            setTimeout(() => {  initQuill(); }, 200);
-            setTimeout(() => {                                  
-                // Botão para inserir tabela com tamanho personalizado
-                const btnInsertTable = document.querySelector('.ql-table-better');
-                if (btnInsertTable) {
-                    btnInsertTable.addEventListener('click', () => {
-                        openShowModalTable();
-                    });
-                }                
-            }, 400);
-        });
+                // Os que faltam e causam o erro atual:
+                showModalTable,
+                tableRows,
+                tableColumns,
 
-        return {
-            loading,
-            state,
-            showModal,
-            itemToDelete,
-            modalImage,
-            errorMsg,
-            successMsg,
-            infoMsg,
-            elementCurrent,
-            elements,
-            pagination,
-            parentMenus,
-            handleFile,
-            prepareNew,
-            cancelAction,
-            editItem,
-            saveElement,
-            requestDelete,
-            confirmDelete,
-            closeModal,
-            openImageModal,
-            closeImageModal,
-            findById,
-            findAllElements,
-            getMenuName,
-            // Exposed for Template
-            imagemPreviewOuAtual,
-            temImagemParaMostrar,
-            removeImage,
-            fileInput,
-
-            // Os que faltam e causam o erro atual:
-            showModalTable,
-            tableRows,
-            tableColumns,
-
-            // Métodos relacionados ao modal de tabela
-            closeModalTable,
-            insertTableQuill,
-            openShowModalTable
-        };
-    }
-}).mount('#app');
+                // Métodos relacionados ao modal de tabela
+                closeModalTable,
+                insertTableQuill,
+                openShowModalTable
+            };
+        }
+    }).mount('#app');
 </script>
 <?php include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/foot.php');?>

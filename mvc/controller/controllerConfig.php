@@ -71,6 +71,9 @@
             if(issetParameter(configsDAO::mensagemContato))
                 $params[configsDAO::mensagemContato] = getParameter(configsDAO::mensagemContato);
 
+			if(issetParameter(configsDAO::ocultar))$params[configsDAO::ocultar]=getParameter(configsDAO::ocultar);
+
+			
             parent::__construct(new configsDAO($params));
 
             $this->settingsImagesBase64 = [

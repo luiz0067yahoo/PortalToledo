@@ -64,6 +64,8 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 
         <!-- Fotos -->
         <div class="mb-3" v-for="field in fileFields" :key="field.key">
+
+
             <!-- Miniatura da imagem atual ou preview da nova -->
             <div v-if="hasImage(field.key)" class="mb-3 position-relative" style="display: inline-block;">
                 <img :src="getImageSrc(field.key)" style="height:100px; width:auto; border:1px solid #ccc; border-radius:4px;">
@@ -78,6 +80,8 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                 <input type="file" :ref="el => setFileInputRef(el, field.key)" class="form-control" @change="e => handleFile(e, field.key)" accept="image/*">
                 <span class="input-group-text">{{ field.label }}</span>
             </div>
+
+
         </div>
 
        
@@ -102,6 +106,10 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
             <button v-if="state=='new'||state=='edit'||state=='find'" @click="cancelAction" type="button" class="btn btn-danger cancelar"><i class="fa fa-ban"></i> Cancelar</button>
           </div>
         </div>
+
+
+
+
       </form>
 
       <!-- Mensagens -->
@@ -125,10 +133,10 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
             <td>{{ element.id }}</td>
             <td>{{ element.mensagem_contato }}</td>
             <td>
-              <img v-if="element.foto" :src="'/uploads/config/original/' + element.foto" style="height:40px;width:auto;cursor:pointer;" @click="openImageModal('/uploads/config/1024x768/' + element.foto)">
+              <img v-if="element.logo" :src="'/uploads/logo/original/' + element.logo" style="height:40px;width:auto;cursor:pointer;" @click="openImageModal('/uploads/logo/1024x768/' + element.logo)">
             </td>
             <td>
-              <img v-if="element.foto_mobile" :src="'/uploads/config/original/' + element.foto_mobile" style="height:40px;width:auto;cursor:pointer;" @click="openImageModal('/uploads/config/1024x768/' + element.foto_mobile)">
+              <img v-if="element.logo_mobile" :src="'/uploads/logo_mobile/original/' + element.logo_mobile" style="height:40px;width:auto;cursor:pointer;" @click="openImageModal('/uploads/logo/1024x768/' + element.logo_mobile)">
             </td>
             <td>
               <button @click="editItem(element)" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></button>
@@ -168,6 +176,9 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
           </ul>
         </nav>
       </div>
+
+
+
     </div>
   </div>
 
@@ -188,6 +199,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
       <img :src="modalImage" style="max-width: 90vw; max-height: 90vh; border: 2px solid white; box-shadow: 0 0 15px rgba(0,0,0,0.5);">
     </div>
   </div>
+  
 </div>
 
 <script type="importmap">
@@ -222,7 +234,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 
         // Dados
         const elementCurrent = ref({
-            id: '', mensagem_contato: '', foto: '', foto_mobile: '', introducao: '',ocultar: false
+            id: '', mensagem_contato: '', logo: '', logo_mobile: '', introducao: '',ocultar: false
         });
 
         const elements = ref([]);
@@ -235,8 +247,8 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 
         // Arquivos múltiplos
         const files = {
-            foto: ref(null),
-            foto_mobile: ref(null),
+            logo: ref(null),
+            logo_mobile: ref(null),
         };
         
         // Store for base64 strings and previews
@@ -245,8 +257,8 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
         const fileInputs = ref({});
 
         const fileFields = [
-            { key: 'foto', label: 'Foto' },
-            { key: 'foto_mobile', label: 'Foto Mobile' },
+            { key: 'logo', label: 'Foto', src: '/uploads/logo/original/'},
+            { key: 'logo_mobile', label: 'Foto Mobile', src: '/uploads/logo_mobile/original/' },
         ];
 
 
@@ -279,7 +291,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
         const prepareNew = () => {
             clearMsg();
             elementCurrent.value = {
-                id: '', mensagem_contato: '', foto: '', foto_mobile: '', ocultar: false, introducao2: '', descricao: '',
+                id: '', mensagem_contato: '', logo: '', logo_mobile: '', ocultar: false, introducao2: '', descricao: '',
                 ocultar: false, facebook: '', youtube: '', instagram: '', whatsapp: '', endereco: '', telefone: '',
                 e_mail: '', website: '', url: ''
             };
@@ -295,7 +307,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
         const cancelAction = () => {
             clearMsg();
             elementCurrent.value = {
-                id: '', mensagem_contato: '', foto: '', foto_mobile: '', ocultar: false, introducao2: '', descricao: '',
+                id: '', mensagem_contato: '', logo: '', logo_mobile: '', ocultar: false, introducao2: '', descricao: '',
                 ocultar: false, facebook: '', youtube: '', instagram: '', whatsapp: '', endereco: '', telefone: '',
                 e_mail: '', website: '', url: ''
             };
@@ -360,8 +372,9 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
         
         // Helper to get the image source (preview or existing)
         const getImageSrc = (key) => {
+          const field = fileFields.find(f => f.key === key);
             if (previews.value[key]) return previews.value[key];
-            if (elementCurrent.value[key]) return `/uploads/config/original/${elementCurrent.value[key]}`;
+            if (elementCurrent.value[key]) return `${field.src}/${elementCurrent.value[key]}`;
             return '';
         };
         
