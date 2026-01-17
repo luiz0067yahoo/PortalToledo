@@ -35,7 +35,7 @@
             $filename = uniqid('img_') . '_' . time() . '.' . $extension;
 
             // Choose your folder (make sure it's writable!)
-            $uploadDir = $_SERVER['DOCUMENT_ROOT'].'/uploads/explorer/';
+            $uploadDir = $_SERVER['DOCUMENT_ROOT'].'/uploads/explorer/noticias/';
             $uploadPath = $uploadDir . $filename;
 
             if (!is_dir($uploadDir)) {
@@ -44,7 +44,7 @@
 
             if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
                 // Return public accessible URL
-                $publicUrl = '/uploads/explorer/' . $filename;   // ← adjust according to your domain/structure
+                $publicUrl = '/uploads/explorer/noticias/' . $filename;   // ← adjust according to your domain/structure
 
                 echo json_encode([
                     'success' => true,

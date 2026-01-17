@@ -299,8 +299,8 @@ Route::add('/admin/anunciosFotos/([0-9]+)',function($idAnuncio){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_anuncios_fotos.php');
 },'get');
 
-Route::add('/admin/anunciosAnexo/([0-9]+)',function($idAnuncio){
-    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_anuncios_anexo.php');
+Route::add('/admin/anunciosAnexos/([0-9]+)',function($idAnuncio){
+    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_anuncios_anexos.php');
 },'get');
 
 Route::add('/admin/albumFotos',function(){

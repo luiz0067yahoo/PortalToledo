@@ -5,6 +5,58 @@
 
     class controllerAnunciosAnexos extends controller
     {
+
+        public function quillUpload(){
+            header('Content-Type: application/json');
+            if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'No file or upload error']);
+                exit;
+            }
+
+            $file = $_FILES['image'];
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (!in_array($file['type'], $allowedTypes)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Only JPG, PNG, GIF, WebP allowed']);
+                exit;
+            }
+
+            if ($file['size'] > $maxSize) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'File too large (max 5MB)']);
+                exit;
+            }
+
+            // Generate unique name
+            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = uniqid('img_') . '_' . time() . '.' . $extension;
+
+            // Choose your folder (make sure it's writable!)
+            $uploadDir = $_SERVER['DOCUMENT_ROOT'].'/uploads/explorer/anuncios_anexos/';
+            $uploadPath = $uploadDir . $filename;
+
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                // Return public accessible URL
+                $publicUrl = '/uploads/explorer/anuncios_anexos/' . $filename;   // ← adjust according to your domain/structure
+
+                echo json_encode([
+                    'success' => true,
+                    'url'     => $publicUrl
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Failed to save file']);
+            }
+
+        }
+
         public function save(){
             echo json_encode(
                 parent::saveBase64(function(){
@@ -22,8 +74,8 @@
         }
 
         public function update($id){
+            $this->model->setParam(anunciosAnexosDAO::fotoPrincipal,"");
             $result = parent::findById($id);
-
             foreach ($this->settingsImagesBase64 as $key => $value){
                 if(count($result["elements"]) > 0){
                     $file_name = $result["elements"][0][$key] ?? null;
@@ -78,8 +130,8 @@
             if(notEmptyParameter(anunciosAnexosDAO::id))
                 $params[anunciosAnexosDAO::id] = getParameter(anunciosAnexosDAO::id);
 
-            if(notEmptyParameter(anunciosAnexosDAO::id_anuncio))
-                $params[anunciosAnexosDAO::id_anuncio] = getParameter(anunciosAnexosDAO::id_anuncio);
+            if(notEmptyParameter(anunciosAnexosDAO::idAnuncio))
+                $params[anunciosAnexosDAO::idAnuncio] = getParameter(anunciosAnexosDAO::idAnuncio);
 
             if(issetParameter(anunciosAnexosDAO::titulo))
                 $params[anunciosAnexosDAO::titulo] = trim(getParameter(anunciosAnexosDAO::titulo));
@@ -87,8 +139,8 @@
             if(arrayKeyExistsParameter(anunciosAnexosDAO::subtitulo))
                 $params[anunciosAnexosDAO::subtitulo] = getParameter(anunciosAnexosDAO::subtitulo);
 
-            if(arrayKeyExistsParameter(anunciosAnexosDAO::conteudo_anuncio))
-                $params[anunciosAnexosDAO::conteudo_anuncio] = getParameter(anunciosAnexosDAO::conteudo_anuncio);
+            if(arrayKeyExistsParameter(anunciosAnexosDAO::conteudoAnuncio))
+                $params[anunciosAnexosDAO::conteudoAnuncio] = getParameter(anunciosAnexosDAO::conteudoAnuncio);
 
             if(arrayKeyExistsParameter(anunciosAnexosDAO::fonte))
                 $params[anunciosAnexosDAO::fonte] = getParameter(anunciosAnexosDAO::fonte);
@@ -96,16 +148,14 @@
             if(notEmptyParameter(anunciosAnexosDAO::acesso))
                 $params[anunciosAnexosDAO::acesso] = getParameter(anunciosAnexosDAO::acesso);
 
-            if(issetParameter(anunciosAnexosDAO::slide_show))
-                $params[anunciosAnexosDAO::slide_show] = getParameter(anunciosAnexosDAO::slide_show);
-
-            if(arrayKeyExistsParameter(anunciosAnexosDAO::ocultar))
+            if(issetParameter(anunciosAnexosDAO::ocultar))
                 $params[anunciosAnexosDAO::ocultar] = getParameter(anunciosAnexosDAO::ocultar);
 
-            parent::__construct(new anunciosAnexosDAO($params));
 
+            parent::__construct(new anunciosAnexosDAO($params));
+            
             $this->settingsImagesBase64 = [
-                anunciosAnexosDAO::foto_principal => [
+                anunciosAnexosDAO::fotoPrincipal => [
                     "path"    => "anuncios_anexos",
                     "formats" => "160x120,320x240,480x640,800x600,1024x768,1366x768"
                 ]
