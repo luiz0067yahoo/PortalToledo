@@ -53,7 +53,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
         <div class="loader"></div>
     </div>
     
-    <h1>CADASTRO DE ANÚNCIOS ANEXOS <?php echo $idAnuncio; ?> </h1>
+    <h1>CADASTRO DE ANÚNCIOS ANEXOS <?php echo $idNoticia; ?> </h1>
     <br>
     
     <div class="row">
@@ -102,7 +102,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                     <label class="form-label fw-bold">Conteúdo da notícia</label>
                 </div>
                 <div class="mb-3">
-                    <div id="conteudo_anuncio_anexo" name="conteudo_anuncio_anexo"  class="form-control" style="height:400px;"></div>
+                    <div id="conteudo_noticia_anexo" name="conteudo_noticia_anexo"  class="form-control" style="height:400px;"></div>
                 </div>
                     
                 <!-- Fonte -->
@@ -163,7 +163,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                 <thead>
                     <tr>
                         <th>Código</th>
-                        <th>Anuncio Pai</th>
+                        <th>Noticia Pai</th>
                         <th>Titulo/Subtitulo</th>
                         <th>Imagem</th>
                         <th>Ação</th>
@@ -172,14 +172,14 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                 <tbody>
                     <tr v-for="element in elements" :key="element.id">
                         <td>{{ element.id }}</td>
-                        <td>{{ element.anuncio }}</td>
+                        <td>{{ element.noticia }}</td>
                         <td>
                             <b>{{ element.titulo }}</b>
                             <br>
                             {{ element.subtitulo }}
                         </td>
                         <td>
-                             <img v-if="element.foto_principal" :src="`/uploads/noticias/original/${element.foto_principal}`" style="height:40px;width:auto;cursor:pointer;" @click="openImageModal(`/uploads/noticias/1024x768/${element.foto_principal}`)">
+                             <img v-if="element.foto_principal" :src="`/uploads/noticias_anexos/original/${element.foto_principal}`" style="height:40px;width:auto;cursor:pointer;" @click="openImageModal(`/uploads/noticias_anexos/1024x768/${element.foto_principal}`)">
                         </td>
                         <td>
                             <button @click="editItem(element)" class="btn btn-primary btn-sm"><i class="fa fa-edit"></i></button>
@@ -340,7 +340,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
     import { fileToBase64 } from '/assets/js/utils/base64.js';
 
     let quillConteudoNoticia=null;
-    var id_anuncio_route = '<?php echo $idAnuncio; ?>';
+    var id_noticia_route = '<?php echo $idNoticia; ?>';
     createApp({
         setup() {
             // State
@@ -363,10 +363,10 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
             const infoMsg = ref("");
             const elementCurrent = ref({
                 id: '',
-                id_anuncio: id_anuncio_route,
+                id_noticia: id_noticia_route,
                 titulo: '',
                 subtitulo: '',
-                conteudo_anuncio_anexo: '',
+                conteudo_noticia_anexo: '',
                 fonte: '',
                 ocultar: false,
                 foto_principal: '',           // ou foto_principal, mas mantendo compatibilidade com nome do noticias
@@ -389,7 +389,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                 // Registro do módulo (obrigatório antes de instanciar Quill)
                 Quill.register({ 'modules/table-better': QuillTableBetter }, true);
 
-                quillConteudoNoticia = new Quill('#conteudo_anuncio_anexo', {
+                quillConteudoNoticia = new Quill('#conteudo_noticia_anexo', {
                     theme: 'snow',
                     modules: {
                         toolbar: {
@@ -528,7 +528,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                         formData.append('image', file);  // ← nome que seu PHP espera
 
                         const response = await axios.post(
-                            '/server/noticias/quillUpload', 
+                            '/server/noticias_anexos/quillUpload', 
                             formData,
                             {
                                 headers: {
@@ -569,7 +569,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
             const parentMenus = ref([]);
             
             // Config
-            const serverUrl = '/server/anunciosAnexos';
+            const serverUrl = '/server/noticiasAnexos';
         // File handling variables
             const files = {
                 foto_principal: ref(null)
@@ -585,7 +585,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                     return foto_principalPreview.value;
                 }
                 if (elementCurrent.value.foto_principal) {
-                    return `/uploads/anuncios_anexos/original/${elementCurrent.value.foto_principal}`;
+                    return `/uploads/noticias_anexos/original/${elementCurrent.value.foto_principal}`;
                 }
                 return '';
             });
@@ -683,7 +683,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 
             const prepareNew = () => {
                 clearMsg();
-                elementCurrent.value = { id: '', id_anuncio: id_anuncio_route,foto_principal: '', titulo: '', subtitulo: '', conteudo_anuncio_anexo: '', fonte: '', acesso: '', ocultar: false };
+                elementCurrent.value = { id: '', id_noticia: id_noticia_route,foto_principal: '', titulo: '', subtitulo: '', conteudo_noticia_anexo: '', fonte: '', acesso: '', ocultar: false };
                 files.foto_principal.value = null;
                 foto_principalPreview.value = '';
                 foto_principal_base64.value = '';
@@ -708,9 +708,9 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                 infoMsg.value = "";
                 elementCurrent.value = { 
                     id: '',
-                    id_anuncio: id_anuncio_route,
+                    id_noticia: id_noticia_route,
                     foto_principal: '',
-                    conteudo_anuncio_anexo: '',
+                    conteudo_noticia_anexo: '',
                     titulo: '',
                     subtitulo: '',
                     fonte: '',
@@ -739,9 +739,9 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                 elementCurrent.value.ocultar = (element.ocultar == 1 || element.ocultar == true);
                 elementCurrent.value.destaque    = (element.destaque == 1 || element.destaque == true);
                 elementCurrent.value.slide_show    = (element.slide_show == 1 || element.slide_show == true);
-                elementCurrent.value.id_anuncio = element.id_anuncio;
+                elementCurrent.value.id_noticia = element.id_noticia;
 
-                setTimeout(() => setQuillConteudoNoticia(element.conteudo_anuncio_anexo), 200);
+                setTimeout(() => setQuillConteudoNoticia(element.conteudo_noticia_anexo), 200);
                 // Reset new file selection on edit start
                 files.foto_principal.value = null;
                 foto_principalPreview.value = '';
@@ -829,7 +829,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
             };
 
             const findAllElements = (page) => {
-                id_anuncio_route = getIdFromUrl(self.location.href);
+                id_noticia_route = getIdFromUrl(self.location.href);
                 if (page) pagination.value.page = page;
                 if (pagination.value.page < 1) pagination.value.page = 1;
                 if (pagination.value.limitpage > 0 && pagination.value.page > pagination.value.limitpage) pagination.value.page = pagination.value.limitpage;
@@ -842,7 +842,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                 params.append('page', serverpage);
                 params.append('row_count', pagination.value.rowCount);
                 params.append('token', generateToken(256));
-                params.append('id_anuncio', id_anuncio_route);
+                params.append('id_noticia', id_noticia_route);
                 
                 if (elementCurrent.value.nome) params.append('nome', elementCurrent.value.nome);
 
@@ -858,9 +858,9 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 
             const saveElement = async () => {
                 loading.value = true;
-                elementCurrent.value.conteudo_anuncio_anexo = quillConteudoNoticia.root.innerHTML;
+                elementCurrent.value.conteudo_noticia_anexo = quillConteudoNoticia.root.innerHTML;
                 const data = { ...elementCurrent.value };
-                data.id_anuncio = id_anuncio_route;
+                data.id_noticia = id_noticia_route;
 
                 // Sending base64 as requested
                 if (foto_principal_base64.value) {
@@ -944,7 +944,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
             });
 
             onMounted(async () => {
-                id_anuncio_route = getIdFromUrl(self.location.href);
+                id_noticia_route = getIdFromUrl(self.location.href);
                 await findAllElements(1);            
                 // Verifique se o elemento existe antes de chamar
                 setTimeout(() => {  initQuill(); }, 200);

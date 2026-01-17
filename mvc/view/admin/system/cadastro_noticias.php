@@ -165,6 +165,11 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                         <button v-if="['new','edit','find'].includes(state)" @click="cancelAction" class="btn btn-danger cancelar">
                             <i class="fa fa-ban"></i> Cancelar
                         </button>
+
+
+
+                        <a target="_blank" :href="'/admin/noticiasFotos/' + elementCurrent.id"><button v-if="state=='edit'" type="button" class="btn btn-primary "><i class="fa fa-times"></i> Cadastrar Fotos</button></a>
+                        <a target="_blank" :href="'/admin/noticiasAnexos/' + elementCurrent.id"><button v-if="state=='edit'" type="button" class="btn btn-primary "><i class="fa fa-file"></i> Cadastrar Anexos</button></a>
                     </div>
                 </div>
             </form>

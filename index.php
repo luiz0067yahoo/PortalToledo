@@ -279,8 +279,8 @@ Route::add('/admin/noticias',function(){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_noticias.php');
 },'get');
 
-Route::add('/admin/noticiasAnexo/([0-9]+)',function($idNoticia){
-    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_noticias_anexo.php');
+Route::add('/admin/noticiasAnexos/([0-9]+)',function($idNoticia){
+    require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/system/cadastro_noticias_anexos.php');
 },'get');
 
 Route::add('/admin/noticiasFotos/([0-9]+)',function($idNoticia){
@@ -600,24 +600,25 @@ Route::add('/server/noticias/([0-9]*)',function($id){
 
 
 //###############################################################################
-Route::add('/server/noticiasAnexo',function(){
-   if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexo())->find());
+require_once($GLOBALS["base_server_path_files"].'/mvc/controller/controllerNoticiasAnexos.php');
+Route::add('/server/noticiasAnexos',function(){
+   if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexos())->find());
 },'get');
 
-Route::add('/server/noticiasAnexo/([0-9]*)',function($id){
-   if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexo())->findById($id));
+Route::add('/server/noticiasAnexos/([0-9]*)',function($id){
+   if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexos())->findById($id));
 },'get');
 
-Route::add('/server/noticiasAnexo',function(){
-    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexo())->create());
+Route::add('/server/noticiasAnexos',function(){
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexos())->create());
 },'post');
 
-Route::add('/server/noticiasAnexo/([0-9]*)',function($id){
-    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexo())->update($id));
+Route::add('/server/noticiasAnexos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexos())->update($id));
 },'put');
 
-Route::add('/server/noticiasAnexo/([0-9]*)',function($id){
-    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexo())->del($id));
+Route::add('/server/noticiasAnexos/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerNoticiasAnexos())->del($id));
 },'delete');
 //###############################################################################
 

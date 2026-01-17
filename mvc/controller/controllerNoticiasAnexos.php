@@ -5,6 +5,58 @@
 
     class controllerNoticiasAnexos extends controller
     {
+
+        public function quillUpload(){
+            header('Content-Type: application/json');
+            if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'No file or upload error']);
+                exit;
+            }
+
+            $file = $_FILES['image'];
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            $maxSize = 5 * 1024 * 1024; // 5MB
+
+            if (!in_array($file['type'], $allowedTypes)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Only JPG, PNG, GIF, WebP allowed']);
+                exit;
+            }
+
+            if ($file['size'] > $maxSize) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'File too large (max 5MB)']);
+                exit;
+            }
+
+            // Generate unique name
+            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = uniqid('img_') . '_' . time() . '.' . $extension;
+
+            // Choose your folder (make sure it's writable!)
+            $uploadDir = $_SERVER['DOCUMENT_ROOT'].'/uploads/explorer/noticias_anexos/';
+            $uploadPath = $uploadDir . $filename;
+
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                // Return public accessible URL
+                $publicUrl = '/uploads/explorer/noticias_anexos/' . $filename;   // ← adjust according to your domain/structure
+
+                echo json_encode([
+                    'success' => true,
+                    'url'     => $publicUrl
+                ]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Failed to save file']);
+            }
+
+        }
+
         public function save(){
             echo json_encode(
                 parent::saveBase64(function(){
@@ -22,8 +74,8 @@
         }
 
         public function update($id){
+            $this->model->setParam(noticiasAnexosDAO::fotoPrincipal,"");
             $result = parent::findById($id);
-
             foreach ($this->settingsImagesBase64 as $key => $value){
                 if(count($result["elements"]) > 0){
                     $file_name = $result["elements"][0][$key] ?? null;
@@ -78,17 +130,17 @@
             if(notEmptyParameter(noticiasAnexosDAO::id))
                 $params[noticiasAnexosDAO::id] = getParameter(noticiasAnexosDAO::id);
 
-            if(notEmptyParameter(noticiasAnexosDAO::id_noticia))
-                $params[noticiasAnexosDAO::id_noticia] = getParameter(noticiasAnexosDAO::id_noticia);
+            if(notEmptyParameter(noticiasAnexosDAO::idNoticia))
+                $params[noticiasAnexosDAO::idNoticia] = getParameter(noticiasAnexosDAO::idNoticia);
 
             if(issetParameter(noticiasAnexosDAO::titulo))
-                $params[noticiasAnexosDAO::titulo] = getParameter(noticiasAnexosDAO::titulo);
+                $params[noticiasAnexosDAO::titulo] = trim(getParameter(noticiasAnexosDAO::titulo));
 
             if(arrayKeyExistsParameter(noticiasAnexosDAO::subtitulo))
                 $params[noticiasAnexosDAO::subtitulo] = getParameter(noticiasAnexosDAO::subtitulo);
 
-            if(arrayKeyExistsParameter(noticiasAnexosDAO::conteudo_noticia))
-                $params[noticiasAnexosDAO::conteudo_noticia] = getParameter(noticiasAnexosDAO::conteudo_noticia);
+            if(arrayKeyExistsParameter(noticiasAnexosDAO::conteudoNoticiaAnexo))
+                $params[noticiasAnexosDAO::conteudoNoticiaAnexo] = getParameter(noticiasAnexosDAO::conteudoNoticiaAnexo);
 
             if(arrayKeyExistsParameter(noticiasAnexosDAO::fonte))
                 $params[noticiasAnexosDAO::fonte] = getParameter(noticiasAnexosDAO::fonte);
@@ -96,17 +148,15 @@
             if(notEmptyParameter(noticiasAnexosDAO::acesso))
                 $params[noticiasAnexosDAO::acesso] = getParameter(noticiasAnexosDAO::acesso);
 
-            if(issetParameter(noticiasAnexosDAO::slide_show))
-                $params[noticiasAnexosDAO::slide_show] = getParameter(noticiasAnexosDAO::slide_show);
-
             if(issetParameter(noticiasAnexosDAO::ocultar))
                 $params[noticiasAnexosDAO::ocultar] = getParameter(noticiasAnexosDAO::ocultar);
 
-            parent::__construct(new noticiasAnexosDAO($params));
 
+            parent::__construct(new noticiasAnexosDAO($params));
+            
             $this->settingsImagesBase64 = [
-                noticiasAnexosDAO::foto_principal => [
-                    "path"    => "noticias",
+                noticiasAnexosDAO::fotoPrincipal => [
+                    "path"    => "noticias_anexos",
                     "formats" => "160x120,320x240,480x640,800x600,1024x768,1366x768"
                 ]
             ];

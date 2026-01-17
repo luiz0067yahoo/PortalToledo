@@ -139,8 +139,8 @@
             if(arrayKeyExistsParameter(anunciosAnexosDAO::subtitulo))
                 $params[anunciosAnexosDAO::subtitulo] = getParameter(anunciosAnexosDAO::subtitulo);
 
-            if(arrayKeyExistsParameter(anunciosAnexosDAO::conteudoAnuncio))
-                $params[anunciosAnexosDAO::conteudoAnuncio] = getParameter(anunciosAnexosDAO::conteudoAnuncio);
+            if(arrayKeyExistsParameter(anunciosAnexosDAO::conteudoAnuncioAnexo))
+                $params[anunciosAnexosDAO::conteudoAnuncioAnexo] = getParameter(anunciosAnexosDAO::conteudoAnuncioAnexo);
 
             if(arrayKeyExistsParameter(anunciosAnexosDAO::fonte))
                 $params[anunciosAnexosDAO::fonte] = getParameter(anunciosAnexosDAO::fonte);
