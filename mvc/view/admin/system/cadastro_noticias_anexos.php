@@ -434,7 +434,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                 console.log('Quill inicializado com tabelas avançadas (quill-table-better)');
             };
 
-        // Near the top of setup()
+       
             const editorInstance = ref(null);
             
             const insertTableQuill = () => {
@@ -560,17 +560,19 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
             };
 
             const elements = ref([]);
+
             const pagination = ref({
                 page: 1,
                 rowCount: 10,
                 total: 0,
                 limitpage: 0
             });
+
             const parentMenus = ref([]);
             
             // Config
             const serverUrl = '/server/noticiasAnexos';
-        // File handling variables
+       
             const files = {
                 foto_principal: ref(null)
             };
@@ -865,7 +867,6 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
                 // Sending base64 as requested
                 if (foto_principal_base64.value) {
                     // Requested field
-                    data.foto_principal_base64 = foto_principal_base64.value;
                     
                     // Compatibility with existing backend (controllerMenus expects 'foto_principal' array for saveBase64)
                     data.foto_principal = {

@@ -864,8 +864,6 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 
                 // Sending base64 as requested
                 if (foto_principal_base64.value) {
-                    // Requested field
-                    data.foto_principal_base64 = foto_principal_base64.value;
                     
                     // Compatibility with existing backend (controllerMenus expects 'foto_principal' array for saveBase64)
                     data.foto_principal = {

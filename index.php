@@ -748,6 +748,33 @@ Route::add('/server/anunciosAnexos/([0-9]*)',function($id){
 },'delete');
 //###############################################################################
 
+
+
+//###############################################################################
+require_once($GLOBALS["base_server_path_files"].'/mvc/controller/controllerConfig.php');
+Route::add('/server/configs',function(){
+    if(new usuariosDAO([])->controlAcess())((new controllerConfig())->find());
+},'get');
+
+Route::add('/server/configs/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerConfig())->findById($id));
+},'get');
+
+Route::add('/server/configs',function(){
+    if(new usuariosDAO([])->controlAcess())((new controllerConfig())->create());
+},'post');
+
+Route::add('/server/configs/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerConfig())->update($id));
+},'put');
+
+Route::add('/server/configs/([0-9]*)',function($id){
+    if(new usuariosDAO([])->controlAcess())((new controllerConfig())->del($id));
+},'delete');
+//###############################################################################
+
+
+
 Route::add('/admin/(.*)',function(){
     require_once($GLOBALS["base_server_path_files"].'/mvc/view/admin/404.php');
 },'get');

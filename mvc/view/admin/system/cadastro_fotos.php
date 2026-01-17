@@ -3,45 +3,33 @@ require_once($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
 include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
 ?>
 
-<script type="importmap">
-{
-  "imports": {
-    "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
-    "@/": "/mvc/view/admin/js/"
-  }
-}
-</script>
-
-<!-- Axios -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
-
 <style>
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-.modal-content-custom {
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
-    min-width: 300px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-.modal-actions {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 20px;
-}
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .modal-content-custom {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        min-width: 300px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 20px;
+    }
 </style>
 
 <div id="app" class="container">
@@ -229,503 +217,516 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
         </div>
     </div>
 </div>
+
+
+<script type="importmap">
+    {
+    "imports": {
+        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
+        "@/": "/mvc/view/admin/js/"
+    }
+    }
+</script>
+
+<!-- Axios -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+
 <script type="module">
-import { createApp, ref, onMounted, computed } from 'vue';
-import { fileToBase64 } from '/assets/js/utils/base64.js';
+    import { createApp, ref, onMounted, computed } from 'vue';
+    import { fileToBase64 } from '/assets/js/utils/base64.js';
 
-createApp({
-    setup() {
-        // State
-        const loading = ref(false);
-        const state = ref('default'); 
-        const showModal = ref(false);
-        const itemToDelete = ref(null);
-        const modalImage = ref(null);
-
-        // Data
-        const errorMsg = ref("");
-        const successMsg = ref("");
-        const infoMsg = ref("");
-        const elementCurrent = ref({ 
-            id: '',
-            id_menu: '',
-            nome: '',
-            ocultar: false,
-            foto: ''
-        });
-        const elements = ref([]);
-        const pagination = ref({
-            page: 1,
-            rowCount: 10,
-            total: 0,
-            limitpage: 0
-        });
-        const parentAlbumFotos = ref([]);
-        
-        // Config
-        const serverUrl = '/server/fotos';
-        
-        // File handling variables
-        const files = {
-            foto: ref(null)
-        };
-        const foto_base64 = ref('');
-        const fotoPreview = ref('');
-        const fotos_struct = ref([]);
-
-        // Computed properties for Image Preview
-        const imagemPreviewOuAtual = computed(() => {
-            if (fotoPreview.value) {
-                return fotoPreview.value;
-            }
-            if (elementCurrent.value.foto) {
-                return `/uploads/album/original/${elementCurrent.value.foto}`;
-            }
-            return '';
-        });
-
-        const temImagemParaMostrar = computed(() => {
-            return !!imagemPreviewOuAtual.value;
-        });
-
-        // Refs
-        const fileInput = ref(null);
-
-        // Method to handle file selection
-        // Method to handle file selection
-        function handleFile(e) {
-            const selectedFiles = e.target.files;
-            fotos_struct.value = [];
-            
-            if (!selectedFiles || selectedFiles.length === 0) {
-                 fotoPreview.value = '';
-                 foto_base64.value = '';
-                 files.foto.value = null;
-                 return;
-            }
-
-            files.foto.value = selectedFiles;
-            const fileArray = Array.from(selectedFiles);
-            
-            // Generate promises for all files
-            const promises = fileArray.map(file => {
-                return new Promise((resolve) => {
-                     const reader = new FileReader();
-                     reader.onload = (evt) => {
-                         const b64 = evt.target.result.split(',')[1];
-                         resolve({
-                             namefile: file.name,
-                             data: b64,
-                             preview: evt.target.result,
-                             fileObject: file // Store original file for input manipulation
-                         });
-                     };
-                     reader.readAsDataURL(file);
-                });
-            });
-
-            Promise.all(promises).then(results => {
-                fotos_struct.value = results;
-                
-                // Set preview and legacy base64 for the first image
-                if (results.length > 0) {
-                    fotoPreview.value = results[0].preview;
-                    foto_base64.value = results[0].data;
-                }
-            });
-        }
-
-        // Method to remove image
-        function removeImage() {
-            // Clear current server image
-            elementCurrent.value.foto = '';
-            
-            // Clear preview
-            fotoPreview.value = '';
-            foto_base64.value = '';
-            fotos_struct.value = [];
-            
-            // Clear file object
-            files.foto.value = null;
-
-            // Clear input DOM element
-            if (fileInput.value) {
-                fileInput.value.value = '';
-            }
-             const fileInputEl = document.querySelector('input[type="file"]');
-             if(fileInputEl) fileInputEl.value = '';
-        }
-
-        function removeIndividualImage(index) {
-            fotos_struct.value.splice(index, 1);
-            
-            // Reconstruct the FileList for the input
-            const dataTransfer = new DataTransfer();
-            fotos_struct.value.forEach(item => {
-                if(item.fileObject) {
-                    dataTransfer.items.add(item.fileObject);
-                }
-            });
-
-            // Update the input element
-            const fileInputEl = document.querySelector('input[type="file"]');
-            if (fileInputEl) {
-                fileInputEl.files = dataTransfer.files;
-                files.foto.value = fileInputEl.files; // Update vue ref used elsewhere if needed
-            }
-
-            // Update legacy/single refs to reflect the first image of the remaining set (or clear if empty)
-            if (fotos_struct.value.length > 0) {
-                fotoPreview.value = fotos_struct.value[0].preview;
-                foto_base64.value = fotos_struct.value[0].data;
-            } else {
-                // If all removed, clear everything
-                fotoPreview.value = '';
-                foto_base64.value = '';
-                files.foto.value = null;
-                if(fileInputEl) fileInputEl.value = '';
-            }
-        }
-
-        // Methods
-        const generateToken = (length) => {
-            var a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
-            var b = [];
-            for (var i = 0; i < length; i++) {
-                var j = (Math.random() * (a.length - 1)).toFixed(0);
-                b[i] = a[j];
-            }
-            return b.join("");
-        };
-
-        const getToken = () => {
-             const userData = localStorage.getItem('portalToledoData');
-             if (userData) {
-                 try {
-                     return JSON.parse(userData).token;
-                 } catch (e) {
-                     return '';
-                 }
-             }
-             return '';
-        };
-
-        const getAuthHeader = () => {
-            return {
-                'Authorization': `Bearer ${getToken()}`
-            };
-        };
-        
-        const getAuthHeaderJSON = () => {
-            return {
-                'Authorization': `Bearer ${getToken()}`,
-                'Content-Type': 'application/json'
-            };
-        };
-
-        const clearMsg = () => {
-            errorMsg.value = "";
-            successMsg.value = "";
-            infoMsg.value = "";
-        };
-
-        const prepareNew = () => {
-            clearMsg();
-            elementCurrent.value = { id: '', id_menu: '', nome: '', ocultar: false, foto: '' };
-            files.foto.value = null;
-            fotoPreview.value = '';
-            foto_base64.value = '';
-            fotos_struct.value = [];
-            const fileInput = document.querySelector('input[type="file"]');
-            if(fileInput) fileInput.value = '';
-            state.value = 'new';
-        };
-
-        const cancelAction = () => {
-            clearMsg();
-            state.value = 'default';
-            loading.value = false;
-            showModal.value = false;
-            itemToDelete.value = null;
-            modalImage.value = null;
+    createApp({
+        setup() {
+            // State
+            const loading = ref(false);
+            const state = ref('default'); 
+            const showModal = ref(false);
+            const itemToDelete = ref(null);
+            const modalImage = ref(null);
 
             // Data
-            errorMsg.value = "";
-            successMsg.value = "";
-            infoMsg.value = "";
-            elementCurrent.value = { 
+            const errorMsg = ref("");
+            const successMsg = ref("");
+            const infoMsg = ref("");
+            const elementCurrent = ref({ 
                 id: '',
                 id_menu: '',
                 nome: '',
                 ocultar: false,
                 foto: ''
-            };
-            elements.value = [];
-            pagination.value = {
+            });
+            const elements = ref([]);
+            const pagination = ref({
                 page: 1,
                 rowCount: 10,
                 total: 0,
                 limitpage: 0
-            };
-            parentAlbumFotos.value = [];
+            });
+            const parentAlbumFotos = ref([]);
             
             // Config
+            const serverUrl = '/server/fotos';
             
             // File handling variables
-            files.foto.value = null;
-            foto_base64.value = '';
-            fotos_struct.value = [];
-            fotoPreview.value    = '';
-        };
+            const files = {
+                foto: ref(null)
+            };
+            const foto_base64 = ref('');
+            const fotoPreview = ref('');
+            const fotos_struct = ref([]);
 
-        const editItem = (element) => {
-            clearMsg();
-            elementCurrent.value = { ...element };
-            elementCurrent.value.ocultar = (element.ocultar == 1 || element.ocultar == true);
-            
-            // Reset new file selection on edit start
-            files.foto.value = null;
-            fotoPreview.value = '';
-            foto_base64.value = '';
-            fotos_struct.value = [];
-            const fileInput = document.querySelector('input[type="file"]');
-            if(fileInput) fileInput.value = '';
+            // Computed properties for Image Preview
+            const imagemPreviewOuAtual = computed(() => {
+                if (fotoPreview.value) {
+                    return fotoPreview.value;
+                }
+                if (elementCurrent.value.foto) {
+                    return `/uploads/album/original/${elementCurrent.value.foto}`;
+                }
+                return '';
+            });
 
-            state.value = 'edit';
-        };
+            const temImagemParaMostrar = computed(() => {
+                return !!imagemPreviewOuAtual.value;
+            });
 
-        const carregarParentAlbumFotos = async () => {
-             try {
-                const response = await axios.get(`/server/albumFotos`, { headers: getAuthHeader() });
-                const data = response.data;
-                if(data.elements) parentAlbumFotos.value = data.elements;
-            } catch (e) {
-                console.error(e);
+            // Refs
+            const fileInput = ref(null);
+
+            // Method to handle file selection
+            // Method to handle file selection
+            function handleFile(e) {
+                const selectedFiles = e.target.files;
+                fotos_struct.value = [];
+                
+                if (!selectedFiles || selectedFiles.length === 0) {
+                    fotoPreview.value = '';
+                    foto_base64.value = '';
+                    files.foto.value = null;
+                    return;
+                }
+
+                files.foto.value = selectedFiles;
+                const fileArray = Array.from(selectedFiles);
+                
+                // Generate promises for all files
+                const promises = fileArray.map(file => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => {
+                            const b64 = evt.target.result.split(',')[1];
+                            resolve({
+                                namefile: file.name,
+                                data: b64,
+                                preview: evt.target.result,
+                                fileObject: file // Store original file for input manipulation
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                });
+
+                Promise.all(promises).then(results => {
+                    fotos_struct.value = results;
+                    
+                    // Set preview and legacy base64 for the first image
+                    if (results.length > 0) {
+                        fotoPreview.value = results[0].preview;
+                        foto_base64.value = results[0].data;
+                    }
+                });
             }
-        };
-        
-        const getMenuName = (id) => {
-            const m = parentAlbumFotos.value.find(x => x.id == id);
-            return m ? m.nome : id;
-        };
 
-        const processResponse = (data) => {
-            clearMsg();
-            if (typeof data === 'string') {
+            // Method to remove image
+            function removeImage() {
+                // Clear current server image
+                elementCurrent.value.foto = '';
+                
+                // Clear preview
+                fotoPreview.value = '';
+                foto_base64.value = '';
+                fotos_struct.value = [];
+                
+                // Clear file object
+                files.foto.value = null;
+
+                // Clear input DOM element
+                if (fileInput.value) {
+                    fileInput.value.value = '';
+                }
+                const fileInputEl = document.querySelector('input[type="file"]');
+                if(fileInputEl) fileInputEl.value = '';
+            }
+
+            function removeIndividualImage(index) {
+                fotos_struct.value.splice(index, 1);
+                
+                // Reconstruct the FileList for the input
+                const dataTransfer = new DataTransfer();
+                fotos_struct.value.forEach(item => {
+                    if(item.fileObject) {
+                        dataTransfer.items.add(item.fileObject);
+                    }
+                });
+
+                // Update the input element
+                const fileInputEl = document.querySelector('input[type="file"]');
+                if (fileInputEl) {
+                    fileInputEl.files = dataTransfer.files;
+                    files.foto.value = fileInputEl.files; // Update vue ref used elsewhere if needed
+                }
+
+                // Update legacy/single refs to reflect the first image of the remaining set (or clear if empty)
+                if (fotos_struct.value.length > 0) {
+                    fotoPreview.value = fotos_struct.value[0].preview;
+                    foto_base64.value = fotos_struct.value[0].data;
+                } else {
+                    // If all removed, clear everything
+                    fotoPreview.value = '';
+                    foto_base64.value = '';
+                    files.foto.value = null;
+                    if(fileInputEl) fileInputEl.value = '';
+                }
+            }
+
+            // Methods
+            const generateToken = (length) => {
+                var a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
+                var b = [];
+                for (var i = 0; i < length; i++) {
+                    var j = (Math.random() * (a.length - 1)).toFixed(0);
+                    b[i] = a[j];
+                }
+                return b.join("");
+            };
+
+            const getToken = () => {
+                const userData = localStorage.getItem('portalToledoData');
+                if (userData) {
+                    try {
+                        return JSON.parse(userData).token;
+                    } catch (e) {
+                        return '';
+                    }
+                }
+                return '';
+            };
+
+            const getAuthHeader = () => {
+                return {
+                    'Authorization': `Bearer ${getToken()}`
+                };
+            };
+            
+            const getAuthHeaderJSON = () => {
+                return {
+                    'Authorization': `Bearer ${getToken()}`,
+                    'Content-Type': 'application/json'
+                };
+            };
+
+            const clearMsg = () => {
+                errorMsg.value = "";
+                successMsg.value = "";
+                infoMsg.value = "";
+            };
+
+            const prepareNew = () => {
+                clearMsg();
+                elementCurrent.value = { id: '', id_menu: '', nome: '', ocultar: false, foto: '' };
+                files.foto.value = null;
+                fotoPreview.value = '';
+                foto_base64.value = '';
+                fotos_struct.value = [];
+                const fileInput = document.querySelector('input[type="file"]');
+                if(fileInput) fileInput.value = '';
+                state.value = 'new';
+            };
+
+            const cancelAction = () => {
+                clearMsg();
+                state.value = 'default';
+                loading.value = false;
+                showModal.value = false;
+                itemToDelete.value = null;
+                modalImage.value = null;
+
+                // Data
+                errorMsg.value = "";
+                successMsg.value = "";
+                infoMsg.value = "";
+                elementCurrent.value = { 
+                    id: '',
+                    id_menu: '',
+                    nome: '',
+                    ocultar: false,
+                    foto: ''
+                };
+                elements.value = [];
+                pagination.value = {
+                    page: 1,
+                    rowCount: 10,
+                    total: 0,
+                    limitpage: 0
+                };
+                parentAlbumFotos.value = [];
+                
+                // Config
+                
+                // File handling variables
+                files.foto.value = null;
+                foto_base64.value = '';
+                fotos_struct.value = [];
+                fotoPreview.value    = '';
+            };
+
+            const editItem = (element) => {
+                clearMsg();
+                elementCurrent.value = { ...element };
+                elementCurrent.value.ocultar = (element.ocultar == 1 || element.ocultar == true);
+                
+                // Reset new file selection on edit start
+                files.foto.value = null;
+                fotoPreview.value = '';
+                foto_base64.value = '';
+                fotos_struct.value = [];
+                const fileInput = document.querySelector('input[type="file"]');
+                if(fileInput) fileInput.value = '';
+
+                state.value = 'edit';
+            };
+
+            const carregarParentAlbumFotos = async () => {
                 try {
-                    data = JSON.parse(data);
+                    const response = await axios.get(`/server/albumFotos`, { headers: getAuthHeader() });
+                    const data = response.data;
+                    if(data.elements) parentAlbumFotos.value = data.elements;
                 } catch (e) {
-                     return;
+                    console.error(e);
                 }
-            }
+            };
             
-            if (data.mensagem_erro) {
-                errorMsg.value = data.mensagem_erro;
-            } else if (data.message && data.error) {
-                 errorMsg.value = data.message;
-            }
-            
-            if (data.mensagem_sucesso) {
-                successMsg.value = data.mensagem_sucesso;
-            } else if (data.message && !data.error) {
-                successMsg.value = data.message;
-            } else if (data.mensagem_informacao) {
-                infoMsg.value = data.mensagem_informacao;
-            }
+            const getMenuName = (id) => {
+                const m = parentAlbumFotos.value.find(x => x.id == id);
+                return m ? m.nome : id;
+            };
 
-            if (data.elements) {
-                elements.value = data.elements;
-            }
-
-             if (data.recordsCount !== undefined) {
-                pagination.value.total = parseInt(data.recordsCount);
-            } else if (data.numero_registros !== undefined) {
-                pagination.value.total = parseInt(data.numero_registros);
-            }
-
-            if (pagination.value.total > 0) {
-                 pagination.value.limitpage = Math.ceil(pagination.value.total / pagination.value.rowCount);
-                 if (pagination.value.limitpage < 1) pagination.value.limitpage = 1;
-            } else {
-                pagination.value.limitpage = 1; 
-            }
-        };
-
-        const findById = (id) => {
-             if(!id) return;
-             loading.value = true;
-             axios.get(`${serverUrl}/${id}`, { headers: getAuthHeader() }).then(response => {
-                const data = response.data;
-                processResponse(data);
-                // Handle different response structures for single item if needed
-                if(data.site && data.site.length > 0) {
-                     elementCurrent.value = data.site[0];
-                     state.value = 'findById';
-                     elementCurrent.value.ocultar = (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
-                } else if (elements.value && elements.value.length > 0) {
-                     elementCurrent.value = elements.value[0];
-                     state.value = 'findById';
-                     elementCurrent.value.ocultar = (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
+            const processResponse = (data) => {
+                clearMsg();
+                if (typeof data === 'string') {
+                    try {
+                        data = JSON.parse(data);
+                    } catch (e) {
+                        return;
+                    }
                 }
-            }).catch(error => {
-                errorMsg.value = "Erro: " + error;
-            }).finally(() => {
-                loading.value = false;
-            });
-        };
-
-        const findAllElements = (page) => {
-            if (page) pagination.value.page = page;
-            if (pagination.value.page < 1) pagination.value.page = 1;
-            if (pagination.value.limitpage > 0 && pagination.value.page > pagination.value.limitpage) pagination.value.page = pagination.value.limitpage;
-
-            loading.value = true;
-            let serverpage = pagination.value.page;
-            if (serverpage < 1) serverpage = 1;
-
-            let params = new URLSearchParams();
-            params.append('page', serverpage);
-            params.append('row_count', pagination.value.rowCount);
-            params.append('token', generateToken(256));
-            
-            if (elementCurrent.value.nome) params.append('nome', elementCurrent.value.nome);
-
-            axios.get(`${serverUrl}?${params.toString()}`, { headers: getAuthHeader() }).then(response => {
-                processResponse(response.data);
-            }).catch(error => {
-                console.log(error);
-                errorMsg.value = "Erro na conexão: " + error;
-            }).finally(() => {
-                loading.value = false;
-            });
-        };
-
-        const saveElement = async () => {
-            loading.value = true;
-            const data = { ...elementCurrent.value };
-            
-            // Sending base64 as requested - taking directly from thumbnails (fotos_struct)
-            if (fotos_struct.value && fotos_struct.value.length > 0) {
-                 const mappedPhotos = fotos_struct.value.map(f => ({
-                    namefile: f.namefile,
-                    data: f.data
-                 }));
-
-                 if (mappedPhotos.length === 1) {
-                     data.foto = mappedPhotos[0];
-                 } else {
-                     data.foto = mappedPhotos;
-                 }
-                 // Set legacy field if backend still relies on it for something, 
-                 // but primary payload is data.foto
-                 data.foto_base64 = mappedPhotos[0].data;
-            }
-
-            data.ocultar = (data.ocultar === true || data.ocultar == 1);
-
-            let url = serverUrl;
-            let method = 'post'; // axios methods are lower case
-
-            if (data.id) {
-                url = `${serverUrl}/${data.id}`;
-                method = 'put';
-            }
-            
-            // Axios dynamic method call
-            axios[method](url, data, { headers: getAuthHeaderJSON() }).then(response => {
-                processResponse(response.data);
-                if (successMsg.value) {
-                    // Reset to default state on success
-                    prepareNew(); 
-                    state.value = 'default';
-                    findAllElements(pagination.value.page);
+                
+                if (data.mensagem_erro) {
+                    errorMsg.value = data.mensagem_erro;
+                } else if (data.message && data.error) {
+                    errorMsg.value = data.message;
                 }
-            }).catch((error) => {
-                console.log(error);
-                errorMsg.value = "Erro desconhecido: " + error;
-            }).finally(() => {
-                loading.value = false;
-            });
-        };
+                
+                if (data.mensagem_sucesso) {
+                    successMsg.value = data.mensagem_sucesso;
+                } else if (data.message && !data.error) {
+                    successMsg.value = data.message;
+                } else if (data.mensagem_informacao) {
+                    infoMsg.value = data.mensagem_informacao;
+                }
 
-        const deleteElement = (id) => {
-            loading.value = true;
-            axios.delete(serverUrl+"/"+id, { headers: getAuthHeader() }).then(response => {
-                processResponse(response.data);
-                if (successMsg.value || !errorMsg.value) { 
-                        prepareNew();
+                if (data.elements) {
+                    elements.value = data.elements;
+                }
+
+                if (data.recordsCount !== undefined) {
+                    pagination.value.total = parseInt(data.recordsCount);
+                } else if (data.numero_registros !== undefined) {
+                    pagination.value.total = parseInt(data.numero_registros);
+                }
+
+                if (pagination.value.total > 0) {
+                    pagination.value.limitpage = Math.ceil(pagination.value.total / pagination.value.rowCount);
+                    if (pagination.value.limitpage < 1) pagination.value.limitpage = 1;
+                } else {
+                    pagination.value.limitpage = 1; 
+                }
+            };
+
+            const findById = (id) => {
+                if(!id) return;
+                loading.value = true;
+                axios.get(`${serverUrl}/${id}`, { headers: getAuthHeader() }).then(response => {
+                    const data = response.data;
+                    processResponse(data);
+                    // Handle different response structures for single item if needed
+                    if(data.site && data.site.length > 0) {
+                        elementCurrent.value = data.site[0];
+                        state.value = 'findById';
+                        elementCurrent.value.ocultar = (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
+                    } else if (elements.value && elements.value.length > 0) {
+                        elementCurrent.value = elements.value[0];
+                        state.value = 'findById';
+                        elementCurrent.value.ocultar = (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
+                    }
+                }).catch(error => {
+                    errorMsg.value = "Erro: " + error;
+                }).finally(() => {
+                    loading.value = false;
+                });
+            };
+
+            const findAllElements = (page) => {
+                if (page) pagination.value.page = page;
+                if (pagination.value.page < 1) pagination.value.page = 1;
+                if (pagination.value.limitpage > 0 && pagination.value.page > pagination.value.limitpage) pagination.value.page = pagination.value.limitpage;
+
+                loading.value = true;
+                let serverpage = pagination.value.page;
+                if (serverpage < 1) serverpage = 1;
+
+                let params = new URLSearchParams();
+                params.append('page', serverpage);
+                params.append('row_count', pagination.value.rowCount);
+                params.append('token', generateToken(256));
+                
+                if (elementCurrent.value.nome) params.append('nome', elementCurrent.value.nome);
+
+                axios.get(`${serverUrl}?${params.toString()}`, { headers: getAuthHeader() }).then(response => {
+                    processResponse(response.data);
+                }).catch(error => {
+                    console.log(error);
+                    errorMsg.value = "Erro na conexão: " + error;
+                }).finally(() => {
+                    loading.value = false;
+                });
+            };
+
+            const saveElement = async () => {
+                loading.value = true;
+                const data = { ...elementCurrent.value };
+                
+                // Sending base64 as requested - taking directly from thumbnails (fotos_struct)
+                if (fotos_struct.value && fotos_struct.value.length > 0) {
+                    const mappedPhotos = fotos_struct.value.map(f => ({
+                        namefile: f.namefile,
+                        data: f.data
+                    }));
+
+                    if (mappedPhotos.length === 1) {
+                        data.foto = mappedPhotos[0];
+                    } else {
+                        data.foto = mappedPhotos;
+                    }
+                    // Set legacy field if backend still relies on it for something, 
+                    // but primary payload is data.foto
+                }
+
+                data.ocultar = (data.ocultar === true || data.ocultar == 1);
+
+                let url = serverUrl;
+                let method = 'post'; // axios methods are lower case
+
+                if (data.id) {
+                    url = `${serverUrl}/${data.id}`;
+                    method = 'put';
+                }
+                
+                // Axios dynamic method call
+                axios[method](url, data, { headers: getAuthHeaderJSON() }).then(response => {
+                    processResponse(response.data);
+                    if (successMsg.value) {
+                        // Reset to default state on success
+                        prepareNew(); 
                         state.value = 'default';
                         findAllElements(pagination.value.page);
+                    }
+                }).catch((error) => {
+                    console.log(error);
+                    errorMsg.value = "Erro desconhecido: " + error;
+                }).finally(() => {
+                    loading.value = false;
+                });
+            };
+
+            const deleteElement = (id) => {
+                loading.value = true;
+                axios.delete(serverUrl+"/"+id, { headers: getAuthHeader() }).then(response => {
+                    processResponse(response.data);
+                    if (successMsg.value || !errorMsg.value) { 
+                            prepareNew();
+                            state.value = 'default';
+                            findAllElements(pagination.value.page);
+                    }
+                }).catch(error => {
+                    errorMsg.value = "Erro ao excluir: " + error;
+                }).finally(() => {
+                    loading.value = false;
+                });
+            };
+            
+            const requestDelete = (element) => {
+                itemToDelete.value = element;
+                showModal.value = true;
+            };
+
+            const confirmDelete = () => {
+                if (itemToDelete.value) {
+                    deleteElement(itemToDelete.value.id);
                 }
-            }).catch(error => {
-                errorMsg.value = "Erro ao excluir: " + error;
-            }).finally(() => {
-                loading.value = false;
+                closeModal();
+            };
+
+            const closeModal = () => {
+                showModal.value = false;
+                itemToDelete.value = null;
+            };
+
+            const openImageModal = (url) => { modalImage.value = url; };
+            const closeImageModal = () => { modalImage.value = null; };
+
+            onMounted(() => {
+                carregarParentAlbumFotos();
+                findAllElements(1);
             });
-        };
-        
-        const requestDelete = (element) => {
-            itemToDelete.value = element;
-            showModal.value = true;
-        };
 
-        const confirmDelete = () => {
-            if (itemToDelete.value) {
-                deleteElement(itemToDelete.value.id);
-            }
-            closeModal();
-        };
-
-        const closeModal = () => {
-            showModal.value = false;
-            itemToDelete.value = null;
-        };
-
-        const openImageModal = (url) => { modalImage.value = url; };
-        const closeImageModal = () => { modalImage.value = null; };
-
-        onMounted(() => {
-            carregarParentAlbumFotos();
-            findAllElements(1);
-        });
-
-        return {
-            loading,
-            state,
-            showModal,
-            itemToDelete,
-            modalImage,
-            errorMsg,
-            successMsg,
-            infoMsg,
-            elementCurrent,
-            elements,
-            pagination,
-            parentAlbumFotos,
-            handleFile,
-            prepareNew,
-            cancelAction,
-            editItem,
-            saveElement,
-            requestDelete,
-            confirmDelete,
-            closeModal,
-            openImageModal,
-            closeImageModal,
-            findById,
-            findAllElements,
-            getMenuName,
-            // Exposed for Template
-            fotos_struct,
-            imagemPreviewOuAtual,
-            temImagemParaMostrar,
-            imagemPreviewOuAtual,
-            temImagemParaMostrar,
-            removeImage,
-            removeIndividualImage,
-            fileInput
-        };
-    }
-}).mount('#app');
+            return {
+                loading,
+                state,
+                showModal,
+                itemToDelete,
+                modalImage,
+                errorMsg,
+                successMsg,
+                infoMsg,
+                elementCurrent,
+                elements,
+                pagination,
+                parentAlbumFotos,
+                handleFile,
+                prepareNew,
+                cancelAction,
+                editItem,
+                saveElement,
+                requestDelete,
+                confirmDelete,
+                closeModal,
+                openImageModal,
+                closeImageModal,
+                findById,
+                findAllElements,
+                getMenuName,
+                // Exposed for Template
+                fotos_struct,
+                imagemPreviewOuAtual,
+                temImagemParaMostrar,
+                imagemPreviewOuAtual,
+                temImagemParaMostrar,
+                removeImage,
+                removeIndividualImage,
+                fileInput
+            };
+        }
+    }).mount('#app');
 </script>
 <?php include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/foot.php'); ?>

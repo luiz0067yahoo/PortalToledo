@@ -657,9 +657,6 @@ createApp({
                  } else {
                      data.foto = mappedPhotos;
                  }
-                 // Set legacy field if backend still relies on it for something, 
-                 // but primary payload is data.foto
-                 data.foto_base64 = mappedPhotos[0].data;
             }
 
             data.ocultar = (data.ocultar === true || data.ocultar == 1);

@@ -4,12 +4,12 @@ class configsDAO extends model
 {
 	const table="config";
 	const logo="logo";
-	const logo_mobile="logo_mobile";
-	const mensagem_contato="fomensagem_contatoto";
+	const logoMobile="logo_mobile";
+	const mensagemContato="mensagem_contato";
 
     public function __construct($model_attributes){
-		parent::__construct($model_attributes,self::table,[self::logo,self::logo_mobile,self::mensagem_contato]);
+		parent::__construct($model_attributes,self::table,[self::logo,self::logoMobile,self::mensagemContato]);
     }
-}
+} 
   
 ?>

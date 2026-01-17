@@ -3,45 +3,33 @@ require($_SERVER['DOCUMENT_ROOT'].'/library/functions.php');
 include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php'); 
 ?>
 
-<script type="importmap">
-{
-  "imports": {
-    "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
-    "@/": "/mvc/view/admin/js/"
-  }
-}
-</script>
-
-<!-- Axios para consistência com o exemplo de Menus -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
-
 <style>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-.modal-content-custom {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  min-width: 300px;
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-.modal-actions {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 20px;
-}
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+  .modal-content-custom {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    min-width: 300px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+  .modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+  }
 </style>
 
 <div id="app" class="container">
@@ -227,359 +215,367 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
     </div>
   </div>
 </div>
+<script type="importmap">
+  {
+    "imports": {
+      "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js",
+      "@/": "/mvc/view/admin/js/"
+    }
+  }
+</script>
+
+<!-- Axios para consistência com o exemplo de Menus -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+
 
 <script type="module">
-import { createApp, ref, onMounted } from 'vue';
-import { fileToBase64 } from '/assets/js/utils/base64.js';
+  import { createApp, ref, onMounted } from 'vue';
+  import { fileToBase64 } from '/assets/js/utils/base64.js';
 
-createApp({
-  setup() {
-    // Estado geral
-    const loading = ref(false);
-    const state = ref('default');
-    const showModal = ref(false);
-    const itemToDelete = ref(null);
-    const modalImage = ref(null);
+  createApp({
+    setup() {
+      // Estado geral
+      const loading = ref(false);
+      const state = ref('default');
+      const showModal = ref(false);
+      const itemToDelete = ref(null);
+      const modalImage = ref(null);
 
-    // Mensagens
-    const errorMsg = ref("");
-    const successMsg = ref("");
-    const infoMsg = ref("");
+      // Mensagens
+      const errorMsg = ref("");
+      const successMsg = ref("");
+      const infoMsg = ref("");
 
-    // Dados
-    const elementCurrent = ref({
-      id: '', nome: '', id_tipo_anuncio: '', id_menu: '', introducao: '', introducao2: '', descricao: '',
-      ocultar: false, facebook: '', youtube: '', instagram: '', whatsapp: '', endereco: '', telefone: '',
-      e_mail: '', website: '', url: ''
-    });
-
-    const elements = ref([]);
-    const tiposAnuncios = ref([]);
-    const menus = ref([]);
-
-    const pagination = ref({ page: 1, rowCount: 10, total: 0, limitpage: 0 });
-
-    const serverUrl = '/server/anuncios';
-
-    // Arquivos múltiplos
-    const files = {
-      foto: ref(null),
-      foto_mobile: ref(null),
-      fotoexpandida: ref(null),
-      foto_mobile_expandida: ref(null)
-    };
-    
-    // Store for base64 strings and previews
-    const previews = ref({});
-    const filesBase64 = ref({});
-    const fileInputs = ref({});
-
-    const fileFields = [
-      { key: 'foto', label: 'Foto' },
-      { key: 'foto_mobile', label: 'Foto Mobile' },
-      { key: 'fotoexpandida', label: 'Foto Expandida' },
-      { key: 'foto_mobile_expandida', label: 'Foto Mobile Expandida' }
-    ];
-
-    const socials = ['facebook','youtube','instagram','whatsapp','endereco','telefone','e_mail','website','url'];
-
-    // Auth helpers (iguais ao exemplo de menus)
-    const generateToken = (length) => {
-      const a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
-      let b = [];
-      for (let i = 0; i < length; i++) {
-        const j = Math.floor(Math.random() * a.length);
-        b[i] = a[j];
-      }
-      return b.join("");
-    };
-
-    const getToken = () => {
-      const userData = localStorage.getItem('portalToledoData');
-      if (userData) {
-        try { return JSON.parse(userData).token; } catch (e) { return ''; }
-      }
-      return '';
-    };
-
-    const getAuthHeader = () => ({ 'Authorization': `Bearer ${getToken()}` });
-    const getAuthHeaderJSON = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
-
-    const clearMsg = () => {
-      errorMsg.value = ""; successMsg.value = ""; infoMsg.value = "";
-    };
-
-    const prepareNew = () => {
-      clearMsg();
-      elementCurrent.value = {
+      // Dados
+      const elementCurrent = ref({
         id: '', nome: '', id_tipo_anuncio: '', id_menu: '', introducao: '', introducao2: '', descricao: '',
         ocultar: false, facebook: '', youtube: '', instagram: '', whatsapp: '', endereco: '', telefone: '',
         e_mail: '', website: '', url: ''
+      });
+
+      const elements = ref([]);
+      const tiposAnuncios = ref([]);
+      const menus = ref([]);
+
+      const pagination = ref({ page: 1, rowCount: 10, total: 0, limitpage: 0 });
+
+      const serverUrl = '/server/anuncios';
+
+      // Arquivos múltiplos
+      const files = {
+        foto: ref(null),
+        foto_mobile: ref(null),
+        fotoexpandida: ref(null),
+        foto_mobile_expandida: ref(null)
       };
-      Object.keys(files).forEach(k => {
-          files[k].value = null;
-          previews.value[k] = '';
-          filesBase64.value[k] = '';
-          if (fileInputs.value[k]) fileInputs.value[k].value = '';
-      });
-      state.value = 'new';
-    };
-
-    const cancelAction = () => {
-      clearMsg();
-      state.value = 'default';
-      prepareNew();
-      elements.value = [];
-      pagination.value = { page: 1, rowCount: 10, total: 0, limitpage: 0 };
-      carregarTipos();
-      carregarMenus();
-    };
-
-    const editItem = (element) => {
-      clearMsg();
-      elementCurrent.value = { ...element };
-      elementCurrent.value.ocultar = (element.ocultar == 1 || element.ocultar == true);
       
-      // Reset previews and inputs
-      Object.keys(files).forEach(k => {
-          files[k].value = null;
-          previews.value[k] = '';
-          filesBase64.value[k] = '';
-          if (fileInputs.value[k]) fileInputs.value[k].value = '';
-      });
+      // Store for base64 strings and previews
+      const previews = ref({});
+      const filesBase64 = ref({});
+      const fileInputs = ref({});
 
-      state.value = 'edit';
-    };
+      const fileFields = [
+        { key: 'foto', label: 'Foto' },
+        { key: 'foto_mobile', label: 'Foto Mobile' },
+        { key: 'fotoexpandida', label: 'Foto Expandida' },
+        { key: 'foto_mobile_expandida', label: 'Foto Mobile Expandida' }
+      ];
 
-    const handleFile = (e, key) => {
-      const file = e.target.files[0];
-      files[key].value = file;
+      const socials = ['facebook','youtube','instagram','whatsapp','endereco','telefone','e_mail','website','url'];
+
+      // Auth helpers (iguais ao exemplo de menus)
+      const generateToken = (length) => {
+        const a = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".split("");
+        let b = [];
+        for (let i = 0; i < length; i++) {
+          const j = Math.floor(Math.random() * a.length);
+          b[i] = a[j];
+        }
+        return b.join("");
+      };
+
+      const getToken = () => {
+        const userData = localStorage.getItem('portalToledoData');
+        if (userData) {
+          try { return JSON.parse(userData).token; } catch (e) { return ''; }
+        }
+        return '';
+      };
+
+      const getAuthHeader = () => ({ 'Authorization': `Bearer ${getToken()}` });
+      const getAuthHeaderJSON = () => ({ 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' });
+
+      const clearMsg = () => {
+        errorMsg.value = ""; successMsg.value = ""; infoMsg.value = "";
+      };
+
+      const prepareNew = () => {
+        clearMsg();
+        elementCurrent.value = {
+          id: '', nome: '', id_tipo_anuncio: '', id_menu: '', introducao: '', introducao2: '', descricao: '',
+          ocultar: false, facebook: '', youtube: '', instagram: '', whatsapp: '', endereco: '', telefone: '',
+          e_mail: '', website: '', url: ''
+        };
+        Object.keys(files).forEach(k => {
+            files[k].value = null;
+            previews.value[k] = '';
+            filesBase64.value[k] = '';
+            if (fileInputs.value[k]) fileInputs.value[k].value = '';
+        });
+        state.value = 'new';
+      };
+
+      const cancelAction = () => {
+        clearMsg();
+        state.value = 'default';
+        prepareNew();
+        elements.value = [];
+        pagination.value = { page: 1, rowCount: 10, total: 0, limitpage: 0 };
+        carregarTipos();
+        carregarMenus();
+      };
+
+      const editItem = (element) => {
+        clearMsg();
+        elementCurrent.value = { ...element };
+        elementCurrent.value.ocultar = (element.ocultar == 1 || element.ocultar == true);
+        
+        // Reset previews and inputs
+        Object.keys(files).forEach(k => {
+            files[k].value = null;
+            previews.value[k] = '';
+            filesBase64.value[k] = '';
+            if (fileInputs.value[k]) fileInputs.value[k].value = '';
+        });
+
+        state.value = 'edit';
+      };
+
+      const handleFile = (e, key) => {
+        const file = e.target.files[0];
+        files[key].value = file;
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const result = event.target.result;
+                previews.value[key] = result;
+                filesBase64.value[key] = result.split(',')[1];
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previews.value[key] = '';
+            filesBase64.value[key] = '';
+        }
+      };
       
-      if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-              const result = event.target.result;
-              previews.value[key] = result;
-              filesBase64.value[key] = result.split(',')[1];
-          };
-          reader.readAsDataURL(file);
-      } else {
+      const removeImage = (key) => {
+          // Clear server data for this field
+          elementCurrent.value[key] = '';
+          // Clear preview and base64
           previews.value[key] = '';
           filesBase64.value[key] = '';
-      }
-    };
-    
-    const removeImage = (key) => {
-        // Clear server data for this field
-        elementCurrent.value[key] = '';
-        // Clear preview and base64
-        previews.value[key] = '';
-        filesBase64.value[key] = '';
-        // Clear file object
-        files[key].value = null;
-        // Clear input
-        if (fileInputs.value[key]) {
-            fileInputs.value[key].value = '';
+          // Clear file object
+          files[key].value = null;
+          // Clear input
+          if (fileInputs.value[key]) {
+              fileInputs.value[key].value = '';
+          }
+      };
+      
+      // Helper to check if we have an image to show (preview or existing)
+      const hasImage = (key) => {
+          return !!(previews.value[key] || elementCurrent.value[key]);
+      };
+      
+      // Helper to get the image source (preview or existing)
+      const getImageSrc = (key) => {
+          if (previews.value[key]) return previews.value[key];
+          if (elementCurrent.value[key]) return `/uploads/anuncio/original/${elementCurrent.value[key]}`;
+          return '';
+      };
+      
+      // Function to bind refs inside v-for
+      const setFileInputRef = (el, key) => {
+          if (el) {
+              fileInputs.value[key] = el;
+          }
+      };
+
+      const carregarTipos = async () => {
+        try {
+          const response = await axios.get('/server/tiposAnuncios', { headers: getAuthHeader() });
+          tiposAnuncios.value = response.data.elements || [];
+        } catch (e) { console.error(e); }
+      };
+
+      const carregarMenus = async () => {
+        try {
+          const response = await axios.get('/server/menus', { headers: getAuthHeader() });
+          menus.value = response.data.elements || [];
+        } catch (e) { console.error(e); }
+      };
+
+      const getTipoName = (id) => {
+        const t = tiposAnuncios.value.find(x => x.id == id);
+        return t ? t.nome : id;
+      };
+
+      const getMenuName = (id) => {
+        const m = menus.value.find(x => x.id == id);
+        return m ? m.nome : id;
+      };
+
+      const processResponse = (data) => {
+        clearMsg();
+        if (typeof data === 'string') {
+          try { data = JSON.parse(data); } catch (e) { return; }
         }
-    };
-    
-    // Helper to check if we have an image to show (preview or existing)
-    const hasImage = (key) => {
-        return !!(previews.value[key] || elementCurrent.value[key]);
-    };
-    
-    // Helper to get the image source (preview or existing)
-    const getImageSrc = (key) => {
-        if (previews.value[key]) return previews.value[key];
-        if (elementCurrent.value[key]) return `/uploads/anuncio/original/${elementCurrent.value[key]}`;
-        return '';
-    };
-    
-    // Function to bind refs inside v-for
-    const setFileInputRef = (el, key) => {
-        if (el) {
-            fileInputs.value[key] = el;
+        if (data.mensagem_erro) errorMsg.value = data.mensagem_erro;
+        else if (data.message && data.error) errorMsg.value = data.message;
+
+        if (data.mensagem_sucesso) successMsg.value = data.mensagem_sucesso;
+        else if (data.message && !data.error) successMsg.value = data.message;
+        else if (data.mensagem_informacao) infoMsg.value = data.mensagem_informacao;
+
+        if (data.elements) elements.value = data.elements;
+
+        if (data.recordsCount !== undefined) pagination.value.total = parseInt(data.recordsCount);
+        else if (data.numero_registros !== undefined) pagination.value.total = parseInt(data.numero_registros);
+
+        if (pagination.value.total > 0) {
+          pagination.value.limitpage = Math.ceil(pagination.value.total / pagination.value.rowCount);
+          if (pagination.value.limitpage < 1) pagination.value.limitpage = 1;
+        } else {
+          pagination.value.limitpage = 1;
         }
-    };
+      };
 
-    const carregarTipos = async () => {
-      try {
-        const response = await axios.get('/server/tiposAnuncios', { headers: getAuthHeader() });
-        tiposAnuncios.value = response.data.elements || [];
-      } catch (e) { console.error(e); }
-    };
+      const findById = (id) => {
+        if (!id) return;
+        loading.value = true;
+        axios.get(`${serverUrl}/${id}`, { headers: getAuthHeader() })
+          .then(response => {
+            const data = response.data;
+            processResponse(data);
+            if (data.elements && data.elements.length > 0) {
+              elementCurrent.value = { ...data.elements[0] };
+              elementCurrent.value.ocultar = (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
+              state.value = 'findById';
+            }
+          })
+          .catch(err => { errorMsg.value = "Erro: " + err; })
+          .finally(() => loading.value = false);
+      };
 
-    const carregarMenus = async () => {
-      try {
-        const response = await axios.get('/server/menus', { headers: getAuthHeader() });
-        menus.value = response.data.elements || [];
-      } catch (e) { console.error(e); }
-    };
+      const findAllElements = (page) => {
+        if (page) pagination.value.page = page;
+        if (pagination.value.page < 1) pagination.value.page = 1;
+        if (pagination.value.limitpage > 0 && pagination.value.page > pagination.value.limitpage) pagination.value.page = pagination.value.limitpage;
 
-    const getTipoName = (id) => {
-      const t = tiposAnuncios.value.find(x => x.id == id);
-      return t ? t.nome : id;
-    };
+        loading.value = true;
+        let params = new URLSearchParams();
+        params.append('page', pagination.value.page);
+        params.append('row_count', pagination.value.rowCount);
+        params.append('token', generateToken(256));
+        if (elementCurrent.value.nome) params.append('nome', elementCurrent.value.nome);
 
-    const getMenuName = (id) => {
-      const m = menus.value.find(x => x.id == id);
-      return m ? m.nome : id;
-    };
+        axios.get(`${serverUrl}?${params.toString()}`, { headers: getAuthHeader() })
+          .then(response => processResponse(response.data))
+          .catch(err => { errorMsg.value = "Erro na conexão: " + err; })
+          .finally(() => loading.value = false);
+      };
 
-    const processResponse = (data) => {
-      clearMsg();
-      if (typeof data === 'string') {
-        try { data = JSON.parse(data); } catch (e) { return; }
-      }
-      if (data.mensagem_erro) errorMsg.value = data.mensagem_erro;
-      else if (data.message && data.error) errorMsg.value = data.message;
+      const saveElement = async () => {
+        loading.value = true;
+        const data = { ...elementCurrent.value };
 
-      if (data.mensagem_sucesso) successMsg.value = data.mensagem_sucesso;
-      else if (data.message && !data.error) successMsg.value = data.message;
-      else if (data.mensagem_informacao) infoMsg.value = data.mensagem_informacao;
+        // Add base64 fields if present
+        for (const key in files) {
+            if (filesBase64.value[key]) {
+                data[key] = {
+                    namefile: files[key].value ? files[key].value.name : 'image.jpg',
+                    data: filesBase64.value[key]
+                };
+            } else if (!files[key].value && !elementCurrent.value[key]) {
+                // Explicitly cleared image
+                data[key] = ''; 
+            }
+        }
 
-      if (data.elements) elements.value = data.elements;
+        data.ocultar = (data.ocultar === true || data.ocultar == 1);
 
-      if (data.recordsCount !== undefined) pagination.value.total = parseInt(data.recordsCount);
-      else if (data.numero_registros !== undefined) pagination.value.total = parseInt(data.numero_registros);
+        let url = serverUrl;
+        let method = data.id ? 'put' : 'post';
+        if (data.id) url = `${serverUrl}/${data.id}`;
 
-      if (pagination.value.total > 0) {
-        pagination.value.limitpage = Math.ceil(pagination.value.total / pagination.value.rowCount);
-        if (pagination.value.limitpage < 1) pagination.value.limitpage = 1;
-      } else {
-        pagination.value.limitpage = 1;
-      }
-    };
+        axios[method](url, data, { headers: getAuthHeaderJSON() })
+          .then(response => {
+            processResponse(response.data);
+            if (successMsg.value) {
+              state.value = 'default';
+              prepareNew();
+              findAllElements(pagination.value.page);
+            }
+          })
+          .catch(err => { errorMsg.value = "Erro desconhecido: " + err; })
+          .finally(() => loading.value = false);
+      };
 
-    const findById = (id) => {
-      if (!id) return;
-      loading.value = true;
-      axios.get(`${serverUrl}/${id}`, { headers: getAuthHeader() })
-        .then(response => {
-          const data = response.data;
-          processResponse(data);
-          if (data.elements && data.elements.length > 0) {
-            elementCurrent.value = { ...data.elements[0] };
-            elementCurrent.value.ocultar = (elementCurrent.value.ocultar == 1 || elementCurrent.value.ocultar == true);
-            state.value = 'findById';
-          }
-        })
-        .catch(err => { errorMsg.value = "Erro: " + err; })
-        .finally(() => loading.value = false);
-    };
+      const deleteElement = (id) => {
+        loading.value = true;
+        axios.delete(`${serverUrl}/${id}`, { headers: getAuthHeader() })
+          .then(response => {
+            processResponse(response.data);
+            if (successMsg.value || !errorMsg.value) {
+              prepareNew();
+              state.value = 'default';
+              findAllElements(pagination.value.page);
+            }
+          })
+          .catch(err => { errorMsg.value = "Erro ao excluir: " + err; })
+          .finally(() => loading.value = false);
+      };
 
-    const findAllElements = (page) => {
-      if (page) pagination.value.page = page;
-      if (pagination.value.page < 1) pagination.value.page = 1;
-      if (pagination.value.limitpage > 0 && pagination.value.page > pagination.value.limitpage) pagination.value.page = pagination.value.limitpage;
+      const requestDelete = (element) => {
+        itemToDelete.value = element;
+        showModal.value = true;
+      };
 
-      loading.value = true;
-      let params = new URLSearchParams();
-      params.append('page', pagination.value.page);
-      params.append('row_count', pagination.value.rowCount);
-      params.append('token', generateToken(256));
-      if (elementCurrent.value.nome) params.append('nome', elementCurrent.value.nome);
+      const confirmDelete = () => {
+        if (itemToDelete.value) deleteElement(itemToDelete.value.id);
+        closeModal();
+      };
 
-      axios.get(`${serverUrl}?${params.toString()}`, { headers: getAuthHeader() })
-        .then(response => processResponse(response.data))
-        .catch(err => { errorMsg.value = "Erro na conexão: " + err; })
-        .finally(() => loading.value = false);
-    };
+      const closeModal = () => {
+        showModal.value = false;
+        itemToDelete.value = null;
+      };
 
-    const saveElement = async () => {
-      loading.value = true;
-      const data = { ...elementCurrent.value };
+      const openImageModal = (url) => { modalImage.value = url; };
+      const closeImageModal = () => { modalImage.value = null; };
 
-      // Add base64 fields if present
-      for (const key in files) {
-          if (filesBase64.value[key]) {
-              data[key + '_base64'] = filesBase64.value[key];
-              // Compatibility: construct object (though controller might check base64 field directly now if updated, 
-              // or we keep sending strict structure if controller isn't updated for this specific naming. 
-              // Previous 'menus' update sent 'icone_base64' AND 'icone' object. Let's do similar.)
-              data[key] = {
-                  namefile: files[key].value ? files[key].value.name : 'image.jpg',
-                  data: filesBase64.value[key]
-              };
-          } else if (!files[key].value && !elementCurrent.value[key]) {
-              // Explicitly cleared image
-              data[key] = ''; 
-          }
-      }
+      onMounted(() => {
+        carregarTipos();
+        carregarMenus();
+        findAllElements(1);
+      });
 
-      data.ocultar = (data.ocultar === true || data.ocultar == 1);
-
-      let url = serverUrl;
-      let method = data.id ? 'put' : 'post';
-      if (data.id) url = `${serverUrl}/${data.id}`;
-
-      axios[method](url, data, { headers: getAuthHeaderJSON() })
-        .then(response => {
-          processResponse(response.data);
-          if (successMsg.value) {
-            state.value = 'default';
-            prepareNew();
-            findAllElements(pagination.value.page);
-          }
-        })
-        .catch(err => { errorMsg.value = "Erro desconhecido: " + err; })
-        .finally(() => loading.value = false);
-    };
-
-    const deleteElement = (id) => {
-      loading.value = true;
-      axios.delete(`${serverUrl}/${id}`, { headers: getAuthHeader() })
-        .then(response => {
-          processResponse(response.data);
-          if (successMsg.value || !errorMsg.value) {
-            prepareNew();
-            state.value = 'default';
-            findAllElements(pagination.value.page);
-          }
-        })
-        .catch(err => { errorMsg.value = "Erro ao excluir: " + err; })
-        .finally(() => loading.value = false);
-    };
-
-    const requestDelete = (element) => {
-      itemToDelete.value = element;
-      showModal.value = true;
-    };
-
-    const confirmDelete = () => {
-      if (itemToDelete.value) deleteElement(itemToDelete.value.id);
-      closeModal();
-    };
-
-    const closeModal = () => {
-      showModal.value = false;
-      itemToDelete.value = null;
-    };
-
-    const openImageModal = (url) => { modalImage.value = url; };
-    const closeImageModal = () => { modalImage.value = null; };
-
-    onMounted(() => {
-      carregarTipos();
-      carregarMenus();
-      findAllElements(1);
-    });
-
-    return {
-      loading, state, showModal, itemToDelete, modalImage,
-      errorMsg, successMsg, infoMsg,
-      elementCurrent, elements, tiposAnuncios, menus,
-      pagination, fileFields, socials,
-      prepareNew, cancelAction, editItem, handleFile,
-      saveElement, findById, findAllElements,
-      requestDelete, confirmDelete, closeModal,
-      openImageModal, closeImageModal,
-      getTipoName, getMenuName,
-      // New helpers
-      removeImage, hasImage, getImageSrc, setFileInputRef
-    };
-  }
-}).mount('#app');
+      return {
+        loading, state, showModal, itemToDelete, modalImage,
+        errorMsg, successMsg, infoMsg,
+        elementCurrent, elements, tiposAnuncios, menus,
+        pagination, fileFields, socials,
+        prepareNew, cancelAction, editItem, handleFile,
+        saveElement, findById, findAllElements,
+        requestDelete, confirmDelete, closeModal,
+        openImageModal, closeImageModal,
+        getTipoName, getMenuName,
+        // New helpers
+        removeImage, hasImage, getImageSrc, setFileInputRef
+      };
+    }
+  }).mount('#app');
 </script>
 
 <?php include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/foot.php'); ?>
