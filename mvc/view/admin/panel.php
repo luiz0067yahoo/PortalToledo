@@ -17,9 +17,19 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
             left: 0;
             background: #343a40;
             color: #fff;
-            transition: all 0.3s;
             z-index: 1000;
+            overflow: hidden;
+        }
+
+        #menus {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 160px;            /* ← ajuste esse valor conforme altura do seu footer */
             overflow-y: auto;
+            padding-top: 140px;       /* ← ajuste conforme altura REAL do header */
+            box-sizing: border-box;
         }
 
         /* Desktop: Default visible. Active class hides it. */
@@ -27,16 +37,27 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
             margin-left: -280px;
         }
 
-        .sidebar-header {
-            background: #FFF;
+       .sidebar-header {
+            background: #fff;
             text-align: center;
             border-bottom: 1px solid #495057;
+            position: relative;
+            z-index: 2;
         }
 
         .sidebar-header img {
             max-width: 260px;
             margin-left:auto;
             margin-right:auto;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 2;
+            background: #343a40;
         }
 
         .menu-item {
@@ -138,63 +159,71 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/mvc/view/admin/templates/top.php';
         <!-- Sidebar -->
         <div id="sidebar" class="shadow-lg" :class="{ active: isToggled }">
             <div class="sidebar-header">
-                <div class="close-sidebar d-flex justify-content-end" @click="closeSidebar">
-                    <i class="fa fa-times close-sidebar text-secondary" style="cursor:pointer; padding: 10px;"></i>
+                <div class="close-sidebar d-flex justify-content-end h-0" style="height: 1px;overflow:visible;" @click="closeSidebar">
+                    <i class="fa fa-times close-sidebar text-secondary" style="cursor:pointer; padding: 5px;"></i>
                 </div>
                 <img src="https://<?php echo $_SERVER['HTTP_HOST']; ?>/assets/img/cms/inprolink_cms_system.png" alt="Logo">
             </div>
 
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
-                <a href="/admin/tiposAnuncios" target="main">Tipo Anúncio</a>
+            <div id="menus" >
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
+                    <a href="/admin/tiposAnuncios" target="main">Tipo Anúncio</a>
+                </div>
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
+                    <a href="/admin/anuncios" target="main">Anúncio</a>
+                </div>
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
+                    <a href="/admin/menus" target="main">Menu</a>
+                </div>
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
+                    <a href="/admin/albumFotos" target="main">Álbum Fotos</a>
+                </div>
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
+                    <a href="/admin/fotos" target="main">Fotos</a>
+                </div>
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
+                    <a href="/admin/albumVideos" target="main">Álbum Vídeos</a>
+                </div>
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
+                    <a href="/admin/videos" target="main">Vídeos</a>
+                </div>
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
+                    <a href="/admin/noticias" target="main">Notícias</a>
+                </div>
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
+                    <a href="/admin/config" target="main">Configurações</a>
+                </div>
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
+                    <a href="/admin/usuarios" target="main">Usuários</a>
+                </div>
+
             </div>
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
-                <a href="/admin/anuncios" target="main">Anúncio</a>
-            </div>
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
-                <a href="/admin/menus" target="main">Menu</a>
-            </div>
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
-                <a href="/admin/albumFotos" target="main">Álbum Fotos</a>
-            </div>
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
-                <a href="/admin/fotos" target="main">Fotos</a>
-            </div>
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
-                <a href="/admin/albumVideos" target="main">Álbum Vídeos</a>
-            </div>
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
-                <a href="/admin/videos" target="main">Vídeos</a>
-            </div>
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
-                <a href="/admin/noticias" target="main">Notícias</a>
-            </div>
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
-                <a href="/admin/config" target="main">Configurações</a>
-            </div>
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/apps/accessories-text-editor.png" alt="">
-                <a href="/admin/usuarios" target="main">Usuários</a>
+            <div class="sidebar-footer">
+                
+                <hr style="border-color: #495057; margin: 15px 20px;">
+    
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/actions/system-switch-user.png" alt="">
+                    <a href="/admin/trocar_senha" target="main">Trocar Senha</a>
+                </div>
+                <div class="menu-item">
+                    <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/actions/system-shutdown.png" alt="">
+                    <a href="#" @click.prevent="logout">Sair</a>
+                </div>
+
             </div>
 
-            <hr style="border-color: #495057; margin: 15px 20px;">
 
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/actions/system-switch-user.png" alt="">
-                <a href="/admin/trocar_senha" target="main">Trocar Senha</a>
-            </div>
-            <div class="menu-item">
-                <img class="icon_32" src="https://raw.githubusercontent.com/KDE/oxygen-icons/master/32x32/actions/system-shutdown.png" alt="">
-                <a href="#" @click.prevent="logout">Sair</a>
-            </div>
         </div>
 
         <!-- Conteúdo Principal -->

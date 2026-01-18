@@ -14,14 +14,14 @@
 					<div class="input-group">
 						<label for="login" class="sr-only">Login</label>
 						<span class="input-group-addon"><i class="glyphicon glyphicon-user color-blue"></i></span>
-						<input type="text" id="login" v-model="login" class="form-control" placeholder="Login" required autofocus>
+						<input type="text" id="login" name="login" v-model="login" class="form-control" placeholder="Login" required autofocus>
 					</div>
 				</div>			
 				<div class="form-group">
 					<div class="input-group">
 						<label for="senha" class="sr-only">Senha</label>
 						<span class="input-group-addon"><i class="glyphicon glyphicon-lock color-blue"></i></span>
-						<input type="password" id="senha" v-model="senha" class="form-control" placeholder="Senha" required>
+						<input type="password" id="senha" name="senha" v-model="senha" class="form-control" placeholder="Senha" required>
 					</div>
 				</div>
 

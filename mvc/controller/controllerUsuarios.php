@@ -121,13 +121,68 @@ class controllerUsuarios extends controller
        echo json_encode($this->model->renewToken());
     }
     
-    public function save() { echo json_encode(parent::save()); }
+    public function save() { 
+        $this->model->cleanFields();
+        $this->model->addField(usuariosDAO::id);
+        $this->model->addField(usuariosDAO::nome);
+        $this->model->addField(usuariosDAO::email);
+
+		$this->model->setParam(usuariosDAO::login, hash('sha512', $this->model->getParam(usuariosDAO::login)));
+		$this->model->setParam(usuariosDAO::senha, hash('sha512', $this->model->getParam(usuariosDAO::senha)));
+		$this->model->setParam(usuariosDAO::tentativas, 0);
+		$this->model->setParam(usuariosDAO::code, null);
+		$this->model->setParam(usuariosDAO::codeTime, null);
+
+        $result=parent::save();
+        $id_cript=functionsJWT::encrypt($result["elements"][0][usuariosDAO::id], JWT_SECRET_KEY_2);
+        if (isset($result["elements"][0][usuariosDAO::id])) $result["elements"][0][usuariosDAO::id]=$id_cript;
+        if (isset($result["params"][usuariosDAO::id])) $result["params"][usuariosDAO::id]=$id_cript;            
+        $result=parent::save();
+        echo json_encode($result); 
+    }
     
     public function create() { 
-        echo json_encode(parent::create()); 
+        $this->model->cleanFields();
+        $this->model->addField(usuariosDAO::id);
+        $this->model->addField(usuariosDAO::nome);
+        $this->model->addField(usuariosDAO::email);
+
+        $this->model->setParam(usuariosDAO::login, hash('sha512', $this->model->getParam(usuariosDAO::login)));
+        $this->model->setParam(usuariosDAO::senha, hash('sha512', $this->model->getParam(usuariosDAO::senha)));
+        $this->model->setParam(usuariosDAO::tentativas, 0);
+        $this->model->setParam(usuariosDAO::code, null);
+        $this->model->setParam(usuariosDAO::codeTime, null);
+
+        $result=parent::create();
+        $id_cript=functionsJWT::encrypt($result["elements"][0][usuariosDAO::id], JWT_SECRET_KEY_2);
+        if (isset($result["elements"][0][usuariosDAO::id])) $result["elements"][0][usuariosDAO::id]=$id_cript;
+        if (isset($result["params"][usuariosDAO::id])) $result["params"][usuariosDAO::id]=$id_cript;
+        echo json_encode($result); 
     }
     
     public function update($id_cript) { 
+        $this->model->cleanFields();
+        $this->model->addField(usuariosDAO::id);
+        $this->model->addField(usuariosDAO::nome);
+        $this->model->addField(usuariosDAO::email);
+
+        if(!empty($this->model->getParam(usuariosDAO::login))) {
+            $this->model->setParam(usuariosDAO::login, hash('sha512', $this->model->getParam(usuariosDAO::login)));
+        }
+        else {
+            $this->model->unParam(usuariosDAO::login);
+        }
+        if(!empty($this->model->getParam(usuariosDAO::senha))) {
+            $this->model->setParam(usuariosDAO::senha, hash('sha512', $this->model->getParam(usuariosDAO::senha)));
+        }
+        else {
+            $this->model->unParam(usuariosDAO::senha);
+        }
+
+        $this->model->setParam(usuariosDAO::tentativas, 0);
+        $this->model->setParam(usuariosDAO::code, null);
+        $this->model->setParam(usuariosDAO::codeTime, null);
+
         $id=functionsJWT::decrypt($id_cript, JWT_SECRET_KEY_2);
         $result=parent::update($id);
         if (isset($result["params"][usuariosDAO::id])) $result["params"][usuariosDAO::id]=$id_cript;

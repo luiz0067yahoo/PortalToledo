@@ -166,21 +166,11 @@ class usuariosDAO extends model
 	
 	public function save()
     {
-		$this->setParam(self::login, hash('sha512', $this->getParam(self::login)));
-		$this->setParam(self::senha, hash('sha512', $this->getParam(self::senha)));
-		$this->setParam(self::tentativas, 0);
-		$this->setParam(self::code, null);
-		$this->setParam(self::codeTime, null);
 		return parent::save();
     }
 
     public function saveSQL()
     {
-		$this->setParam(self::login, hash('sha512', $this->getParam(self::login)));
-		$this->setParam(self::senha, hash('sha512', $this->getParam(self::senha)));
-		$this->setParam(self::tentativas, 0);
-		$this->setParam(self::code, null);
-		$this->setParam(self::codeTime, null);
 		return parent::saveSQL();
     }
 
@@ -224,7 +214,7 @@ class usuariosDAO extends model
     public function createSQL()
     {
 		$this->setParam(self::date_insert, date("Y-m-d H:i:s"));
-        return parent::createSQL($id);
+        return parent::createSQL();
     }
 
     public function update($id)
