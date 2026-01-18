@@ -496,8 +496,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/mvc/view/admin/templates/top.php');
             const setQuillConteudoNoticia = (html='') => {
                 try{
                     const delta = quillConteudoNoticia.clipboard.convert({ html: html });
-                    //quillConteudoNoticia.setContents(delta, 'silent');
-                    quillConteudoNoticia.setText(html);
+                    quillConteudoNoticia.setContents(delta, 'silent');
                 }
                 catch(e){
                     console.log(e);
